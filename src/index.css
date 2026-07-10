@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: #f7f4ef;
+    color: #241c15;
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Numeric cells / values line up on the decimal. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Card / panel primitives matching the design tokens. */
+  .cb-card {
+    @apply rounded-card border border-app-border bg-app-card shadow-card;
+  }
+
+  /* Input-colour convention */
+  .field-manual {
+    color: #2a62c9;
+    background: #f8faff;
+    border: 1.5px solid #c9d9f4;
+  }
+  .field-master {
+    color: #1f7a4d;
+    background: #f4fbf7;
+    border: 1.5px solid #bee3ce;
+  }
+  .field-auto {
+    color: #241c15;
+    background: #f2efea;
+    border: 1.5px solid #e4ddd2;
+  }
+}
+
+/* Thin, unobtrusive scrollbars inside scroll areas. */
+.cb-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.cb-scroll::-webkit-scrollbar-thumb {
+  background: #dccfbb;
+  border-radius: 99px;
+}
