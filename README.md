@@ -30,7 +30,7 @@ Query · Supabase (Postgres + Auth + Storage + Row Level Security).
 | Aset & Depresiasi | Garis lurus, akumulasi & nilai buku otomatis → P&L |
 | P&L | 12 bulan + total tahunan, EBITDA, margin, kolom sticky, read-only |
 | Manajemen Pengguna | Akun + role + izin per-modul, Daftar Peran (Super Admin only) |
-| Dashboard | (belum dibangun — placeholder) |
+| Dashboard | KPI (pendapatan, pembelian, gaji, laba, margin) + grafik garis bulanan + donut komposisi |
 
 ## Menjalankan
 
