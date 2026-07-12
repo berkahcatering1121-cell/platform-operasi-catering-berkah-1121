@@ -97,6 +97,29 @@ export interface PurchaseView {
   month_key: string
 }
 
+export interface PettyPeriod {
+  id: string
+  period_month: string
+  opening_balance: number
+  is_settled: boolean
+}
+
+// From v_petty_cash_entries (computed running_balance + period columns).
+export interface PettyEntryView {
+  id: string
+  period_id: string
+  entry_date: string
+  description: string
+  cash_in: number
+  cash_out: number
+  photos: string[]
+  sort: number
+  period_month: string
+  opening_balance: number
+  is_settled: boolean
+  running_balance: number
+}
+
 // From v_debts (computed sisa + automatic status).
 export interface DebtView {
   id: string
