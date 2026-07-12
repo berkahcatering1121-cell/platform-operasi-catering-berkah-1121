@@ -33,7 +33,8 @@ interface AuthContextValue {
   signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext<AuthContextValue | null>(null)
 
 async function loadProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase

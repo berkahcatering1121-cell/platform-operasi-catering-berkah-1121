@@ -97,6 +97,30 @@ export interface PurchaseView {
   month_key: string
 }
 
+// From v_payroll (computed base_pay / total_beban / take_home + employee cols).
+export interface PayrollView {
+  id: string
+  employee_id: string
+  employee_name: string
+  employee_position: string | null
+  employee_department: string | null
+  salary_type: SalaryType
+  daily_wage: number
+  base_salary: number
+  period_month: string
+  period_label: string | null
+  pay_date: string | null
+  days_worked: number
+  allowance: number
+  bonus: number
+  deduction: number
+  status: string
+  base_pay: number
+  total_beban: number
+  take_home: number
+  month_key: string
+}
+
 // From v_sales (computed total, sisa, month_key, pic_name).
 export interface SaleView {
   id: string
