@@ -6,9 +6,10 @@ import PhotoUploader from '@/components/ui/PhotoUploader'
 import { formatRupiah } from '@/lib/format'
 import { useEmployees, useIngredientCategories, useSuppliers } from '@/features/master/api'
 import { useSavePurchase, type PurchaseInput } from './api'
-import type { PurchaseView } from '@/lib/db'
+import { SATUAN_OPTIONS, type PurchaseView } from '@/lib/db'
 
 const STATUS_OPTIONS = ['Lunas', 'DP', 'Belum Bayar'].map((s) => ({ value: s, label: s }))
+const UNIT_OPTIONS = SATUAN_OPTIONS.map((u) => ({ value: u, label: u }))
 
 interface FormState {
   purchase_date: string
@@ -149,11 +150,11 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
             onChange={(e) => set({ qty: e.target.value.replace(/[^\d.]/g, '') })}
             placeholder="40"
           />
-          <Field
+          <SelectField
             label="Satuan"
+            options={UNIT_OPTIONS}
             value={form.unit}
             onChange={(e) => set({ unit: e.target.value })}
-            placeholder="kg / liter / pcs"
           />
           <Field
             label="Harga Satuan"
