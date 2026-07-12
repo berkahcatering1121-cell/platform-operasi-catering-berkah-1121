@@ -8,20 +8,29 @@ Query · Supabase (Postgres + Auth + Storage + Row Level Security).
 
 ## Status
 
-Fondasi terpasang dan sudah diverifikasi berjalan:
-
 - **Database** — skema lengkap, kebijakan RLS berbasis peran, view/fungsi
-  turunan (HPP/margin, subtotal, sisa, saldo berjalan, depresiasi, P&L).
-  Lihat [`supabase/README.md`](supabase/README.md).
+  turunan (HPP/margin, subtotal, sisa, saldo berjalan, depresiasi, P&L), dan
+  Edge Function `admin-users` untuk manajemen akun. Lihat
+  [`supabase/README.md`](supabase/README.md) & [`supabase/RUNBOOK.md`](supabase/RUNBOOK.md).
 - **Aplikasi** — proyek Vite, Supabase client, autentikasi asli (login ID
-  Pengguna/password), splash bermerek, layar Login, dan layout shell sidebar
-  11 modul dengan navigasi terfilter izin, drawer mobile, dan tombol layar
-  penuh.
+  Pengguna/password), splash bermerek, layar Login, layout shell sidebar dengan
+  navigasi terfilter izin, drawer mobile, dan tombol layar penuh.
 
-Modul (Dashboard, Master Data, Pembelian, Penjualan, Gaji, Biaya Operasional,
-Hutang, Petty Cash, Aset, P&L, Manajemen Pengguna) saat ini berupa placeholder
-yang sudah ter-route dan ter-gate izin — konten dibangun bertahap pada tahap
-berikutnya.
+**Modul (semua terpasang & wired ke Supabase):**
+
+| Modul | Isi |
+| --- | --- |
+| Master Data | Kategori & Referensi, Supplier, Karyawan, Menu & Harga Jual + editor resep HPP/margin |
+| Pembelian | Grup per bulan + subtotal, foto bukti, PIC, satuan dropdown |
+| Penjualan | Sisa Pembayaran (DP), harga/porsi dari Master Data (overridable) |
+| Gaji | Kalender hari kerja (harian) + gaji bulanan; edit/hapus khusus Super Admin & Admin |
+| Biaya Operasional | Kategori + foto nota, subtotal per bulan |
+| Hutang | Kartu ringkasan, sisa & status otomatis |
+| Petty Cash | Saldo berjalan otomatis, badge Settle per bulan |
+| Aset & Depresiasi | Garis lurus, akumulasi & nilai buku otomatis → P&L |
+| P&L | 12 bulan + total tahunan, EBITDA, margin, kolom sticky, read-only |
+| Manajemen Pengguna | Akun + role + izin per-modul, Daftar Peran (Super Admin only) |
+| Dashboard | (belum dibangun — placeholder) |
 
 ## Menjalankan
 

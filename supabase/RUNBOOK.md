@@ -76,6 +76,33 @@ supabase db push                 # menjalankan migrations 0001–0004 berurutan
 
 ---
 
+## Edge Function untuk Manajemen Pengguna (opsional, untuk membuat akun dari aplikasi)
+
+Membuat / menghapus akun login butuh **service_role key** (Supabase Auth Admin
+API) yang tidak boleh ada di browser. Karena itu modul **Manajemen Pengguna**
+memanggil Edge Function `admin-users` yang berjalan di server, memverifikasi
+pemanggil adalah **Super Admin**, lalu menjalankan operasinya. Tanpa function
+ini, halaman tetap bisa menampilkan & mengedit **profil/role/izin** yang ada,
+tetapi tombol tambah/hapus akun akan memberi pesan “belum ter-deploy”.
+
+Deploy dari mesin Anda (butuh Supabase CLI + Docker):
+
+```bash
+supabase link --project-ref jjjsjnxprakztdsubsnl
+supabase functions deploy admin-users
+supabase secrets set AUTH_EMAIL_DOMAIN=catering-berkah.local
+```
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, dan `SUPABASE_SERVICE_ROLE_KEY` disuntik
+otomatis oleh platform — tidak perlu di-set manual. Setelah deploy, login
+sebagai `dony` (Super Admin) → **Manajemen Pengguna** → **+ Pengguna** untuk
+membuat akun baru lengkap dengan password, role, dan izin per-modul.
+
+> **Tanpa deploy?** Anda tetap bisa membuat akun lewat Dashboard (Authentication
+> → Add user) + query insert profil seperti pada langkah A3.
+
+---
+
 ## Setelah database siap
 
 Beri tahu saya (idealnya dengan hasil query verifikasi A2). Frontend sudah
