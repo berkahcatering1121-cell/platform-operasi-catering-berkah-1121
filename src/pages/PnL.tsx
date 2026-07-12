@@ -32,7 +32,10 @@ const ROWS: RowDef[] = [
   { kind: 'money', label: 'Depresiasi Aset', get: (m) => m.beban_depresiasi, indent: true },
   { kind: 'money', label: 'Total Beban Operasional', get: (m) => m.total_beban_operasional, strong: true, tint: 'bg-app-panel' },
   { kind: 'money', label: 'Laba Bersih', get: (m) => m.laba_bersih, strong: true, tint: 'bg-gold-tint' },
-  { kind: 'pct', label: 'Margin Bersih', numr: (m) => m.laba_bersih, den: (m) => m.pendapatan },
+  // EBITDA = Laba Bersih + Depresiasi Aset (no interest/tax/amortisation tracked here).
+  { kind: 'money', label: 'EBITDA', get: (m) => m.laba_bersih + m.beban_depresiasi, strong: true, tint: 'bg-app-panel' },
+  { kind: 'pct', label: 'Margin EBITDA', numr: (m) => m.laba_bersih + m.beban_depresiasi, den: (m) => m.pendapatan },
+  { kind: 'pct', label: 'Margin Laba Bersih', numr: (m) => m.laba_bersih, den: (m) => m.pendapatan },
 ]
 
 export default function PnL() {
@@ -83,7 +86,7 @@ export default function PnL() {
       ) : (
         <Card bodyClassName="">
           <div className="border-b border-app-border px-4 py-2 text-[11px] text-ink-muted">
-            Semua angka dalam Rupiah · read-only, dihitung otomatis
+            Semua angka dalam Rupiah · read-only, dihitung otomatis · EBITDA = Laba Bersih + Depresiasi Aset
           </div>
           <div className="cb-scroll overflow-x-auto">
             <table className="w-full border-collapse">
