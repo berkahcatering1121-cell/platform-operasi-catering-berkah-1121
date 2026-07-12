@@ -97,6 +97,20 @@ export interface PurchaseView {
   month_key: string
 }
 
+// From v_debts (computed sisa + automatic status).
+export interface DebtView {
+  id: string
+  debt_date: string
+  creditor: string
+  debt_type: string | null
+  description: string | null
+  amount: number
+  due_date: string | null
+  paid_amount: number
+  sisa: number
+  status: string
+}
+
 export interface OperationalCost {
   id: string
   cost_date: string
