@@ -97,6 +97,21 @@ export interface PurchaseView {
   month_key: string
 }
 
+// From v_assets (straight-line depreciation computed as of today).
+export interface AssetView {
+  id: string
+  acquisition_date: string
+  name: string
+  category: string | null
+  acquisition_cost: number
+  economic_life_months: number
+  residual_value: number
+  dep_per_month: number
+  months_elapsed: number
+  accumulated_depreciation: number
+  book_value: number
+}
+
 export interface PettyPeriod {
   id: string
   period_month: string
