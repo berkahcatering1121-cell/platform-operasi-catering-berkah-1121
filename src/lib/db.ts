@@ -97,6 +97,27 @@ export interface PurchaseView {
   month_key: string
 }
 
+export interface OperationalCost {
+  id: string
+  cost_date: string
+  description: string
+  category: string
+  amount: number
+  method: string | null
+  notes: string | null
+  photos: string[]
+}
+
+// Operational-cost categories. Labels are keyword-compatible with get_pnl's
+// P&L bucketing (Sewa / Listrik-Air-Gas / Transport / Marketing / Lain-lain).
+export const OPEX_CATEGORIES = [
+  'Sewa Tempat & Dapur',
+  'Listrik, Air & Gas',
+  'Transportasi & Pengiriman',
+  'Marketing & Promosi',
+  'Biaya Lain-lain',
+] as const
+
 // From v_payroll (computed base_pay / total_beban / take_home + employee cols).
 export interface PayrollView {
   id: string
