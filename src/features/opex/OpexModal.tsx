@@ -94,7 +94,7 @@ export default function OpexModal({ open, onClose, editing }: Props) {
             inputMode="numeric"
             value={form.amount}
             onChange={(e) => set({ amount: e.target.value.replace(/[^\d]/g, '') })}
-            placeholder="4000000"
+            placeholder="Masukkan nominal"
           />
         </div>
 
@@ -102,7 +102,7 @@ export default function OpexModal({ open, onClose, editing }: Props) {
           label="Keterangan"
           value={form.description}
           onChange={(e) => set({ description: e.target.value })}
-          placeholder="mis. Sewa dapur & tempat bulanan"
+          placeholder="Ketik keterangan"
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -125,7 +125,7 @@ export default function OpexModal({ open, onClose, editing }: Props) {
           label="Catatan"
           value={form.notes}
           onChange={(e) => set({ notes: e.target.value })}
-          placeholder="opsional"
+          placeholder="Opsional — ketik catatan"
         />
 
         <PhotoUploader

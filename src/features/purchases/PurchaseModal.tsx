@@ -120,7 +120,7 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
           label="Bahan"
           value={form.material_name}
           onChange={(e) => set({ material_name: e.target.value })}
-          placeholder="mis. Ayam Potong"
+          placeholder="Ketik nama bahan"
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -148,7 +148,7 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
             inputMode="decimal"
             value={form.qty}
             onChange={(e) => set({ qty: e.target.value.replace(/[^\d.]/g, '') })}
-            placeholder="40"
+            placeholder="Masukkan jumlah"
           />
           <SelectField
             label="Satuan"
@@ -162,7 +162,7 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
             inputMode="numeric"
             value={form.unit_price}
             onChange={(e) => set({ unit_price: e.target.value.replace(/[^\d]/g, '') })}
-            placeholder="38000"
+            placeholder="Masukkan nominal"
           />
         </div>
 
@@ -181,7 +181,7 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
           label="Catatan"
           value={form.notes}
           onChange={(e) => set({ notes: e.target.value })}
-          placeholder="opsional"
+          placeholder="Opsional — ketik catatan"
         />
 
         <PhotoUploader prefix="purchases" value={form.photos} onChange={(photos) => set({ photos })} />

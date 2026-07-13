@@ -138,7 +138,7 @@ export default function KaryawanTab() {
               label="Nama"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="mis. Mpok Irma"
+              placeholder="Ketik nama karyawan"
               autoFocus
             />
             <div className="grid grid-cols-2 gap-3">
@@ -146,13 +146,13 @@ export default function KaryawanTab() {
                 label="Jabatan"
                 value={form.position}
                 onChange={(e) => setForm({ ...form, position: e.target.value })}
-                placeholder="mis. Head Cook"
+                placeholder="Ketik jabatan"
               />
               <Field
                 label="Departemen"
                 value={form.department}
                 onChange={(e) => setForm({ ...form, department: e.target.value })}
-                placeholder="mis. Produksi/Dapur"
+                placeholder="Ketik departemen"
               />
             </div>
             <SelectField
@@ -172,7 +172,7 @@ export default function KaryawanTab() {
                 inputMode="numeric"
                 value={form.base_salary}
                 onChange={(e) => setForm({ ...form, base_salary: e.target.value.replace(/[^\d]/g, '') })}
-                placeholder="4000000"
+                placeholder="Masukkan nominal"
               />
             ) : (
               <Field
@@ -181,7 +181,7 @@ export default function KaryawanTab() {
                 inputMode="numeric"
                 value={form.daily_wage}
                 onChange={(e) => setForm({ ...form, daily_wage: e.target.value.replace(/[^\d]/g, '') })}
-                placeholder="120000"
+                placeholder="Masukkan nominal"
               />
             )}
             {save.isError && <p className="text-[11.5px] text-danger">{(save.error as Error).message}</p>}

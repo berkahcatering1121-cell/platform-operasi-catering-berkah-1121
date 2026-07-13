@@ -92,7 +92,7 @@ export default function AssetModal({ open, onClose, editing }: Props) {
             label="Kategori"
             value={form.category}
             onChange={(e) => set({ category: e.target.value })}
-            placeholder="mis. Kendaraan / Peralatan Dapur"
+            placeholder="Ketik kategori aset"
           />
         </div>
 
@@ -100,7 +100,7 @@ export default function AssetModal({ open, onClose, editing }: Props) {
           label="Nama Aset"
           value={form.name}
           onChange={(e) => set({ name: e.target.value })}
-          placeholder="mis. Mobil Box Grand Max"
+          placeholder="Ketik nama aset"
         />
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -110,14 +110,14 @@ export default function AssetModal({ open, onClose, editing }: Props) {
             inputMode="numeric"
             value={form.acquisition_cost}
             onChange={(e) => set({ acquisition_cost: e.target.value.replace(/[^\d]/g, '') })}
-            placeholder="8000000"
+            placeholder="Masukkan nominal"
           />
           <Field
             label="Umur (bulan)"
             inputMode="numeric"
             value={form.economic_life_months}
             onChange={(e) => set({ economic_life_months: e.target.value.replace(/[^\d]/g, '') })}
-            placeholder="48"
+            placeholder="Masukkan jumlah bulan"
           />
           <Field
             label="Nilai Residu"
@@ -125,7 +125,7 @@ export default function AssetModal({ open, onClose, editing }: Props) {
             inputMode="numeric"
             value={form.residual_value}
             onChange={(e) => set({ residual_value: e.target.value.replace(/[^\d]/g, '') })}
-            placeholder="0"
+            placeholder="Masukkan nominal"
           />
         </div>
 

@@ -73,7 +73,7 @@ export default function PeriodModal({ open, onClose, editing }: Props) {
           inputMode="numeric"
           value={form.opening_balance}
           onChange={(e) => set({ opening_balance: e.target.value.replace(/[^\d]/g, '') })}
-          placeholder="5000000"
+          placeholder="Masukkan nominal"
         />
         <label className="flex items-center gap-2.5 rounded-field border border-app-border bg-app-panel px-3 py-2.5">
           <input

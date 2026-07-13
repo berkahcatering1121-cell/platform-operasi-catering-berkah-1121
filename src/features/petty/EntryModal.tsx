@@ -93,7 +93,7 @@ export default function EntryModal({ open, onClose, periodId, periodMonth, editi
           label="Keterangan"
           value={form.description}
           onChange={(e) => set({ description: e.target.value })}
-          placeholder="mis. Beli galon & es batu"
+          placeholder="Ketik keterangan"
         />
         <Field
           label="Jumlah"
@@ -101,7 +101,7 @@ export default function EntryModal({ open, onClose, periodId, periodMonth, editi
           inputMode="numeric"
           value={form.amount}
           onChange={(e) => set({ amount: e.target.value.replace(/[^\d]/g, '') })}
-          placeholder="85000"
+          placeholder="Masukkan nominal"
         />
         <PhotoUploader prefix="petty" label="Foto Bukti" value={form.photos} onChange={(photos) => set({ photos })} />
         {save.isError && <p className="text-[11.5px] text-danger">{(save.error as Error).message}</p>}

@@ -135,7 +135,7 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
             inputMode="numeric"
             value={price}
             onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
-            placeholder="32000"
+            placeholder="Masukkan nominal"
           />
         </div>
 
@@ -143,7 +143,7 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
           label="Nama Menu"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="mis. Nasi Kuning Komplit"
+          placeholder="Ketik nama menu"
         />
 
         <div>
@@ -152,7 +152,7 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
             rows={2}
-            placeholder="nasi kuning, ayam goreng serundeng, telor suwir, kerupuk, alat makan…"
+            placeholder="Ketik komposisi/isi menu"
             className="field-manual w-full rounded-field px-3 py-2 text-[13px] font-medium leading-relaxed outline-none"
           />
         </div>
