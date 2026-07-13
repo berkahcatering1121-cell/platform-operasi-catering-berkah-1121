@@ -4,18 +4,22 @@ import { ID_MONTHS_SHORT, formatRupiahShort } from '@/lib/format'
 export interface Series {
   label: string
   color: string
-  values: number[] // length 12
+  values: number[]
 }
 
 interface Props {
   series: Series[]
+  /** X-axis labels; defaults to the 12 short month names. */
+  labels?: string[]
 }
 
 /**
  * Monthly line chart (inline SVG) — Pendapatan / Pembelian / Laba Bersih.
  * Values are scaled to the combined maximum; the y-axis is labelled in juta.
  */
-export default function LineChart({ series }: Props) {
+export default function LineChart({ series, labels }: Props) {
+  const xLabels = labels ?? ID_MONTHS_SHORT
+  const n = Math.max(1, series[0]?.values.length ?? xLabels.length)
   const W = 820
   const H = 280
   const padL = 46
@@ -32,7 +36,7 @@ export default function LineChart({ series }: Props) {
     return Math.ceil(m / mag) * mag
   }, [series])
 
-  const x = (i: number) => padL + (i * plotW) / 11
+  const x = (i: number) => padL + (n > 1 ? (i * plotW) / (n - 1) : plotW / 2)
   const y = (v: number) => padT + (1 - v / max) * plotH
   const gridVals = [0, 0.25, 0.5, 0.75, 1].map((f) => f * max)
 
@@ -49,8 +53,8 @@ export default function LineChart({ series }: Props) {
           </g>
         ))}
         {/* x labels */}
-        {ID_MONTHS_SHORT.map((m, i) => (
-          <text key={m} x={x(i)} y={H - 10} textAnchor="middle" fontSize={9.5} fill="#A79A87">
+        {xLabels.map((m, i) => (
+          <text key={i} x={x(i)} y={H - 10} textAnchor="middle" fontSize={9.5} fill="#A79A87">
             {m}
           </text>
         ))}

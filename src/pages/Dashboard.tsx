@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
 import { formatPercent, formatRupiahShort } from '@/lib/format'
-import { usePnl } from '@/features/pnl/api'
+import { ID_MONTHS_SHORT } from '@/lib/format'
+import { usePnl, type PnlMonth } from '@/features/pnl/api'
 import { usePurchases } from '@/features/purchases/api'
 import { useSales } from '@/features/sales/api'
 import LineChart from '@/features/dashboard/LineChart'
@@ -78,8 +79,16 @@ export default function Dashboard() {
     [sales.data, year],
   )
 
+  // Trim the chart to the contiguous range of active months (mirrors P&L).
+  const shownMonths = useMemo(() => {
+    const active = (m: PnlMonth) => m.pendapatan !== 0 || m.hpp !== 0 || m.laba_bersih !== 0
+    const idxs = months.map((m, i) => (active(m) ? i : -1)).filter((i) => i >= 0)
+    if (!idxs.length) return months
+    return months.slice(Math.min(...idxs), Math.max(...idxs) + 1)
+  }, [months])
+
   const kpis = [
-    { label: 'Total Pendapatan', value: formatRupiahShort(totals.rev), sub: `Jan–Des ${year}` },
+    { label: 'Total Pendapatan', value: formatRupiahShort(totals.rev), sub: `Total tahun ${year}` },
     {
       label: 'Total Pembelian Bahan Baku',
       value: formatRupiahShort(totals.purch),
@@ -145,10 +154,11 @@ export default function Dashboard() {
               ))}
             </div>
             <LineChart
+              labels={shownMonths.map((m) => ID_MONTHS_SHORT[m.month_no - 1])}
               series={[
-                { label: 'Pendapatan', color: '#C9A93B', values: months.map((m) => m.pendapatan) },
-                { label: 'Pembelian', color: '#6BA588', values: months.map((m) => m.hpp) },
-                { label: 'Laba Bersih', color: '#16603F', values: months.map((m) => m.laba_bersih) },
+                { label: 'Pendapatan', color: '#C9A93B', values: shownMonths.map((m) => m.pendapatan) },
+                { label: 'Pembelian', color: '#6BA588', values: shownMonths.map((m) => m.hpp) },
+                { label: 'Laba Bersih', color: '#16603F', values: shownMonths.map((m) => m.laba_bersih) },
               ]}
             />
           </Card>

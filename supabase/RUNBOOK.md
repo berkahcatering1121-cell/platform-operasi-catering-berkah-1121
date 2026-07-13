@@ -76,6 +76,16 @@ supabase db push                 # menjalankan migrations 0001–0004 berurutan
 
 ---
 
+## Data contoh (demo) — Juli–Desember 2026
+
+Untuk mengisi contoh transaksi di semua modul (dimulai Juli 2026, bulan sebelum
+Juli dikosongkan), jalankan **`supabase/seed_demo.sql`** di SQL Editor. Skrip ini
+me-*reset* lalu mengisi ulang tabel transaksi + suppliers + employees + assets
+(data referensi, menu, dan akun login tidak disentuh). P&L & Dashboard otomatis
+hanya menampilkan bulan yang ada datanya (Jul–Des 2026) + Total.
+
+---
+
 ## Edge Function untuk Manajemen Pengguna (opsional, untuk membuat akun dari aplikasi)
 
 Membuat / menghapus akun login butuh **service_role key** (Supabase Auth Admin
