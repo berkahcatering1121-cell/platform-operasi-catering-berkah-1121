@@ -60,7 +60,7 @@ export default function Sidebar({
       {/* Brand header */}
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
-          <img src="/assets/app-icon-white.png" alt="" width={34} height={34} />
+          <img src="/assets/app-icon-white.png" alt="" width={48} height={48} className="flex-none" />
           <div className="min-w-0">
             <div className="truncate text-[13.5px] font-extrabold leading-tight">
               Catering Berkah 1121
