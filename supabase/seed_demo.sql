@@ -1,76 +1,54 @@
 -- =====================================================================
 -- Catering Berkah 1121 — DEMO DATA (Juli–Desember 2026)
 -- =====================================================================
--- Mengisi contoh data transaksi untuk SEMUA modul, dimulai Juli 2026.
--- Bulan sebelum Juli 2026 sengaja dikosongkan (tidak ada transaksi), jadi
--- P&L & Dashboard hanya menampilkan Jul–Des 2026 + Total.
+-- Mengisi contoh transaksi Jul–Des 2026 TANPA menyentuh:
+--   • Master Data  : suppliers, employees (karyawan), menu, kategori
+--   • Gaji         : payroll + payroll_days
+--   • Akun login   : profiles / roles
+-- Hanya me-*reset* & mengisi ulang: purchases, sales, operational_costs,
+-- debts, petty_cash, dan assets. Bulan sebelum Juli 2026 tetap kosong.
 --
--- ⚠️ RESET: skrip ini MENGHAPUS lalu mengisi ulang tabel transaksi + suppliers
--- + employees + assets agar hasilnya konsisten dan bisa dijalankan ulang.
--- Data referensi (roles, kategori, metode/status pembayaran), menu, akun
--- login (profiles) TIDAK disentuh. Jalankan sekali di Supabase SQL Editor.
+-- Catatan: kolom bulan di P&L (Jan–Des) diatur oleh aplikasi, bukan seed —
+-- Jan–Jun tampil kosong karena tidak ada transaksi. Aman dijalankan ulang.
+-- Jalankan sekali di Supabase SQL Editor.
 -- =====================================================================
 
 begin;
 
 do $$
 declare
-  -- master-data ids
-  sup_ayam uuid; sup_daging uuid; sup_sayur uuid; sup_sembako uuid; sup_bumbu uuid; sup_box uuid;
-  e_irma uuid; e_yuli uuid; e_roni uuid; e_amira uuid; e_maya uuid; e_rina uuid; e_dony uuid;
-  -- loop scratch
-  i int; m date; mend date; r numeric; p numeric; pid uuid; pp uuid; erow record;
+  sup_ayam uuid; sup_sayur uuid; sup_sembako uuid; sup_bumbu uuid; sup_box uuid;
+  e_maya uuid; e_rina uuid;
+  i int; m date; mend date; r numeric; p numeric; pp uuid;
   listrik numeric; transport numeric; marketing numeric; lain numeric;
   thw_p int; krd_p int; bkl_p int; bng_p int; bkl_total numeric;
   revs   numeric[] := array[98600000, 102300000, 110450000, 118200000, 132600000, 145800000];
   ratios numeric[] := array[0.45, 0.44, 0.43, 0.42, 0.41, 0.40];
 begin
   ------------------------------------------------------------------
-  -- RESET demo tables
+  -- Ambil referensi Master Data yang SUDAH ADA (tidak diubah)
+  ------------------------------------------------------------------
+  select id into sup_ayam    from public.suppliers where category = 'Protein Hewani'         order by name limit 1;
+  select id into sup_sayur   from public.suppliers where category = 'Sayur & Buah'           order by name limit 1;
+  select id into sup_sembako from public.suppliers where category = 'Bahan Kering & Sembako' order by name limit 1;
+  select id into sup_bumbu   from public.suppliers where category = 'Bumbu & Rempah'         order by name limit 1;
+  select id into sup_box     from public.suppliers where category = 'Kemasan & Box'          order by name limit 1;
+
+  -- PIC diambil dari karyawan yang ada (fallback ke karyawan mana pun)
+  select id into e_maya from public.employees where name ilike '%maya%' order by name limit 1;
+  select id into e_rina from public.employees where name ilike '%rina%' order by name limit 1;
+  if e_rina is null then select id into e_rina from public.employees order by name limit 1; end if;
+  if e_maya is null then e_maya := e_rina; end if;
+
+  ------------------------------------------------------------------
+  -- RESET hanya transaksi non-Gaji (Master Data, Menu & Gaji dibiarkan)
   ------------------------------------------------------------------
   delete from public.purchases;
   delete from public.sales;
-  delete from public.payroll;             -- cascade -> payroll_days
   delete from public.operational_costs;
   delete from public.debts;
-  delete from public.petty_cash_periods;  -- cascade -> petty_cash_entries
+  delete from public.petty_cash_periods;   -- cascade -> petty_cash_entries
   delete from public.assets;
-  delete from public.employees;
-  delete from public.suppliers;
-
-  ------------------------------------------------------------------
-  -- Suppliers
-  ------------------------------------------------------------------
-  insert into public.suppliers(name, category, phone) values
-    ('Agen Ayam Potong Barokah', 'Protein Hewani', '0812-3456-7801') returning id into sup_ayam;
-  insert into public.suppliers(name, category, phone) values
-    ('Toko Daging H. Somad', 'Protein Hewani', '0813-9922-1144') returning id into sup_daging;
-  insert into public.suppliers(name, category, phone) values
-    ('Pasar Induk Berkat Jaya', 'Sayur & Buah', '0857-1200-3355') returning id into sup_sayur;
-  insert into public.suppliers(name, category, phone) values
-    ('CV Sumber Sembako', 'Bahan Kering & Sembako', '0821-4455-6677') returning id into sup_sembako;
-  insert into public.suppliers(name, category, phone) values
-    ('UD Bumbu Nusantara', 'Bumbu & Rempah', '0812-7788-9900') returning id into sup_bumbu;
-  insert into public.suppliers(name, category, phone) values
-    ('Berkah Packaging', 'Kemasan & Box', '0851-2233-4455') returning id into sup_box;
-
-  ------------------------------------------------------------------
-  -- Employees (4 Harian + 3 Bulanan)
-  ------------------------------------------------------------------
-  insert into public.employees(name, position, department, salary_type, base_salary, daily_wage) values
-    ('Mpok Irma', 'Head Cook', 'Produksi/Dapur', 'Harian', 0, 200000) returning id into e_irma;
-  insert into public.employees(name, position, department, salary_type, base_salary, daily_wage) values
-    ('Yuli', 'Staff Dapur', 'Produksi/Dapur', 'Harian', 0, 150000) returning id into e_yuli;
-  insert into public.employees(name, position, department, salary_type, base_salary, daily_wage) values
-    ('Roni', 'Staff Dapur', 'Produksi/Dapur', 'Harian', 0, 100000) returning id into e_roni;
-  insert into public.employees(name, position, department, salary_type, base_salary, daily_wage) values
-    ('Amira', 'Staff Dapur', 'Produksi/Dapur', 'Harian', 0, 100000) returning id into e_amira;
-  insert into public.employees(name, position, department, salary_type, base_salary, daily_wage) values
-    ('Maya Putri', 'Marketing', 'Kantor', 'Bulanan', 3500000, 0) returning id into e_maya;
-  insert into public.employees(name, position, department, salary_type, base_salary, daily_wage) values
-    ('Rina Marlina', 'Admin & Keuangan', 'Kantor', 'Bulanan', 3800000, 0) returning id into e_rina;
-  insert into public.employees(name, position, department, salary_type, base_salary, daily_wage) values
-    ('Dony Renato', 'Direktur Keuangan', 'Kantor', 'Bulanan', 4000000, 0) returning id into e_dony;
 
   ------------------------------------------------------------------
   -- Assets (diperoleh Juli 2026 -> depresiasi mengalir Jul–Des)
@@ -136,26 +114,6 @@ begin
       (m + 13, 'Iklan & promosi',             'Marketing & Promosi',        marketing, 'QRIS',             null),
       (m + 17, 'Biaya lain-lain operasional', 'Biaya Lain-lain',            lain,      'Tunai',            null);
 
-    -- ---- Gaji: Harian pakai kalender hari kerja; Bulanan gaji tetap ----
-    for erow in select id, salary_type from public.employees loop
-      if erow.salary_type = 'Harian' then
-        insert into public.payroll(employee_id, period_month, period_label, pay_date, days_worked, allowance, bonus, deduction, status)
-          values (erow.id, m,
-            'Gaji Bulanan ' || (array['Juli','Agustus','September','Oktober','November','Desember'])[i + 1] || ' 2026',
-            mend - 1, 0, 0, 0, 0, case when i <= 1 then 'Dibayar' else 'Belum' end)
-          returning id into pid;
-        insert into public.payroll_days(payroll_id, work_date)
-          select pid, gs::date from generate_series(m, mend - 1, interval '1 day') gs
-          where extract(dow from gs) <> 0;   -- semua hari kecuali Minggu
-        update public.payroll set days_worked = (select count(*) from public.payroll_days where payroll_id = pid) where id = pid;
-      else
-        insert into public.payroll(employee_id, period_month, period_label, pay_date, days_worked, allowance, bonus, deduction, status)
-          values (erow.id, m,
-            'Gaji Bulanan ' || (array['Juli','Agustus','September','Oktober','November','Desember'])[i + 1] || ' 2026',
-            mend - 1, 0, 200000, 0, 0, case when i <= 1 then 'Dibayar' else 'Belum' end);
-      end if;
-    end loop;
-
     -- ---- Petty cash: satu periode per bulan + beberapa transaksi ----
     insert into public.petty_cash_periods(period_month, opening_balance, is_settled)
       values (m, 5000000, i <= 3) returning id into pp;
@@ -172,4 +130,4 @@ commit;
 
 -- Verifikasi cepat (opsional):
 --   select month_no, pendapatan, laba_bersih from public.get_pnl(2026) order by month_no;
---   -> baris 1..6 (Jan–Jun) = 0, baris 7..12 (Jul–Des) terisi.
+--   -> Jan–Jun (1..6) = 0, Jul–Des (7..12) terisi. Gaji & Master Data tetap.

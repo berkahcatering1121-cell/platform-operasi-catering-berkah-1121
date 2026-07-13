@@ -52,21 +52,11 @@ export default function PnL() {
   const pnl = usePnl(year)
   const months = pnl.data ?? []
 
-  // Annual totals always sum the whole year.
+  // Annual totals sum the whole year. All 12 months (Jan–Des) are always shown;
+  // months with no activity simply render empty.
   const annual = useMemo(() => {
     const sum = (f: (m: PnlMonth) => number) => months.reduce((t, m) => t + f(m), 0)
     return { sum }
-  }, [months])
-
-  // Only show the contiguous range of months that actually have activity, so a
-  // business that started mid-year (e.g. Juli) shows Jul–Des instead of leading
-  // empty columns. Falls back to all 12 months when there is no data at all.
-  const shownMonths = useMemo(() => {
-    const active = (m: PnlMonth) =>
-      m.pendapatan !== 0 || m.hpp !== 0 || m.total_beban_operasional !== 0 || m.laba_bersih !== 0
-    const idxs = months.map((m, i) => (active(m) ? i : -1)).filter((i) => i >= 0)
-    if (!idxs.length) return months
-    return months.slice(Math.min(...idxs), Math.max(...idxs) + 1)
   }, [months])
 
   const labelBase = 'sticky left-0 z-10 px-3 py-[10px] text-[12px] whitespace-nowrap border-t border-[#F1EBE2]'
@@ -116,7 +106,7 @@ export default function PnL() {
                   >
                     Keterangan
                   </th>
-                  {shownMonths.map((m) => (
+                  {months.map((m) => (
                     <th
                       key={m.month_no}
                       className={`${cellBase} bg-app-panel text-[10.5px] font-extrabold uppercase tracking-[0.05em] text-ink-muted`}
@@ -139,7 +129,7 @@ export default function PnL() {
                         <td className={`${labelBase} bg-[#F1F6F2] text-[11px] font-extrabold uppercase tracking-[0.05em] text-brand`}>
                           {row.label}
                         </td>
-                        <td className="bg-[#F1F6F2] border-t border-[#E1EBE3]" colSpan={shownMonths.length + 1} />
+                        <td className="bg-[#F1F6F2] border-t border-[#E1EBE3]" colSpan={13} />
                       </tr>
                     )
                   }
@@ -150,7 +140,7 @@ export default function PnL() {
                     return (
                       <tr key={ri}>
                         <td className={`${labelBase} bg-app-card italic text-ink-muted`}>{row.label}</td>
-                        {shownMonths.map((m) => {
+                        {months.map((m) => {
                           const d = row.den(m)
                           return (
                             <td key={m.month_no} className={`${cellBase} bg-app-card text-ink-muted`}>
@@ -192,7 +182,7 @@ export default function PnL() {
                   return (
                     <tr key={ri}>
                       <td className={labelCls}>{row.label}</td>
-                      {shownMonths.map((m) => (
+                      {months.map((m) => (
                         <td key={m.month_no} className={valueCls(row.get(m))}>
                           {num(row.get(m))}
                         </td>
