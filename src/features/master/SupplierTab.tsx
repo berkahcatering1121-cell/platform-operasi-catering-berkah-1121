@@ -116,7 +116,7 @@ export default function SupplierTab() {
               variant="manual"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Ketik nama supplier"
+              placeholder="Ketik Nama Supplier"
               autoFocus
             />
             <SelectField
@@ -132,7 +132,7 @@ export default function SupplierTab() {
               variant="manual"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="Ketik nomor kontak"
+              placeholder="Ketik Nomor Kontak"
             />
             {save.isError && <p className="text-[11.5px] text-danger">{(save.error as Error).message}</p>}
           </form>

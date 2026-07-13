@@ -141,7 +141,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
           label="Customer / Event"
           value={form.customer}
           onChange={(e) => set({ customer: e.target.value })}
-          placeholder="Ketik nama customer / event"
+          placeholder="Ketik Nama Customer / Event"
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -168,7 +168,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
           label="Nama Menu"
           value={form.menu_name}
           onChange={(e) => set({ menu_name: e.target.value })}
-          placeholder="Ketik atau pilih dari Menu di atas"
+          placeholder="Ketik atau Pilih dari Menu di Atas"
         />
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -177,7 +177,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
             inputMode="decimal"
             value={form.portions}
             onChange={(e) => set({ portions: e.target.value.replace(/[^\d.]/g, '') })}
-            placeholder="Masukkan jumlah porsi"
+            placeholder="Masukkan Jumlah Porsi"
           />
           <Field
             label="Harga / Porsi"
@@ -187,7 +187,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
             hint="bisa di-override"
             value={form.price_per_portion}
             onChange={(e) => set({ price_per_portion: e.target.value.replace(/[^\d]/g, '') })}
-            placeholder="Masukkan nominal"
+            placeholder="Masukkan Nominal"
           />
           <Field label="Total" variant="auto" readOnly value={formatRupiah(total)} />
         </div>
@@ -200,7 +200,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
               inputMode="numeric"
               value={form.paid_amount}
               onChange={(e) => set({ paid_amount: e.target.value.replace(/[^\d]/g, '') })}
-              placeholder="Masukkan nominal"
+              placeholder="Masukkan Nominal"
             />
             <Field label="Sisa Pembayaran" variant="auto" readOnly value={formatRupiah(sisa)} />
           </div>
@@ -228,7 +228,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
           label="Catatan"
           value={form.notes}
           onChange={(e) => set({ notes: e.target.value })}
-          placeholder="Opsional — ketik catatan"
+          placeholder="Opsional — Ketik Catatan"
         />
 
         <PhotoUploader prefix="sales" value={form.photos} onChange={(photos) => set({ photos })} />

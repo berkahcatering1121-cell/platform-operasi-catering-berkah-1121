@@ -102,13 +102,13 @@ export default function DebtModal({ open, onClose, editing }: Props) {
             label="Kreditur"
             value={form.creditor}
             onChange={(e) => set({ creditor: e.target.value })}
-            placeholder="Ketik nama kreditur"
+            placeholder="Ketik Nama Kreditur"
           />
           <Field
             label="Jenis"
             value={form.debt_type}
             onChange={(e) => set({ debt_type: e.target.value })}
-            placeholder="Ketik jenis hutang"
+            placeholder="Ketik Jenis Hutang"
           />
         </div>
 
@@ -116,7 +116,7 @@ export default function DebtModal({ open, onClose, editing }: Props) {
           label="Keterangan"
           value={form.description}
           onChange={(e) => set({ description: e.target.value })}
-          placeholder="Ketik keterangan"
+          placeholder="Ketik Keterangan"
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -126,7 +126,7 @@ export default function DebtModal({ open, onClose, editing }: Props) {
             inputMode="numeric"
             value={form.amount}
             onChange={(e) => set({ amount: e.target.value.replace(/[^\d]/g, '') })}
-            placeholder="Masukkan nominal"
+            placeholder="Masukkan Nominal"
           />
           <Field
             label="Sudah Dibayar"
@@ -134,7 +134,7 @@ export default function DebtModal({ open, onClose, editing }: Props) {
             inputMode="numeric"
             value={form.paid_amount}
             onChange={(e) => set({ paid_amount: e.target.value.replace(/[^\d]/g, '') })}
-            placeholder="Masukkan nominal"
+            placeholder="Masukkan Nominal"
           />
         </div>
 

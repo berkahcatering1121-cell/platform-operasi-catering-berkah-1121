@@ -148,7 +148,7 @@ export default function PayrollModal({ open, onClose, editing }: Props) {
           label="Keterangan Periode"
           value={form.period_label}
           onChange={(e) => set({ period_label: e.target.value })}
-          placeholder="Ketik keterangan periode"
+          placeholder="Ketik Keterangan Periode"
         />
 
         {emp && (

@@ -95,14 +95,14 @@ export default function UserModal({ open, onClose, editing, roles }: Props) {
             label="Nama"
             value={form.full_name}
             onChange={(e) => set({ full_name: e.target.value })}
-            placeholder="Ketik nama lengkap"
+            placeholder="Ketik Nama Lengkap"
           />
           <Field
             label="ID Pengguna"
             hint="untuk login"
             value={form.username}
             onChange={(e) => set({ username: e.target.value.replace(/\s/g, '') })}
-            placeholder="Ketik ID login"
+            placeholder="Ketik ID Login"
           />
         </div>
 
@@ -120,7 +120,7 @@ export default function UserModal({ open, onClose, editing, roles }: Props) {
               label="Role baru"
               value={form.customRole}
               onChange={(e) => set({ customRole: e.target.value })}
-              placeholder="Ketik nama peran"
+              placeholder="Ketik Nama Peran"
             />
           ) : (
             <SelectField
