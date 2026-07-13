@@ -19,6 +19,7 @@ export interface Profile {
   role: string
   modules: ModuleKey[]
   is_active: boolean
+  must_change_password: boolean
 }
 
 interface AuthContextValue {
@@ -31,6 +32,8 @@ interface AuthContextValue {
   canAccess: (key: ModuleKey) => boolean
   signIn: (username: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  /** Re-fetch the current user's profile (e.g. after a forced password change). */
+  refreshProfile: () => Promise<void>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -39,11 +42,15 @@ export const AuthContext = createContext<AuthContextValue | null>(null)
 async function loadProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, full_name, role, modules, is_active')
+    .select('id, username, full_name, role, modules, is_active, must_change_password')
     .eq('id', userId)
     .single()
   if (error || !data) return null
-  return { ...data, modules: (data.modules ?? []) as ModuleKey[] } as Profile
+  return {
+    ...data,
+    modules: (data.modules ?? []) as ModuleKey[],
+    must_change_password: data.must_change_password ?? false,
+  } as Profile
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -87,6 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null)
   }, [])
 
+  const refreshProfile = useCallback(async () => {
+    const { data } = await supabase.auth.getUser()
+    if (data.user) setProfile(await loadProfile(data.user.id))
+  }, [])
+
   const isSuperAdmin = profile?.role === 'Super Admin'
   const isAdminOrSuper = profile?.role === 'Super Admin' || profile?.role === 'Admin'
 
@@ -111,8 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canAccess,
       signIn,
       signOut,
+      refreshProfile,
     }),
-    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canAccess, signIn, signOut],
+    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canAccess, signIn, signOut, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

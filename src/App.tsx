@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import Splash from '@/components/Splash'
 import Login from '@/pages/Login'
+import ChangePassword from '@/pages/ChangePassword'
 import AppShell from '@/components/layout/AppShell'
 import RequireModule from '@/routes/RequireModule'
 
@@ -19,7 +20,7 @@ import PnL from '@/pages/PnL'
 import Pengguna from '@/pages/Pengguna'
 
 export default function App() {
-  const { loading, session } = useAuth()
+  const { loading, session, profile } = useAuth()
 
   // Branded splash: show for ~2.2s, then fade out (matches prototype timing).
   const [booting, setBooting] = useState(true)
@@ -42,6 +43,8 @@ export default function App() {
 
   if (booting || loading) return <Splash leaving={splashLeaving} />
   if (!session) return <Login />
+  // First-login: force the user to replace their temporary password.
+  if (profile?.must_change_password) return <ChangePassword />
 
   return (
     <Routes>

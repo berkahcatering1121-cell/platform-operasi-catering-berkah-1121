@@ -55,6 +55,12 @@ create table public.profiles (
   role        text not null references public.roles(name) on update cascade,
   modules     text[] not null default '{}',
   is_active   boolean not null default true,
+  -- Password management: new users get a random temp password and must set
+  -- their own on first login. `visible_password` keeps the current password
+  -- readable for the Super Admin (per business requirement); it is only ever
+  -- exposed via profiles RLS (own row, or Super Admin).
+  must_change_password boolean not null default false,
+  visible_password     text,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );

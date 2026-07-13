@@ -19,6 +19,74 @@ import {
 } from '@/features/users/api'
 import UserModal from '@/features/users/UserModal'
 
+// Super-Admin-only view of a user's current password: masked by default with
+// an eye toggle and copy button. Shows a status hint while the user still
+// needs to pick their own password.
+function PasswordCell({ user }: { user: UserRow }) {
+  const [show, setShow] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  if (!user.visible_password) {
+    return <span className="text-[12px] text-ink-faint">—</span>
+  }
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(user.visible_password ?? '')
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1200)
+    } catch {
+      /* clipboard may be blocked */
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="font-mono text-[13px] font-bold text-ink">
+        {show ? user.visible_password : '••••••••'}
+      </span>
+      <button
+        onClick={() => setShow((v) => !v)}
+        aria-label={show ? 'Sembunyikan' : 'Tampilkan'}
+        className="rounded p-1 text-ink-muted hover:bg-app-panel hover:text-ink"
+      >
+        {show ? (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22" />
+            <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+          </svg>
+        ) : (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        )}
+      </button>
+      <button
+        onClick={copy}
+        aria-label="Salin password"
+        className="rounded p-1 text-ink-muted hover:bg-app-panel hover:text-ink"
+      >
+        {copied ? (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-ok-text">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        ) : (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        )}
+      </button>
+      {user.must_change_password && (
+        <span className="whitespace-nowrap rounded-pill border border-warn-border bg-warn-bg px-2 py-[2px] text-[10px] font-bold text-warn-text">
+          belum diganti
+        </span>
+      )}
+    </div>
+  )
+}
+
 function RoleBadge({ role }: { role: string }) {
   const isSuper = role === 'Super Admin'
   return (
@@ -160,6 +228,7 @@ export default function Pengguna() {
                   <tr>
                     <th className={TH}>Nama</th>
                     <th className={TH}>ID</th>
+                    <th className={TH}>Password</th>
                     <th className={TH}>Role</th>
                     <th className={TH}>Izin Modul</th>
                     <th className={TH}>Status</th>
@@ -172,6 +241,9 @@ export default function Pengguna() {
                       <tr key={u.id}>
                         <td className={TD + ' font-bold text-ink'}>{u.full_name}</td>
                         <td className={TD}>{u.username}</td>
+                        <td className={TD}>
+                          <PasswordCell user={u} />
+                        </td>
                         <td className={TD}>
                           <RoleBadge role={u.role} />
                         </td>
@@ -191,7 +263,7 @@ export default function Pengguna() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6}>
+                      <td colSpan={7}>
                         <EmptyState message="Belum ada pengguna." />
                       </td>
                     </tr>

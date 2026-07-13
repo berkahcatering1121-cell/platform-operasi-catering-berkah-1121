@@ -9,6 +9,8 @@ export interface UserRow {
   role: string
   modules: ModuleKey[]
   is_active: boolean
+  must_change_password: boolean
+  visible_password: string | null
 }
 
 export interface RoleRow {
@@ -39,7 +41,7 @@ export function useUsers() {
       unwrap<UserRow[]>(
         await supabase
           .from('profiles')
-          .select('id, username, full_name, role, modules, is_active')
+          .select('id, username, full_name, role, modules, is_active, must_change_password, visible_password')
           .order('full_name'),
       ),
   })
@@ -53,9 +55,10 @@ export function useRoles() {
   })
 }
 
-// Invoke the admin-users edge function, surfacing its JSON error message.
-async function invokeAdmin(body: Record<string, unknown>): Promise<void> {
-  const { error } = await supabase.functions.invoke('admin-users', { body })
+// Invoke the admin-users edge function, surfacing its JSON error message and
+// returning the parsed response body (e.g. { ok, tempPassword }).
+async function invokeAdmin(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const { data, error } = await supabase.functions.invoke('admin-users', { body })
   if (error) {
     let msg = error.message
     try {
@@ -73,13 +76,13 @@ async function invokeAdmin(body: Record<string, unknown>): Promise<void> {
     }
     throw new Error(msg)
   }
+  return (data ?? {}) as Record<string, unknown>
 }
 
 export interface UserInput {
   id?: string
   username: string
   full_name: string
-  password?: string
   role: string
   modules: ModuleKey[]
 }
@@ -95,22 +98,36 @@ async function ensureRole(name: string) {
 export function useSaveUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: UserInput) => {
+    // Returns the generated temp password on create (undefined on update).
+    mutationFn: async (input: UserInput): Promise<{ tempPassword?: string }> => {
       await ensureRole(input.role)
-      await invokeAdmin({
+      const res = await invokeAdmin({
         action: input.id ? 'update' : 'create',
         id: input.id,
         username: input.username,
         full_name: input.full_name,
-        password: input.password || undefined,
         role: input.role.trim(),
         modules: input.modules,
       })
+      return { tempPassword: res.tempPassword as string | undefined }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: userKeys.users })
       qc.invalidateQueries({ queryKey: userKeys.roles })
     },
+  })
+}
+
+// Super Admin issues a fresh random temp password; user must change it again
+// on next login. Returns the new temp password to hand over.
+export function useResetPassword() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string): Promise<{ tempPassword?: string }> => {
+      const res = await invokeAdmin({ action: 'resetPassword', id })
+      return { tempPassword: res.tempPassword as string | undefined }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.users }),
   })
 }
 
