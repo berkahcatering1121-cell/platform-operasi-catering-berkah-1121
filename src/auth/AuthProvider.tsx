@@ -40,16 +40,31 @@ interface AuthContextValue {
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
 async function loadProfile(userId: string): Promise<Profile | null> {
+  // Core fields only — these always exist, so the profile never fails to load.
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, full_name, role, modules, is_active, must_change_password')
+    .select('id, username, full_name, role, modules, is_active')
     .eq('id', userId)
     .single()
   if (error || !data) return null
+
+  // `must_change_password` is a newer column. Read it defensively so the app
+  // keeps working on databases where the migration hasn't been applied yet
+  // (defaults to false on any error / missing column).
+  let mustChange = false
+  const { data: pw } = await supabase
+    .from('profiles')
+    .select('must_change_password')
+    .eq('id', userId)
+    .maybeSingle()
+  if (pw && typeof (pw as { must_change_password?: boolean }).must_change_password === 'boolean') {
+    mustChange = (pw as { must_change_password: boolean }).must_change_password
+  }
+
   return {
     ...data,
     modules: (data.modules ?? []) as ModuleKey[],
-    must_change_password: data.must_change_password ?? false,
+    must_change_password: mustChange,
   } as Profile
 }
 
