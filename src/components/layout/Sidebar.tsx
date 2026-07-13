@@ -134,12 +134,6 @@ export default function Sidebar({
                       {m.icon}
                     </span>
                     <span className="flex-1 truncate">{m.label}</span>
-                    <span
-                      className="text-[9.5px] font-extrabold tracking-wider"
-                      style={{ color: isActive ? '#C9A93B' : '#5F776C' }}
-                    >
-                      {m.code}
-                    </span>
                   </>
                 )}
               </NavLink>
@@ -253,8 +247,8 @@ export default function Sidebar({
           </button>
           <button
             onClick={() => void signOut()}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-field py-2.5 text-[12px] font-bold text-white"
-            style={{ background: 'rgba(179,38,30,0.22)', border: '1px solid rgba(245,198,189,0.28)' }}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-field py-2.5 text-[12px] font-bold text-white/90 hover:text-white"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             Keluar
           </button>
