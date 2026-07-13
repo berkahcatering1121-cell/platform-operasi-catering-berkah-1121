@@ -43,8 +43,8 @@ export default {
           inactive: '#9FB3A6',
         },
         // Input convention
-        manual: { text: '#2A62C9', bg: '#F8FAFF', border: '#C9D9F4' },
-        master: { text: '#1F7A4D', bg: '#F4FBF7', border: '#BEE3CE' },
+        manual: { DEFAULT: '#2A62C9', text: '#2A62C9', bg: '#F8FAFF', border: '#C9D9F4' },
+        master: { DEFAULT: '#1F7A4D', text: '#1F7A4D', bg: '#F4FBF7', border: '#BEE3CE' },
         auto: { text: '#241C15', bg: '#F2EFEA', border: '#E4DDD2' },
         // Status
         ok: { text: '#1F7A4D', bg: '#E7F5EE', border: '#BEE3CE' },
