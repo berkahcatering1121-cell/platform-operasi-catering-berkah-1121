@@ -1,5 +1,6 @@
+import { useRef } from 'react'
 import { NavLink } from 'react-router-dom'
-import { MODULES } from '@/lib/modules'
+import { MODULE_BY_KEY, NAV_GROUPS } from '@/lib/modules'
 import { useAuth } from '@/auth/AuthProvider'
 
 interface SidebarProps {
@@ -25,7 +26,23 @@ export default function Sidebar({
   onOpenPanduan,
 }: SidebarProps) {
   const { profile, canAccess, signOut } = useAuth()
-  const items = MODULES.filter((m) => canAccess(m.key))
+
+  // Group modules into sections, dropping any the user can't access + empty groups.
+  const groups = NAV_GROUPS.map((g) => ({
+    title: g.title,
+    items: g.keys.map((k) => MODULE_BY_KEY[k]).filter((m) => canAccess(m.key)),
+  })).filter((g) => g.items.length > 0)
+
+  // Auto-hide scrollbar: show it while scrolling, hide ~700ms after it stops.
+  const navRef = useRef<HTMLElement>(null)
+  const scrollTimer = useRef<number | undefined>(undefined)
+  const handleScroll = () => {
+    const el = navRef.current
+    if (!el) return
+    el.classList.add('is-scrolling')
+    if (scrollTimer.current) window.clearTimeout(scrollTimer.current)
+    scrollTimer.current = window.setTimeout(() => el.classList.remove('is-scrolling'), 700)
+  }
 
   return (
     <div className="flex h-full flex-col bg-brand-sidebar text-white">
@@ -68,44 +85,57 @@ export default function Sidebar({
       <div className="mx-4 mb-1.5 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
 
       {/* Nav */}
-      <nav className="cb-scroll flex-1 overflow-y-auto px-3 py-1.5">
-        {items.map((m) => (
-          <NavLink
-            key={m.key}
-            to={m.path}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              `mb-0.5 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2.5 text-[13px] transition-colors ${
-                isActive
-                  ? 'font-extrabold text-gold-pale'
-                  : 'font-semibold text-side-inactive hover:text-white/90'
-              }`
-            }
-            style={({ isActive }) =>
-              isActive ? { background: 'rgba(201,169,59,0.16)' } : undefined
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span
-                  className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[9px]"
-                  style={{
-                    background: isActive ? '#C9A93B' : 'rgba(255,255,255,0.06)',
-                    color: isActive ? '#14332A' : '#9FB3A6',
-                  }}
-                >
-                  {m.icon}
-                </span>
-                <span className="flex-1 truncate">{m.label}</span>
-                <span
-                  className="text-[9.5px] font-extrabold tracking-wider"
-                  style={{ color: isActive ? '#C9A93B' : '#5F776C' }}
-                >
-                  {m.code}
-                </span>
-              </>
+      <nav
+        ref={navRef}
+        onScroll={handleScroll}
+        className="nav-scroll flex-1 overflow-y-auto px-3 py-1.5"
+      >
+        {groups.map((g, gi) => (
+          <div key={gi} className={gi > 0 ? 'mt-2' : ''}>
+            {g.title && (
+              <div className="px-2.5 pb-1 pt-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#6E877A]">
+                {g.title}
+              </div>
             )}
-          </NavLink>
+            {g.items.map((m) => (
+              <NavLink
+                key={m.key}
+                to={m.path}
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `mb-0.5 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2.5 text-[13px] transition-colors ${
+                    isActive
+                      ? 'font-extrabold text-gold-pale'
+                      : 'font-semibold text-side-inactive hover:text-white/90'
+                  }`
+                }
+                style={({ isActive }) =>
+                  isActive ? { background: 'rgba(201,169,59,0.16)' } : undefined
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[9px]"
+                      style={{
+                        background: isActive ? '#C9A93B' : 'rgba(255,255,255,0.06)',
+                        color: isActive ? '#14332A' : '#9FB3A6',
+                      }}
+                    >
+                      {m.icon}
+                    </span>
+                    <span className="flex-1 truncate">{m.label}</span>
+                    <span
+                      className="text-[9.5px] font-extrabold tracking-wider"
+                      style={{ color: isActive ? '#C9A93B' : '#5F776C' }}
+                    >
+                      {m.code}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
         ))}
       </nav>
 

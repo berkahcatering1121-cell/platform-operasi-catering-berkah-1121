@@ -67,3 +67,11 @@ export const MODULE_BY_KEY = Object.fromEntries(MODULES.map((m) => [m.key, m])) 
   ModuleKey,
   ModuleDef
 >
+
+// Sidebar nav grouped into sections. `title: null` = no header (top/bottom).
+export const NAV_GROUPS: { title: string | null; keys: ModuleKey[] }[] = [
+  { title: null, keys: ['dashboard', 'master'] },
+  { title: 'Operasional', keys: ['pembelian', 'penjualan', 'petty', 'operasional'] },
+  { title: 'Finance', keys: ['gaji', 'hutang', 'aset', 'pnl'] },
+  { title: null, keys: ['pengguna'] },
+]
