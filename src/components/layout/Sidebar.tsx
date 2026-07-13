@@ -1,6 +1,6 @@
-import { useRef } from 'react'
-import { NavLink } from 'react-router-dom'
-import { MODULE_BY_KEY, NAV_GROUPS } from '@/lib/modules'
+import { useEffect, useRef, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { MODULE_BY_KEY, NAV } from '@/lib/modules'
 import { useAuth } from '@/auth/AuthProvider'
 
 interface SidebarProps {
@@ -26,12 +26,23 @@ export default function Sidebar({
   onOpenPanduan,
 }: SidebarProps) {
   const { profile, canAccess, signOut } = useAuth()
+  const location = useLocation()
 
-  // Group modules into sections, dropping any the user can't access + empty groups.
-  const groups = NAV_GROUPS.map((g) => ({
-    title: g.title,
-    items: g.keys.map((k) => MODULE_BY_KEY[k]).filter((m) => canAccess(m.key)),
-  })).filter((g) => g.items.length > 0)
+  // Which collapsible group (if any) contains the current route.
+  const activeKey = Object.values(MODULE_BY_KEY).find((m) => m.path === location.pathname)?.key
+  const activeGroup = NAV.find(
+    (e) => e.type === 'group' && activeKey != null && e.keys.includes(activeKey),
+  )
+  const activeGroupId = activeGroup && activeGroup.type === 'group' ? activeGroup.id : undefined
+
+  // Expanded/collapsed state per group; the active group opens automatically.
+  const [open, setOpen] = useState<Record<string, boolean>>(() =>
+    activeGroupId ? { [activeGroupId]: true } : {},
+  )
+  useEffect(() => {
+    if (activeGroupId) setOpen((o) => (o[activeGroupId] ? o : { ...o, [activeGroupId]: true }))
+  }, [activeGroupId])
+  const toggle = (id: string) => setOpen((o) => ({ ...o, [id]: !o[id] }))
 
   // Auto-hide scrollbar: show it while scrolling, hide ~700ms after it stops.
   const navRef = useRef<HTMLElement>(null)
@@ -90,14 +101,12 @@ export default function Sidebar({
         onScroll={handleScroll}
         className="nav-scroll flex-1 overflow-y-auto px-3 py-1.5"
       >
-        {groups.map((g, gi) => (
-          <div key={gi} className={gi > 0 ? 'mt-2' : ''}>
-            {g.title && (
-              <div className="px-2.5 pb-1 pt-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#6E877A]">
-                {g.title}
-              </div>
-            )}
-            {g.items.map((m) => (
+        {NAV.map((entry) => {
+          // Direct link (Dashboard, Master Data, Manajemen Pengguna)
+          if (entry.type === 'link') {
+            const m = MODULE_BY_KEY[entry.key]
+            if (!canAccess(m.key)) return null
+            return (
               <NavLink
                 key={m.key}
                 to={m.path}
@@ -134,9 +143,74 @@ export default function Sidebar({
                   </>
                 )}
               </NavLink>
-            ))}
-          </div>
-        ))}
+            )
+          }
+
+          // Collapsible category (Operasional, Finance)
+          const children = entry.keys.map((k) => MODULE_BY_KEY[k]).filter((m) => canAccess(m.key))
+          if (!children.length) return null
+          const isOpen = !!open[entry.id]
+          const hasActiveChild = !!activeKey && entry.keys.includes(activeKey)
+          return (
+            <div key={entry.id} className="mt-1">
+              <button
+                type="button"
+                onClick={() => toggle(entry.id)}
+                aria-expanded={isOpen}
+                className="mb-0.5 flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2.5 text-[13px] font-semibold text-side-inactive transition-colors hover:text-white/90"
+              >
+                <span
+                  className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[9px]"
+                  style={{
+                    background: hasActiveChild ? 'rgba(201,169,59,0.16)' : 'rgba(255,255,255,0.06)',
+                    color: hasActiveChild ? '#F1E4C0' : '#9FB3A6',
+                  }}
+                >
+                  {entry.icon}
+                </span>
+                <span className="flex-1 text-left">{entry.title}</span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
+                  style={{ color: '#6B8578' }}
+                >
+                  <path d="m9 6 6 6-6 6" />
+                </svg>
+              </button>
+
+              {isOpen && (
+                <div className="mb-1 ml-[24px] border-l border-white/10 pl-2">
+                  {children.map((m) => (
+                    <NavLink
+                      key={m.key}
+                      to={m.path}
+                      onClick={onNavigate}
+                      className={({ isActive }) =>
+                        `mb-0.5 flex items-center rounded-[8px] px-2.5 py-2 text-[12.5px] transition-colors ${
+                          isActive
+                            ? 'font-bold text-gold-pale'
+                            : 'font-medium text-side-inactive hover:text-white/90'
+                        }`
+                      }
+                      style={({ isActive }) =>
+                        isActive ? { background: 'rgba(201,169,59,0.12)' } : undefined
+                      }
+                    >
+                      <span className="flex-1 truncate">{m.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </nav>
 
       {/* Footer */}

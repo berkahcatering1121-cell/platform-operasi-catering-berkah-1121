@@ -68,10 +68,28 @@ export const MODULE_BY_KEY = Object.fromEntries(MODULES.map((m) => [m.key, m])) 
   ModuleDef
 >
 
-// Sidebar nav grouped into sections. `title: null` = no header (top/bottom).
-export const NAV_GROUPS: { title: string | null; keys: ModuleKey[] }[] = [
-  { title: null, keys: ['dashboard', 'master'] },
-  { title: 'Operasional', keys: ['pembelian', 'penjualan', 'petty', 'operasional'] },
-  { title: 'Finance', keys: ['gaji', 'hutang', 'aset', 'pnl'] },
-  { title: null, keys: ['pengguna'] },
+// Sidebar nav. A `link` is a direct module; a `group` is a collapsible
+// category (icon + name + chevron) whose children show/hide on click.
+export type NavEntry =
+  | { type: 'link'; key: ModuleKey }
+  | { type: 'group'; id: string; title: string; icon: ReactNode; keys: ModuleKey[] }
+
+export const NAV: NavEntry[] = [
+  { type: 'link', key: 'dashboard' },
+  { type: 'link', key: 'master' },
+  {
+    type: 'group',
+    id: 'ops',
+    title: 'Operasional',
+    icon: svg(<><path d="M3 12h4l2.5 7 4-15 2.5 8H21" /></>),
+    keys: ['pembelian', 'penjualan', 'petty', 'operasional'],
+  },
+  {
+    type: 'group',
+    id: 'finance',
+    title: 'Finance',
+    icon: svg(<><path d="M3 10 12 4l9 6" /><path d="M5 10v9M19 10v9M9.5 10v9M14.5 10v9" /><path d="M3 20h18" /></>),
+    keys: ['gaji', 'hutang', 'aset', 'pnl'],
+  },
+  { type: 'link', key: 'pengguna' },
 ]
