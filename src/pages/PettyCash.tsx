@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import PhotoCell from '@/components/ui/PhotoCell'
 import { SUB_L, SUB_R, TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatDate, formatRupiah, formatMonthLabel } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import {
   usePettyPeriods,
   usePettyEntries,
@@ -125,7 +126,7 @@ export default function PettyCash() {
                       {rows.map((r) => (
                         <tr key={r.id}>
                           <td className={TD + ' whitespace-nowrap'}>{formatDate(r.entry_date)}</td>
-                          <td className={TD + ' font-bold text-ink'}>{r.description}</td>
+                          <td className={TD + ' font-bold text-ink'}>{titleCase(r.description)}</td>
                           <td className={TD}>
                             <PhotoCell paths={r.photos} title={r.description} />
                           </td>

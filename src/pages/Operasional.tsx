@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import PhotoCell from '@/components/ui/PhotoCell'
 import { SUB_L, SUB_R, TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatDate, formatRupiah } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import { groupByMonth } from '@/lib/grouping'
 import { useOperationalCosts, useDeleteOpex } from '@/features/opex/api'
 import OpexModal from '@/features/opex/OpexModal'
@@ -75,7 +76,7 @@ export default function Operasional() {
                       {g.rows.map((r) => (
                         <tr key={r.id}>
                           <td className={TD + ' whitespace-nowrap'}>{formatDate(r.cost_date)}</td>
-                          <td className={TD + ' font-bold text-ink'}>{r.description}</td>
+                          <td className={TD + ' font-bold text-ink'}>{titleCase(r.description)}</td>
                           <td className={TD}>
                             <Badge tone="neutral">{r.category}</Badge>
                           </td>

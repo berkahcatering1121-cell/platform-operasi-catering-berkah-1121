@@ -7,6 +7,7 @@ import RowActions from '@/components/ui/RowActions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatDate, formatRupiah } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import { useDebts, useDeleteDebt } from '@/features/debts/api'
 import DebtModal from '@/features/debts/DebtModal'
 import type { DebtView } from '@/lib/db'
@@ -94,11 +95,11 @@ export default function Hutang() {
                       <tr key={r.id}>
                         <td className={TD + ' whitespace-nowrap'}>{formatDate(r.debt_date)}</td>
                         <td className={TD}>
-                          <div className="font-bold text-ink">{r.creditor}</div>
-                          {r.debt_type && <div className="text-[11px] text-ink-faint">{r.debt_type}</div>}
+                          <div className="font-bold text-ink">{titleCase(r.creditor)}</div>
+                          {r.debt_type && <div className="text-[11px] text-ink-faint">{titleCase(r.debt_type)}</div>}
                         </td>
                         <td className={TD + ' max-w-[240px] truncate'} title={r.description ?? ''}>
-                          {r.description ?? '—'}
+                          {r.description ? titleCase(r.description) : '—'}
                         </td>
                         <td className={TD_R + ' font-extrabold text-ink'}>{formatRupiah(r.amount)}</td>
                         <td className={TD + ' whitespace-nowrap'}>{formatDate(r.due_date)}</td>

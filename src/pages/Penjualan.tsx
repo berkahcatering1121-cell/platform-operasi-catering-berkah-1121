@@ -7,6 +7,7 @@ import RowActions from '@/components/ui/RowActions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { SUB_L, SUB_R, TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatDate, formatRupiah } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import { groupByMonth } from '@/lib/grouping'
 import { useEmployees } from '@/features/master/api'
 import { useSales, useDeleteSale } from '@/features/sales/api'
@@ -82,9 +83,9 @@ export default function Penjualan() {
                       {g.rows.map((r) => (
                         <tr key={r.id}>
                           <td className={TD + ' whitespace-nowrap'}>{formatDate(r.sale_date)}</td>
-                          <td className={TD + ' font-bold text-ink'}>{r.customer}</td>
+                          <td className={TD + ' font-bold text-ink'}>{titleCase(r.customer)}</td>
                           <td className={TD}>
-                            <div>{r.menu_name ?? '—'}</div>
+                            <div>{r.menu_name ? titleCase(r.menu_name) : '—'}</div>
                             {r.menu_category && (
                               <div className="text-[11px] text-ink-faint">{r.menu_category}</div>
                             )}

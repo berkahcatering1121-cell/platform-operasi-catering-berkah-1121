@@ -6,6 +6,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import RowActions from '@/components/ui/RowActions'
 import { Field, InputLegend, SelectField } from '@/components/ui/Field'
 import { TD, TH } from '@/components/ui/table'
+import { titleCase } from '@/lib/text'
 import {
   useDeleteSupplier,
   useIngredientCategories,
@@ -67,7 +68,7 @@ export default function SupplierTab() {
               {suppliers.data && suppliers.data.length > 0 ? (
                 suppliers.data.map((s) => (
                   <tr key={s.id}>
-                    <td className={TD + ' font-bold text-ink'}>{s.name}</td>
+                    <td className={TD + ' font-bold text-ink'}>{titleCase(s.name)}</td>
                     <td className={TD}>{s.category ?? '—'}</td>
                     <td className={TD}>{s.phone ?? '—'}</td>
                     <td className={TD + ' text-right'}>

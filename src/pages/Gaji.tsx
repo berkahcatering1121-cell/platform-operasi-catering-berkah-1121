@@ -7,6 +7,7 @@ import RowActions from '@/components/ui/RowActions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { SUB_L, SUB_R, TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatRupiah } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import { groupByMonth } from '@/lib/grouping'
 import { useAuth } from '@/auth/AuthProvider'
 import { usePayroll, useDeletePayroll } from '@/features/payroll/api'
@@ -19,7 +20,6 @@ const weekRank = (label: string | null) => {
   const i = WEEK_ORDER.findIndex((w) => l.includes(w))
   return i < 0 ? 99 : i
 }
-const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase())
 // Row label under an employee: the (title-cased) week, or a monthly-salary tag.
 const weekLabel = (r: PayrollView) =>
   r.period_label ? titleCase(r.period_label) : r.salary_type === 'Harian' ? '—' : 'Gaji Bulanan'
@@ -110,7 +110,7 @@ export default function Gaji() {
                           <Fragment key={first.employee_id}>
                             <tr>
                               <td colSpan={cols} className="border-t border-[#F1EBE2] bg-[#F1F6F2] px-3 py-2">
-                                <span className="text-[13px] font-extrabold text-ink">{first.employee_name}</span>
+                                <span className="text-[13px] font-extrabold text-ink">{titleCase(first.employee_name)}</span>
                                 <span className="ml-2 align-middle">
                                   <StatusBadge status={first.salary_type} />
                                 </span>

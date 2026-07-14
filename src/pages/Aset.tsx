@@ -7,6 +7,7 @@ import RowActions from '@/components/ui/RowActions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatDate, formatRupiah } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import { useAssets, useDeleteAsset } from '@/features/assets/api'
 import AssetModal from '@/features/assets/AssetModal'
 import type { AssetView } from '@/lib/db'
@@ -95,8 +96,8 @@ export default function Aset() {
                         <tr key={r.id}>
                           <td className={TD + ' whitespace-nowrap'}>{formatDate(r.acquisition_date)}</td>
                           <td className={TD}>
-                            <div className="font-bold text-ink">{r.name}</div>
-                            {r.category && <div className="text-[11px] text-ink-faint">{r.category}</div>}
+                            <div className="font-bold text-ink">{titleCase(r.name)}</div>
+                            {r.category && <div className="text-[11px] text-ink-faint">{titleCase(r.category)}</div>}
                           </td>
                           <td className={TD_R + ' font-bold text-ink'}>{formatRupiah(r.acquisition_cost)}</td>
                           <td className={TD_R}>{r.economic_life_months} bln</td>

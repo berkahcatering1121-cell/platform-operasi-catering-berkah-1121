@@ -8,6 +8,7 @@ import { Field, InputLegend, SelectField } from '@/components/ui/Field'
 import { StatusBadge } from '@/components/ui/Badge'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatRupiah } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import { useDeleteEmployee, useEmployees, useSaveEmployee } from './api'
 import type { Employee, SalaryType } from '@/lib/db'
 
@@ -77,9 +78,9 @@ export default function KaryawanTab() {
               {employees.data && employees.data.length > 0 ? (
                 employees.data.map((e) => (
                   <tr key={e.id}>
-                    <td className={TD + ' font-bold text-ink'}>{e.name}</td>
-                    <td className={TD}>{e.position ?? '—'}</td>
-                    <td className={TD}>{e.department ?? '—'}</td>
+                    <td className={TD + ' font-bold text-ink'}>{titleCase(e.name)}</td>
+                    <td className={TD}>{e.position ? titleCase(e.position) : '—'}</td>
+                    <td className={TD}>{e.department ? titleCase(e.department) : '—'}</td>
                     <td className={TD}>
                       <StatusBadge status={e.salary_type} />
                     </td>

@@ -6,6 +6,7 @@ import RowActions from '@/components/ui/RowActions'
 import { MarginBadge, marginNote } from '@/components/ui/Badge'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatRupiah, formatPercentInt } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import MenuEditorModal from './MenuEditorModal'
 import { useDeleteMenuItem, useMenuCategories, useMenuItems } from './api'
 import type { MenuItemView } from '@/lib/db'
@@ -74,10 +75,10 @@ export default function MenuTab() {
                       list.map((m) => (
                         <tr key={m.id}>
                           <td className={TD} style={{ whiteSpace: 'normal', maxWidth: 520 }}>
-                            <div className="font-bold text-ink">{m.name}</div>
+                            <div className="font-bold text-ink">{titleCase(m.name)}</div>
                             {m.description && (
                               <div className="mt-0.5 text-[11px] leading-relaxed text-ink-faint">
-                                {m.description}
+                                {titleCase(m.description)}
                               </div>
                             )}
                           </td>

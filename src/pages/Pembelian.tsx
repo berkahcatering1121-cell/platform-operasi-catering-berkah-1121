@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import PhotoCell from '@/components/ui/PhotoCell'
 import { SUB_L, SUB_R, TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatDate, formatRupiah } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import { groupByMonth } from '@/lib/grouping'
 import { useEmployees } from '@/features/master/api'
 import { usePurchases, useDeletePurchase } from '@/features/purchases/api'
@@ -85,7 +86,7 @@ export default function Pembelian() {
                         <tr key={r.id}>
                           <td className={TD + ' whitespace-nowrap'}>{formatDate(r.purchase_date)}</td>
                           <td className={TD}>
-                            <div className="font-bold text-ink">{r.material_name}</div>
+                            <div className="font-bold text-ink">{titleCase(r.material_name)}</div>
                             {r.category && <div className="text-[11px] text-ink-faint">{r.category}</div>}
                           </td>
                           <td className={TD}>{r.supplier_name ?? '—'}</td>
