@@ -21,9 +21,13 @@ const MONTHS_FULL = [
 function Kpi({ label, value, sub, accent }: { label: string; value: string; sub: string; accent?: 'green' | 'dark' }) {
   return (
     <div className="cb-card p-4">
-      <div className="text-[11.5px] font-semibold text-ink-muted">{label}</div>
+      {/* Fixed-height label (reserves 2 lines) so every value starts at the
+          same vertical position — numbers stay aligned across cards. */}
+      <div className="flex min-h-[30px] items-start text-[11.5px] font-semibold leading-[15px] text-ink-muted">
+        {label}
+      </div>
       <div
-        className={`mt-1 text-[21px] font-extrabold tracking-[-0.01em] ${
+        className={`mt-1.5 text-[21px] font-extrabold tracking-[-0.01em] ${
           accent === 'green' ? 'text-ok' : accent === 'dark' ? 'text-brand-dark' : 'text-ink'
         }`}
       >
