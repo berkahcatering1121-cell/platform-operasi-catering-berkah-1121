@@ -9,15 +9,14 @@ import { useSales } from '@/features/sales/api'
 import LineChart from '@/features/dashboard/LineChart'
 import Donut, { paletteColor, type Segment } from '@/features/dashboard/Donut'
 import LiveClock from '@/features/dashboard/LiveClock'
-import {
-  PERIOD_OPTIONS,
-  periodRange,
-  formatRangeLabel,
-  isoDate,
-  type PeriodKey,
-} from '@/features/dashboard/period'
+import PeriodPicker from '@/features/dashboard/PeriodPicker'
+import { periodRange, formatRangeLabel, isoDate, type PeriodKey } from '@/features/dashboard/period'
 
 const TODAY_YEAR = new Date().getFullYear()
+const MONTHS_FULL = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+]
 
 function Kpi({ label, value, sub, accent }: { label: string; value: string; sub: string; accent?: 'green' | 'dark' }) {
   return (
@@ -48,6 +47,7 @@ function composition(rows: { key: string | null; total: number }[]): Segment[] {
 
 export default function Dashboard() {
   const [year, setYear] = useState(TODAY_YEAR)
+  const [month, setMonth] = useState(0) // 0 = whole year; 1-12 = a specific month
   const [period, setPeriod] = useState<PeriodKey>('thisMonth')
   const [customDay, setCustomDay] = useState(isoDate(new Date()))
   const pnl = usePnl(year)
@@ -67,8 +67,13 @@ export default function Dashboard() {
   }, [sales.data, purchases.data, range])
 
   const months = pnl.data ?? []
+  // KPI scope: the whole year, or a single month when one is picked.
+  const scopedMonths = useMemo(
+    () => (month ? months.filter((m) => m.month_no === month) : months),
+    [months, month],
+  )
   const totals = useMemo(() => {
-    const sum = (f: (m: (typeof months)[number]) => number) => months.reduce((t, m) => t + f(m), 0)
+    const sum = (f: (m: (typeof scopedMonths)[number]) => number) => scopedMonths.reduce((t, m) => t + f(m), 0)
     const rev = sum((m) => m.pendapatan)
     const gross = sum((m) => m.laba_kotor)
     const net = sum((m) => m.laba_bersih)
@@ -80,29 +85,37 @@ export default function Dashboard() {
       marginKotor: rev > 0 ? gross / rev : 0,
       marginBersih: rev > 0 ? net / rev : 0,
     }
-  }, [months])
+  }, [scopedMonths])
 
+  const scopeLabel = month ? `${MONTHS_FULL[month - 1]} ${year}` : `tahun ${year}`
+  const monthPrefix = month ? `${String(month).padStart(2, '0')}` : null
+
+  // Donuts follow the same year (+ optional month) scope as the KPIs.
+  const inScope = (d: string) =>
+    d.startsWith(String(year)) && (!monthPrefix || d.slice(5, 7) === monthPrefix)
   const purchaseSeg = useMemo(
     () =>
       composition(
         (purchases.data ?? [])
-          .filter((p) => p.purchase_date.startsWith(String(year)))
+          .filter((p) => inScope(p.purchase_date))
           .map((p) => ({ key: p.category, total: p.total })),
       ),
-    [purchases.data, year],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [purchases.data, year, monthPrefix],
   )
   const salesSeg = useMemo(
     () =>
       composition(
         (sales.data ?? [])
-          .filter((s) => s.sale_date.startsWith(String(year)))
+          .filter((s) => inScope(s.sale_date))
           .map((s) => ({ key: s.menu_category, total: s.total })),
       ),
-    [sales.data, year],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sales.data, year, monthPrefix],
   )
 
   const kpis = [
-    { label: 'Total Pendapatan', value: formatRupiahShort(totals.rev), sub: `Total tahun ${year}` },
+    { label: 'Total Pendapatan', value: formatRupiahShort(totals.rev), sub: `Total ${scopeLabel}` },
     {
       label: 'Total Pembelian Bahan Baku',
       value: formatRupiahShort(totals.purch),
@@ -120,22 +133,37 @@ export default function Dashboard() {
         title="Dashboard"
         subtitle={`Ringkasan keuangan Catering Berkah · Tahun ${year}`}
         actions={
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setYear((y) => y - 1)}
-              className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-              aria-label="Tahun sebelumnya"
+          <div className="flex items-center gap-2">
+            <select
+              value={month}
+              onChange={(e) => setMonth(Number(e.target.value))}
+              className="h-[38px] rounded-btn border border-app-border bg-app-card px-2.5 text-[13px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
+              aria-label="Pilih bulan"
             >
-              ‹
-            </button>
-            <span className="min-w-[62px] text-center text-[14px] font-extrabold text-ink">{year}</span>
-            <button
-              onClick={() => setYear((y) => y + 1)}
-              className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-              aria-label="Tahun berikutnya"
-            >
-              ›
-            </button>
+              <option value={0}>Semua bulan</option>
+              {MONTHS_FULL.map((m, i) => (
+                <option key={m} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setYear((y) => y - 1)}
+                className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
+                aria-label="Tahun sebelumnya"
+              >
+                ‹
+              </button>
+              <span className="min-w-[52px] text-center text-[14px] font-extrabold text-ink">{year}</span>
+              <button
+                onClick={() => setYear((y) => y + 1)}
+                className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
+                aria-label="Tahun berikutnya"
+              >
+                ›
+              </button>
+            </div>
           </div>
         }
       />
@@ -148,46 +176,16 @@ export default function Dashboard() {
         <div className="space-y-4">
           {/* Clock + period summary */}
           <div className="cb-card p-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <LiveClock />
-              <div className="cb-scroll -mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-1">
-                {PERIOD_OPTIONS.map((p) => (
-                  <button
-                    key={p.key}
-                    onClick={() => setPeriod(p.key)}
-                    className={`whitespace-nowrap rounded-pill border px-3 py-1.5 text-[12px] font-bold transition ${
-                      period === p.key
-                        ? 'border-brand bg-brand text-white'
-                        : 'border-app-border bg-app-card text-ink-secondary hover:bg-app-panel'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-                <label
-                  className={`flex flex-none items-center gap-1.5 rounded-pill border px-3 py-1.5 text-[12px] font-bold transition ${
-                    period === 'custom'
-                      ? 'border-brand bg-brand text-white'
-                      : 'border-app-border bg-app-card text-ink-secondary'
-                  }`}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="17" rx="2" />
-                    <path d="M16 2v4M8 2v4M3 10h18" />
-                  </svg>
-                  <span>Pilih hari</span>
-                  <input
-                    type="date"
-                    value={customDay}
-                    onChange={(e) => {
-                      setCustomDay(e.target.value)
-                      setPeriod('custom')
-                    }}
-                    className="w-0 opacity-0"
-                    aria-label="Pilih tanggal"
-                  />
-                </label>
-              </div>
+              <PeriodPicker
+                period={period}
+                customDay={customDay}
+                onSelect={(p, day) => {
+                  setPeriod(p)
+                  if (day) setCustomDay(day)
+                }}
+              />
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
