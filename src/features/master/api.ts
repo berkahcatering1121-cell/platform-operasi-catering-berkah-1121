@@ -72,12 +72,11 @@ export function usePaymentStatuses() {
 type RefTable = 'ingredient_categories' | 'menu_categories'
 export function useAddRefCategory(table: RefTable) {
   const qc = useQueryClient()
-  const key = table === 'ingredient_categories' ? masterKeys.ingredientCats : masterKeys.menuCats
   return useMutation({
     mutationFn: async (name: string) => {
       unwrap(await supabase.from(table).insert({ name: name.trim(), sort: 999 }).select('id'))
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 
@@ -89,7 +88,7 @@ export function useUpdateRefCategory(table: RefTable) {
     },
     // Renaming an ingredient category cascades to suppliers/purchases in the DB,
     // so refresh all master queries to stay in sync.
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['master'] }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 
@@ -101,7 +100,7 @@ export function useDeleteRefCategory(table: RefTable) {
     },
     // Deleting a menu category cascades to its menu items; an ingredient
     // category nulls the category on suppliers/purchases. Refresh everything.
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['master'] }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 
@@ -124,7 +123,7 @@ export function useSaveSupplier() {
       if (input.id) unwrap(await supabase.from('suppliers').update(payload).eq('id', input.id).select('id'))
       else unwrap(await supabase.from('suppliers').insert(payload).select('id'))
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: masterKeys.suppliers }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 
@@ -134,7 +133,7 @@ export function useDeleteSupplier() {
     mutationFn: async (id: string) => {
       unwrap(await supabase.from('suppliers').delete().eq('id', id).select('id'))
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: masterKeys.suppliers }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 
@@ -167,7 +166,7 @@ export function useSaveEmployee() {
       if (input.id) unwrap(await supabase.from('employees').update(payload).eq('id', input.id).select('id'))
       else unwrap(await supabase.from('employees').insert(payload).select('id'))
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: masterKeys.employees }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 
@@ -177,7 +176,7 @@ export function useDeleteEmployee() {
     mutationFn: async (id: string) => {
       unwrap(await supabase.from('employees').delete().eq('id', id).select('id'))
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: masterKeys.employees }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 
@@ -250,7 +249,7 @@ export function useSaveMenuItem() {
         }))
       if (recipe.length) unwrap(await supabase.from('menu_ingredients').insert(recipe).select('id'))
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: masterKeys.menuItems }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 
@@ -260,6 +259,6 @@ export function useDeleteMenuItem() {
     mutationFn: async (id: string) => {
       unwrap(await supabase.from('menu_items').delete().eq('id', id).select('id'))
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: masterKeys.menuItems }),
+    onSuccess: () => qc.invalidateQueries(),
   })
 }

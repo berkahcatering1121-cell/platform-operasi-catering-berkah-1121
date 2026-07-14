@@ -8,6 +8,14 @@ import { usePurchases } from '@/features/purchases/api'
 import { useSales } from '@/features/sales/api'
 import LineChart from '@/features/dashboard/LineChart'
 import Donut, { paletteColor, type Segment } from '@/features/dashboard/Donut'
+import LiveClock from '@/features/dashboard/LiveClock'
+import {
+  PERIOD_OPTIONS,
+  periodRange,
+  formatRangeLabel,
+  isoDate,
+  type PeriodKey,
+} from '@/features/dashboard/period'
 
 const TODAY_YEAR = new Date().getFullYear()
 
@@ -40,9 +48,23 @@ function composition(rows: { key: string | null; total: number }[]): Segment[] {
 
 export default function Dashboard() {
   const [year, setYear] = useState(TODAY_YEAR)
+  const [period, setPeriod] = useState<PeriodKey>('thisMonth')
+  const [customDay, setCustomDay] = useState(isoDate(new Date()))
   const pnl = usePnl(year)
   const purchases = usePurchases()
   const sales = useSales()
+
+  // Period summary (Hari ini / Minggu / Bulan / pilih tanggal) computed from the
+  // already-loaded sales & purchases lists.
+  const range = useMemo(() => periodRange(period, new Date(), customDay), [period, customDay])
+  const periodSummary = useMemo(() => {
+    const inRange = (d: string) => d >= range.start && d <= range.end
+    const s = (sales.data ?? []).filter((x) => inRange(x.sale_date))
+    const p = (purchases.data ?? []).filter((x) => inRange(x.purchase_date))
+    const rev = s.reduce((t, x) => t + x.total, 0)
+    const buy = p.reduce((t, x) => t + x.total, 0)
+    return { rev, buy, gross: rev - buy, margin: rev > 0 ? (rev - buy) / rev : 0, nSales: s.length, nBuy: p.length }
+  }, [sales.data, purchases.data, range])
 
   const months = pnl.data ?? []
   const totals = useMemo(() => {
@@ -124,7 +146,60 @@ export default function Dashboard() {
         <ErrorState message={(pnl.error as Error).message} />
       ) : (
         <div className="space-y-4">
-          {/* KPI cards */}
+          {/* Clock + period summary */}
+          <div className="cb-card p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <LiveClock />
+              <div className="cb-scroll -mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-1">
+                {PERIOD_OPTIONS.map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => setPeriod(p.key)}
+                    className={`whitespace-nowrap rounded-pill border px-3 py-1.5 text-[12px] font-bold transition ${
+                      period === p.key
+                        ? 'border-brand bg-brand text-white'
+                        : 'border-app-border bg-app-card text-ink-secondary hover:bg-app-panel'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+                <label
+                  className={`flex flex-none items-center gap-1.5 rounded-pill border px-3 py-1.5 text-[12px] font-bold transition ${
+                    period === 'custom'
+                      ? 'border-brand bg-brand text-white'
+                      : 'border-app-border bg-app-card text-ink-secondary'
+                  }`}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="17" rx="2" />
+                    <path d="M16 2v4M8 2v4M3 10h18" />
+                  </svg>
+                  <span>Pilih hari</span>
+                  <input
+                    type="date"
+                    value={customDay}
+                    onChange={(e) => {
+                      setCustomDay(e.target.value)
+                      setPeriod('custom')
+                    }}
+                    className="w-0 opacity-0"
+                    aria-label="Pilih tanggal"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Kpi label="Pendapatan" value={formatRupiahShort(periodSummary.rev)} sub={`${periodSummary.nSales} penjualan`} />
+              <Kpi label="Pembelian" value={formatRupiahShort(periodSummary.buy)} sub={`${periodSummary.nBuy} pembelian`} />
+              <Kpi label="Laba Kotor" value={formatRupiahShort(periodSummary.gross)} sub="pendapatan − pembelian" accent="green" />
+              <Kpi label="Margin Kotor" value={formatPercent(periodSummary.margin)} sub="laba kotor / pendapatan" accent="dark" />
+            </div>
+            <div className="mt-2.5 text-[11.5px] font-medium text-ink-faint">Periode: {formatRangeLabel(range)}</div>
+          </div>
+
+          {/* Yearly KPI cards */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {kpis.map((k) => (
               <Kpi key={k.label} label={k.label} value={k.value} sub={k.sub} accent={k.accent} />
