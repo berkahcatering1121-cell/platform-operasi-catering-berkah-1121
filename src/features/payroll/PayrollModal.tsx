@@ -13,6 +13,16 @@ const STATUS_OPTIONS = [
   { value: 'Dibayar', label: 'Dibayar' },
 ]
 
+// Weekly periods for daily (Harian) staff. Each week is a separate payroll
+// entry with its own work dates + status.
+const WEEK_OPTIONS = [
+  'Minggu Pertama',
+  'Minggu Kedua',
+  'Minggu Ketiga',
+  'Minggu Keempat',
+  'Minggu Kelima',
+]
+
 interface FormState {
   employee_id: string
   period: string // YYYY-MM
@@ -67,6 +77,15 @@ export default function PayrollModal({ open, onClose, editing }: Props) {
   )
   const isHarian = emp?.salary_type === 'Harian'
   const days = form.work_dates.length
+
+  // Keep legacy / custom period labels selectable in the dropdown.
+  const weekOptions = useMemo(() => {
+    const opts = WEEK_OPTIONS.map((w) => ({ value: w, label: w }))
+    if (form.period_label && !WEEK_OPTIONS.includes(form.period_label)) {
+      opts.unshift({ value: form.period_label, label: form.period_label })
+    }
+    return opts
+  }, [form.period_label])
   const gajiDasar = emp ? (isHarian ? emp.daily_wage * days : emp.base_salary) : 0
   const totalBeban = gajiDasar + (Number(form.allowance) || 0) + (Number(form.bonus) || 0)
   const takeHome = totalBeban - (Number(form.deduction) || 0)
@@ -124,7 +143,7 @@ export default function PayrollModal({ open, onClose, editing }: Props) {
             }))}
             placeholder="Pilih karyawan…"
             value={form.employee_id}
-            onChange={(e) => set({ employee_id: e.target.value, work_dates: [] })}
+            onChange={(e) => set({ employee_id: e.target.value, work_dates: [], period_label: '' })}
           />
           <SelectField
             label="Status"
@@ -144,25 +163,30 @@ export default function PayrollModal({ open, onClose, editing }: Props) {
           />
         </div>
 
-        <Field
-          label="Keterangan Periode"
-          value={form.period_label}
-          onChange={(e) => set({ period_label: e.target.value })}
-          placeholder="Ketik Keterangan Periode"
-        />
-
         {emp && (
           <div className="rounded-field border border-master-border bg-master-bg px-3 py-2 text-[12px] text-master">
             {isHarian ? (
-              <>Karyawan <b>Harian</b> · Upah/Hari {formatRupiah(emp.daily_wage)} — centang kalender di bawah.</>
+              <>Karyawan <b>Harian</b> · Upah/Hari {formatRupiah(emp.daily_wage)} — pilih minggu & centang tanggal masuk di kalender.</>
             ) : (
-              <>Karyawan <b>Bulanan</b> · Gaji Pokok tetap {formatRupiah(emp.base_salary)} (tanpa kalender).</>
+              <>Karyawan <b>Bulanan</b> · Gaji Pokok tetap {formatRupiah(emp.base_salary)} (tanpa minggu/kalender).</>
             )}
           </div>
         )}
 
+        {/* Weekly period + work-date calendar — Harian only. Buat satu entri per
+            minggu (Minggu Pertama, Kedua, …), masing-masing punya status sendiri. */}
         {emp && isHarian && (
-          <WorkCalendar monthKey={form.period} selected={form.work_dates} onChange={(d) => set({ work_dates: d })} />
+          <>
+            <SelectField
+              label="Periode Minggu"
+              hint="satu entri per minggu"
+              options={weekOptions}
+              placeholder="Pilih minggu…"
+              value={form.period_label}
+              onChange={(e) => set({ period_label: e.target.value })}
+            />
+            <WorkCalendar monthKey={form.period} selected={form.work_dates} onChange={(d) => set({ work_dates: d })} />
+          </>
         )}
 
         <div className="grid gap-3 sm:grid-cols-3">

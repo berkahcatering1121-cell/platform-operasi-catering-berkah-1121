@@ -5,7 +5,7 @@ export const TH =
 export const TH_R = TH + ' text-right'
 export const TD =
   'px-3 py-[11px] text-[13px] text-ink-body border-t border-[#F1EBE2] align-middle'
-export const TD_R = TD + ' text-right tnum'
+export const TD_R = TD + ' text-right tnum whitespace-nowrap'
 export const TD_B = TD + ' font-bold text-ink'
 export const TD_RB = TD_R + ' font-extrabold text-ink'
 
