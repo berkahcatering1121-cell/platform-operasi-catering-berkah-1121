@@ -1,16 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
-import { Field, InputLegend } from '@/components/ui/Field'
+import { Field, InputLegend, SelectField } from '@/components/ui/Field'
 import { StatusBadge } from '@/components/ui/Badge'
 import { formatRupiah } from '@/lib/format'
 import { useSaveDebt, type DebtInput } from './api'
 import type { DebtView } from '@/lib/db'
 
+// Jenis hutang yang umum — biar pencatatan lebih cepat & konsisten.
+const DEBT_TYPES = [
+  'Pinjaman Bank',
+  'Pinjaman Bank (KUR)',
+  'Kredit / Cicilan',
+  'Leasing Kendaraan',
+  'Hutang Supplier',
+  'Modal Kerja',
+  'Pinjaman Pribadi',
+  'Kartu Kredit',
+]
+const CUSTOM = '__custom__'
+
 interface FormState {
   debt_date: string
   creditor: string
   debt_type: string
+  customMode: boolean // "Lainnya" — ketik jenis sendiri
   description: string
   amount: string
   due_date: string
@@ -18,10 +32,12 @@ interface FormState {
 }
 
 function toForm(d?: DebtView | null): FormState {
+  const type = d?.debt_type ?? ''
   return {
     debt_date: d?.debt_date ?? new Date().toISOString().slice(0, 10),
     creditor: d?.creditor ?? '',
-    debt_type: d?.debt_type ?? '',
+    debt_type: type,
+    customMode: !!type && !DEBT_TYPES.includes(type),
     description: d?.description ?? '',
     amount: d ? String(d.amount) : '',
     due_date: d?.due_date ?? '',
@@ -104,13 +120,31 @@ export default function DebtModal({ open, onClose, editing }: Props) {
             onChange={(e) => set({ creditor: e.target.value })}
             placeholder="Ketik Nama Kreditur"
           />
-          <Field
+          <SelectField
             label="Jenis"
+            options={[
+              ...DEBT_TYPES.map((t) => ({ value: t, label: t })),
+              { value: CUSTOM, label: 'Lainnya (ketik sendiri)…' },
+            ]}
+            placeholder="Pilih jenis…"
+            value={form.customMode ? CUSTOM : form.debt_type}
+            onChange={(e) => {
+              const v = e.target.value
+              if (v === CUSTOM) set({ customMode: true, debt_type: '' })
+              else set({ customMode: false, debt_type: v })
+            }}
+          />
+        </div>
+
+        {form.customMode && (
+          <Field
+            label="Jenis Hutang (lainnya)"
             value={form.debt_type}
             onChange={(e) => set({ debt_type: e.target.value })}
             placeholder="Ketik Jenis Hutang"
+            autoFocus
           />
-        </div>
+        )}
 
         <Field
           label="Keterangan"
