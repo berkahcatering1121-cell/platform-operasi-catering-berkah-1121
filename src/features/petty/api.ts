@@ -42,11 +42,13 @@ export function usePettyEntries() {
 }
 
 // ---- period mutations ------------------------------------------------------
+// Note: is_settled is intentionally NOT set here — settle status is an approval
+// action controlled separately by Finance (useSetSettle). "Mengisi" periode
+// tidak sama dengan "meng-approve settle".
 export interface PeriodInput {
   id?: string
   period_month: string // YYYY-MM-01
   opening_balance: number
-  is_settled: boolean
 }
 
 export function useSavePeriod() {
@@ -56,6 +58,17 @@ export function useSavePeriod() {
       const { id, ...payload } = input
       if (id) unwrap(await supabase.from('petty_cash_periods').update(payload).eq('id', id).select('id'))
       else unwrap(await supabase.from('petty_cash_periods').insert(payload).select('id'))
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['petty'] }),
+  })
+}
+
+/** Approve / change settle status — Finance only (also enforced by DB trigger). */
+export function useSetSettle() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, is_settled }: { id: string; is_settled: boolean }) => {
+      unwrap(await supabase.from('petty_cash_periods').update({ is_settled }).eq('id', id).select('id'))
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['petty'] }),
   })

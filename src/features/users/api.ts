@@ -11,6 +11,7 @@ export interface UserRow {
   is_active: boolean
   must_change_password: boolean
   visible_password: string | null
+  can_settle: boolean
 }
 
 export interface RoleRow {
@@ -39,7 +40,7 @@ export function useUsers() {
       unwrap<UserRow[]>(
         await supabase
           .from('profiles')
-          .select('id, username, full_name, role, modules, is_active, must_change_password, visible_password')
+          .select('id, username, full_name, role, modules, is_active, must_change_password, visible_password, can_settle')
           .order('full_name'),
       ),
   })
@@ -124,6 +125,18 @@ export function useResetPassword() {
     mutationFn: async (id: string): Promise<{ tempPassword?: string }> => {
       const res = await invokeAdmin({ action: 'resetPassword', id })
       return { tempPassword: res.tempPassword as string | undefined }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.users }),
+  })
+}
+
+// Designate (or revoke) a Finance approver for Petty Cash settle.
+// Direct profiles update — RLS restricts this to Super Admin.
+export function useSetCanSettle() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, can_settle }: { id: string; can_settle: boolean }) => {
+      unwrap(await supabase.from('profiles').update({ can_settle }).eq('id', id).select('id'))
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.users }),
   })

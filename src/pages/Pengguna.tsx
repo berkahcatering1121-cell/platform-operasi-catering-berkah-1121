@@ -12,6 +12,7 @@ import {
   useUsers,
   useRoles,
   useDeleteUser,
+  useSetCanSettle,
   useAddRole,
   useDeleteRole,
   type RoleRow,
@@ -187,6 +188,7 @@ export default function Pengguna() {
   const users = useUsers()
   const roles = useRoles()
   const del = useDeleteUser()
+  const setCanSettle = useSetCanSettle()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<UserRow | null>(null)
@@ -231,6 +233,7 @@ export default function Pengguna() {
                     <th className={TH}>Password</th>
                     <th className={TH}>Role</th>
                     <th className={TH}>Izin Modul</th>
+                    <th className={TH}>Approve Settle</th>
                     <th className={TH}>Status</th>
                     <th className={TH_R}>Aksi</th>
                   </tr>
@@ -251,6 +254,24 @@ export default function Pengguna() {
                           {moduleSummary(u)}
                         </td>
                         <td className={TD}>
+                          {u.role === 'Super Admin' ? (
+                            <span className="text-[11px] font-semibold text-ink-faint">Otomatis</span>
+                          ) : (
+                            <button
+                              onClick={() => setCanSettle.mutate({ id: u.id, can_settle: !u.can_settle })}
+                              disabled={setCanSettle.isPending}
+                              title="Boleh approve settle Petty Cash (tim Finance)"
+                              className={`inline-flex items-center rounded-pill border px-2.5 py-[3px] text-[10.5px] font-extrabold transition disabled:opacity-60 ${
+                                u.can_settle
+                                  ? 'border-ok-border bg-ok-bg text-ok-text'
+                                  : 'border-app-border bg-app-panel text-ink-muted hover:bg-app-card'
+                              }`}
+                            >
+                              {u.can_settle ? 'Finance ✓' : 'Tidak'}
+                            </button>
+                          )}
+                        </td>
+                        <td className={TD}>
                           <Badge tone={u.is_active ? 'green' : 'neutral'}>{u.is_active ? 'Aktif' : 'Nonaktif'}</Badge>
                         </td>
                         <td className={TD + ' text-right'}>
@@ -263,7 +284,7 @@ export default function Pengguna() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         <EmptyState message="Belum ada pengguna." />
                       </td>
                     </tr>

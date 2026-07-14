@@ -9,21 +9,25 @@ import PhotoCell from '@/components/ui/PhotoCell'
 import { SUB_L, SUB_R, TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatDate, formatRupiah, formatMonthLabel } from '@/lib/format'
 import { titleCase } from '@/lib/text'
+import { useAuth } from '@/auth/AuthProvider'
 import {
   usePettyPeriods,
   usePettyEntries,
   useDeletePeriod,
   useDeleteEntry,
+  useSetSettle,
 } from '@/features/petty/api'
 import PeriodModal from '@/features/petty/PeriodModal'
 import EntryModal from '@/features/petty/EntryModal'
 import type { PettyEntryView, PettyPeriod } from '@/lib/db'
 
 export default function PettyCash() {
+  const { canSettle } = useAuth()
   const periods = usePettyPeriods()
   const entries = usePettyEntries()
   const delPeriod = useDeletePeriod()
   const delEntry = useDeleteEntry()
+  const setSettle = useSetSettle()
 
   const [periodModal, setPeriodModal] = useState<{ open: boolean; editing: PettyPeriod | null }>({
     open: false,
@@ -84,7 +88,31 @@ export default function PettyCash() {
                     <span className="text-[11.5px] text-ink-muted">
                       Saldo Awal <b className="text-ink-body">{formatRupiah(p.opening_balance)}</b>
                     </span>
-                    <StatusBadge status={p.is_settled ? 'Settle' : 'Not Settle Yet'} />
+                    {canSettle ? (
+                      <button
+                        onClick={() => setSettle.mutate({ id: p.id, is_settled: !p.is_settled })}
+                        disabled={setSettle.isPending}
+                        title={p.is_settled ? 'Klik untuk batalkan settle' : 'Approve settle (tim Finance)'}
+                        className={`inline-flex items-center gap-1.5 rounded-pill border px-3 py-1 text-[11px] font-extrabold transition disabled:opacity-60 ${
+                          p.is_settled
+                            ? 'border-ok-border bg-ok-bg text-ok-text hover:brightness-95'
+                            : 'border-gold-border bg-gold-tint text-gold-text hover:bg-gold-pale'
+                        }`}
+                      >
+                        {p.is_settled ? (
+                          <>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                            Settle
+                          </>
+                        ) : (
+                          'Tandai Settle'
+                        )}
+                      </button>
+                    ) : (
+                      <StatusBadge status={p.is_settled ? 'Settle' : 'Not Settle Yet'} />
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Button

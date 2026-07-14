@@ -8,7 +8,6 @@ import type { PettyPeriod } from '@/lib/db'
 interface FormState {
   period: string // YYYY-MM
   opening_balance: string
-  is_settled: boolean
 }
 
 function toForm(p?: PettyPeriod | null): FormState {
@@ -16,7 +15,6 @@ function toForm(p?: PettyPeriod | null): FormState {
   return {
     period: p ? p.period_month.slice(0, 7) : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
     opening_balance: p ? String(p.opening_balance) : '',
-    is_settled: p?.is_settled ?? false,
   }
 }
 
@@ -42,7 +40,6 @@ export default function PeriodModal({ open, onClose, editing }: Props) {
       id: editing?.id,
       period_month: `${form.period}-01`,
       opening_balance: Number(form.opening_balance) || 0,
-      is_settled: form.is_settled,
     }
     save.mutate(payload, { onSuccess: onClose })
   }
@@ -75,17 +72,9 @@ export default function PeriodModal({ open, onClose, editing }: Props) {
           onChange={(e) => set({ opening_balance: e.target.value.replace(/[^\d]/g, '') })}
           placeholder="Masukkan Nominal"
         />
-        <label className="flex items-center gap-2.5 rounded-field border border-app-border bg-app-panel px-3 py-2.5">
-          <input
-            type="checkbox"
-            checked={form.is_settled}
-            onChange={(e) => set({ is_settled: e.target.checked })}
-            className="h-4 w-4 accent-[#1F7A4D]"
-          />
-          <span className="text-[12.5px] font-semibold text-ink-body">
-            Sudah di-settle (kas kecil bulan ini selesai direkonsiliasi)
-          </span>
-        </label>
+        <p className="rounded-field border border-app-border bg-app-panel px-3 py-2.5 text-[11.5px] leading-relaxed text-ink-muted">
+          Status <b>settle</b> di-approve terpisah oleh tim Finance dari halaman Petty Cash.
+        </p>
         {save.isError && <p className="text-[11.5px] text-danger">{(save.error as Error).message}</p>}
       </div>
     </Modal>

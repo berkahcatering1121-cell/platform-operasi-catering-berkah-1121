@@ -20,6 +20,7 @@ export interface Profile {
   modules: ModuleKey[]
   is_active: boolean
   must_change_password: boolean
+  can_settle: boolean
 }
 
 interface AuthContextValue {
@@ -28,6 +29,8 @@ interface AuthContextValue {
   profile: Profile | null
   isSuperAdmin: boolean
   isAdminOrSuper: boolean
+  /** May approve/change Petty Cash settle status (Super Admin or Finance). */
+  canSettle: boolean
   /** Whether the current user may see/operate a module. Mirrors the RLS rules. */
   canAccess: (key: ModuleKey) => boolean
   /** First accessible route (sidebar order); null when the user has no modules. */
@@ -63,10 +66,22 @@ async function loadProfile(userId: string): Promise<Profile | null> {
     mustChange = (pw as { must_change_password: boolean }).must_change_password
   }
 
+  // `can_settle` (Petty Cash approval) — also read defensively.
+  let canSettleFlag = false
+  const { data: cs } = await supabase
+    .from('profiles')
+    .select('can_settle')
+    .eq('id', userId)
+    .maybeSingle()
+  if (cs && typeof (cs as { can_settle?: boolean }).can_settle === 'boolean') {
+    canSettleFlag = (cs as { can_settle: boolean }).can_settle
+  }
+
   return {
     ...data,
     modules: (data.modules ?? []) as ModuleKey[],
     must_change_password: mustChange,
+    can_settle: canSettleFlag,
   } as Profile
 }
 
@@ -118,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isSuperAdmin = profile?.role === 'Super Admin'
   const isAdminOrSuper = profile?.role === 'Super Admin' || profile?.role === 'Admin'
+  const canSettle = isSuperAdmin || profile?.can_settle === true
 
   const canAccess = useCallback(
     (key: ModuleKey) => {
@@ -141,13 +157,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       isSuperAdmin,
       isAdminOrSuper,
+      canSettle,
       canAccess,
       landingPath,
       signIn,
       signOut,
       refreshProfile,
     }),
-    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canAccess, landingPath, signIn, signOut, refreshProfile],
+    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canSettle, canAccess, landingPath, signIn, signOut, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
