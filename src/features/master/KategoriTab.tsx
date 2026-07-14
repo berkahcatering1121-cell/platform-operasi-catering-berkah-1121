@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import {
   useAddRefCategory,
+  useDeleteRefCategory,
   useIngredientCategories,
   useMenuCategories,
   usePaymentMethods,
   usePaymentStatuses,
+  useUpdateRefCategory,
 } from './api'
 import type { RefRow } from '@/lib/db'
+
+type RefTable = 'ingredient_categories' | 'menu_categories'
 
 function ChipRow({ items }: { items: { name: string; tone?: 'green' | 'amber' | 'red' | 'neutral' }[] }) {
   return (
@@ -22,6 +27,98 @@ function ChipRow({ items }: { items: { name: string; tone?: 'green' | 'amber' | 
   )
 }
 
+// A category chip with inline rename + delete affordances.
+function EditableChip({
+  item,
+  onEdit,
+  onDelete,
+}: {
+  item: RefRow
+  onEdit: (id: string, name: string) => void
+  onDelete: (item: RefRow) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(item.name)
+
+  const save = () => {
+    const name = value.trim()
+    if (!name || name === item.name) {
+      setEditing(false)
+      setValue(item.name)
+      return
+    }
+    onEdit(item.id, name)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-pill border border-master-border bg-master-bg py-0.5 pl-2 pr-1">
+        <input
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save()
+            if (e.key === 'Escape') {
+              setEditing(false)
+              setValue(item.name)
+            }
+          }}
+          className="w-[120px] bg-transparent text-[12.5px] font-semibold text-master outline-none"
+        />
+        <button onClick={save} aria-label="Simpan" className="rounded-full p-1 text-master hover:bg-white/60">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </button>
+        <button
+          onClick={() => {
+            setEditing(false)
+            setValue(item.name)
+          }}
+          aria-label="Batal"
+          className="rounded-full p-1 text-ink-muted hover:bg-white/60"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <span className="group inline-flex items-center gap-1.5 rounded-pill border border-master-border bg-master-bg py-1 pl-3 pr-1.5 text-[12.5px] font-bold text-master">
+      {item.name}
+      <span className="flex items-center gap-0.5">
+        <button
+          onClick={() => {
+            setValue(item.name)
+            setEditing(true)
+          }}
+          aria-label={`Edit ${item.name}`}
+          className="rounded-full p-1 text-master/70 hover:bg-white/70 hover:text-master"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </button>
+        <button
+          onClick={() => onDelete(item)}
+          aria-label={`Hapus ${item.name}`}
+          className="rounded-full p-1 text-master/70 hover:bg-danger-bg hover:text-danger"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+    </span>
+  )
+}
+
 function AddableCategoryCard({
   title,
   subtitle,
@@ -31,10 +128,13 @@ function AddableCategoryCard({
   title: string
   subtitle: string
   items: RefRow[] | undefined
-  table: 'ingredient_categories' | 'menu_categories'
+  table: RefTable
 }) {
   const [value, setValue] = useState('')
+  const [toDelete, setToDelete] = useState<RefRow | null>(null)
   const add = useAddRefCategory(table)
+  const update = useUpdateRefCategory(table)
+  const del = useDeleteRefCategory(table)
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,15 +143,26 @@ function AddableCategoryCard({
     add.mutate(name, { onSuccess: () => setValue('') })
   }
 
+  const deleteMessage = toDelete
+    ? table === 'menu_categories'
+      ? `Hapus kategori "${toDelete.name}"? SEMUA menu dalam kategori ini akan ikut terhapus permanen.`
+      : `Hapus kategori "${toDelete.name}"? Supplier & pembelian yang memakai kategori ini akan dikosongkan kategorinya.`
+    : ''
+
+  const err = add.error || update.error || del.error
+
   return (
     <Card title={title} subtitle={subtitle}>
       <div className="mb-3">
         {items && items.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {items.map((c) => (
-              <Badge key={c.id} tone="green">
-                {c.name}
-              </Badge>
+              <EditableChip
+                key={c.id}
+                item={c}
+                onEdit={(id, name) => update.mutate({ id, name })}
+                onDelete={(item) => setToDelete(item)}
+              />
             ))}
           </div>
         ) : (
@@ -73,7 +184,18 @@ function AddableCategoryCard({
           + Tambah
         </button>
       </form>
-      {add.isError && <p className="mt-2 text-[11.5px] text-danger">{(add.error as Error).message}</p>}
+      {err && <p className="mt-2 text-[11.5px] text-danger">{(err as Error).message}</p>}
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Hapus kategori"
+        message={deleteMessage}
+        busy={del.isPending}
+        onClose={() => setToDelete(null)}
+        onConfirm={() =>
+          toDelete && del.mutate(toDelete.id, { onSuccess: () => setToDelete(null) })
+        }
+      />
     </Card>
   )
 }

@@ -81,6 +81,30 @@ export function useAddRefCategory(table: RefTable) {
   })
 }
 
+export function useUpdateRefCategory(table: RefTable) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      unwrap(await supabase.from(table).update({ name: name.trim() }).eq('id', id).select('id'))
+    },
+    // Renaming an ingredient category cascades to suppliers/purchases in the DB,
+    // so refresh all master queries to stay in sync.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['master'] }),
+  })
+}
+
+export function useDeleteRefCategory(table: RefTable) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      unwrap(await supabase.from(table).delete().eq('id', id).select('id'))
+    },
+    // Deleting a menu category cascades to its menu items; an ingredient
+    // category nulls the category on suppliers/purchases. Refresh everything.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['master'] }),
+  })
+}
+
 // ---- suppliers -------------------------------------------------------------
 export function useSuppliers() {
   return useQuery({
