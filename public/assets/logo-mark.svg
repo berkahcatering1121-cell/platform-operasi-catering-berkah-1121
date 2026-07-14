@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Cloche mark, no background. Green dome + gold knob ring + gold tray so it
+       reads clearly on a light surface. -->
+  <path d="M112 360 L112 288 C112 158 400 158 400 288 L400 360"
+        fill="none" stroke="#16603F" stroke-width="30"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="130" r="28" fill="none" stroke="#C9A93B" stroke-width="18"/>
+  <line x1="140" y1="398" x2="372" y2="398" stroke="#C9A93B" stroke-width="26" stroke-linecap="round"/>
+</svg>

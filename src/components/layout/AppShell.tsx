@@ -111,7 +111,7 @@ export default function AppShell() {
               </svg>
             </button>
             <div className="flex items-center gap-2">
-              <img src="/assets/app-icon.png" alt="" width={24} height={24} />
+              <img src="/assets/logo-mark.svg" alt="" width={30} height={30} />
               <span className="text-[13.5px] font-extrabold text-ink">Catering Berkah 1121</span>
             </div>
           </header>
