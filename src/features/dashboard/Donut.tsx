@@ -33,13 +33,20 @@ export default function Donut({ segments }: Props) {
           .join(', ')})`
       : '#EDE6DB'
 
+  // Keep "Rp <nominal>" on ONE line, shrinking the font for long amounts so it
+  // never wraps to "Rp" above the number.
+  const totalStr = formatRupiah(total)
+  const totalSize = totalStr.length >= 13 ? 10.5 : totalStr.length >= 11 ? 11.5 : 12.5
+
   return (
     <div className="flex flex-wrap items-center gap-5">
       <div className="relative flex-none" style={{ width: 132, height: 132 }}>
         <div className="h-full w-full rounded-full" style={{ background: gradient }} />
-        <div className="absolute inset-[22px] flex flex-col items-center justify-center rounded-full bg-app-card text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">Total</span>
-          <span className="text-[12.5px] font-extrabold text-ink">{formatRupiah(total)}</span>
+        <div className="absolute inset-[18px] flex flex-col items-center justify-center rounded-full bg-app-card px-1 text-center">
+          <span className="text-[9.5px] font-semibold uppercase tracking-wide text-ink-muted">Total</span>
+          <span className="whitespace-nowrap font-extrabold leading-tight text-ink" style={{ fontSize: totalSize }}>
+            {totalStr}
+          </span>
         </div>
       </div>
       <div className="min-w-[180px] flex-1 space-y-1.5">

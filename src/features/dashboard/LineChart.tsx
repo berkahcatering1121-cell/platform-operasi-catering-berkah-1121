@@ -21,11 +21,11 @@ export default function LineChart({ series, labels }: Props) {
   const xLabels = labels ?? ID_MONTHS_SHORT
   const n = Math.max(1, series[0]?.values.length ?? xLabels.length)
   const W = 820
-  const H = 280
+  const H = 200
   const padL = 46
   const padR = 12
-  const padT = 16
-  const padB = 30
+  const padT = 14
+  const padB = 28
   const plotW = W - padL - padR
   const plotH = H - padT - padB
 
