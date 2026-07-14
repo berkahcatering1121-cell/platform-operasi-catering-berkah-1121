@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
-import { Field, InputLegend, SelectField } from '@/components/ui/Field'
+import { Field, InputLegend } from '@/components/ui/Field'
 import { MarginBadge, marginNote } from '@/components/ui/Badge'
 import { formatRupiah, formatPercentInt } from '@/lib/format'
 import { SATUAN_OPTIONS, type IngredientDraft, type MarginHealth, type MenuCategory, type MenuItemView, type Satuan } from '@/lib/db'
@@ -74,6 +74,7 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
     [rows],
   )
   const priceNum = Number(price) || 0
+  const categoryName = categories.find((c) => c.id === categoryId)?.name ?? ''
   const hasRows = rows.some((r) => r.name.trim())
   const laba = priceNum - hpp
   const margin = priceNum > 0 ? laba / priceNum : 0
@@ -121,13 +122,22 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
         <InputLegend />
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <SelectField
-            label="Kategori Menu"
-            variant="master"
-            options={categories.map((c) => ({ value: c.id, label: c.name }))}
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          />
+          {/* Kategori terkunci — ditentukan dari kategori tempat menu ditambahkan. */}
+          <div>
+            <div className="mb-1 flex items-baseline justify-between gap-2">
+              <label className="text-[12px] font-semibold text-ink-body">Kategori Menu</label>
+              <span className="text-[10.5px] text-ink-faint">terkunci</span>
+            </div>
+            <div className="field-master flex h-11 items-center justify-between rounded-field px-3">
+              <span className="truncate text-[14px] font-semibold text-master">
+                {categoryName || '—'}
+              </span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-none text-master/70">
+                <rect x="5" y="11" width="14" height="9" rx="2" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+              </svg>
+            </div>
+          </div>
           <Field
             label="Harga Jual / Porsi"
             prefix="Rp"
@@ -140,10 +150,11 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
         </div>
 
         <Field
-          label="Nama Menu"
+          label="Nama Sub-Menu"
+          hint="turunan dari Kategori Menu"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ketik Nama Menu"
+          placeholder="Ketik Nama Sub-Menu"
         />
 
         <div>

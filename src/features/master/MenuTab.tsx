@@ -36,11 +36,11 @@ export default function MenuTab() {
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-4">
         <p className="text-[12.5px] text-ink-muted">
-          Satu tabel per kategori menu. HPP, laba, dan margin dihitung otomatis dari resep.
+          Satu tabel per kategori menu. Tekan “+ Menu” pada kategori untuk menambah sub-menu di dalamnya.
+          HPP, laba, dan margin dihitung otomatis dari resep.
         </p>
-        <Button onClick={() => setEditor({ item: null })}>+ Menu</Button>
       </div>
 
       <div className="space-y-4">
