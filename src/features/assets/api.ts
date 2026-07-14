@@ -19,7 +19,7 @@ export function useAssets() {
           .select(
             'id, acquisition_date, name, category, acquisition_cost, economic_life_months, residual_value, dep_per_month, months_elapsed, accumulated_depreciation, book_value',
           )
-          .order('acquisition_date', { ascending: false }),
+          .order('acquisition_date', { ascending: true }),
       ),
   })
 }

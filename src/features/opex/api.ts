@@ -17,7 +17,7 @@ export function useOperationalCosts() {
         await supabase
           .from('operational_costs')
           .select('id, cost_date, description, category, amount, method, notes, photos')
-          .order('cost_date', { ascending: false }),
+          .order('cost_date', { ascending: true }),
       ),
   })
 }

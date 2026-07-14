@@ -19,7 +19,7 @@ export function usePurchases() {
           .select(
             'id, purchase_date, material_name, category, supplier_id, supplier_name, qty, unit, unit_price, total, status, pic_employee_id, notes, photos, month_key',
           )
-          .order('purchase_date', { ascending: false }),
+          .order('purchase_date', { ascending: true }),
       ),
   })
 }

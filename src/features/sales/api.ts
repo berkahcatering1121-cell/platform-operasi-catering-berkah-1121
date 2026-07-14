@@ -19,7 +19,7 @@ export function useSales() {
           .select(
             'id, sale_date, customer, menu_category, menu_name, portions, price_per_portion, total, sisa, method, status, paid_amount, pic_employee_id, pic_name, notes, photos, month_key',
           )
-          .order('sale_date', { ascending: false }),
+          .order('sale_date', { ascending: true }),
       ),
   })
 }

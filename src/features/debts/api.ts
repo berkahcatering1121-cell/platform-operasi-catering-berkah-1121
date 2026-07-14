@@ -17,7 +17,7 @@ export function useDebts() {
         await supabase
           .from('v_debts')
           .select('id, debt_date, creditor, debt_type, description, amount, due_date, paid_amount, sisa, status')
-          .order('debt_date', { ascending: false }),
+          .order('debt_date', { ascending: true }),
       ),
   })
 }
