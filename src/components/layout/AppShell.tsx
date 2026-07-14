@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import PanduanDrawer from './PanduanDrawer'
 import BottomNav from './BottomNav'
+import TopSearch from './TopSearch'
 
 /**
  * Layout shell: fixed deep-green sidebar on desktop; hamburger drawer + sticky
@@ -101,19 +102,29 @@ export default function AppShell() {
       {/* Content */}
       <div className="flex min-w-0 flex-1 flex-col" style={{ marginLeft: isMobile ? 0 : 236 }}>
         {isMobile && (
-          <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-app-border bg-app-card/95 px-4 py-3 backdrop-blur">
-            <button
-              onClick={() => setDrawerOpen(true)}
-              aria-label="Buka menu"
-              className="rounded-md p-1.5 text-ink-secondary"
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M3 6h18M3 12h18M3 18h18" />
-              </svg>
-            </button>
-            <div className="flex items-center gap-2">
-              <img src="/assets/logo-mark.svg" alt="" width={30} height={30} />
-              <span className="text-[13.5px] font-extrabold text-ink">Catering Berkah 1121</span>
+          <header className="sticky top-0 z-20 border-b border-app-border bg-app-card/95 px-4 py-2.5 backdrop-blur">
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => setDrawerOpen(true)}
+                aria-label="Buka menu"
+                className="-ml-1 rounded-md p-1.5 text-ink-secondary"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M3 6h18M3 12h18M3 18h18" />
+                </svg>
+              </button>
+              <img src="/assets/logo-mark.svg" alt="" width={32} height={32} className="flex-none" />
+              <div className="min-w-0 leading-none">
+                <div className="truncate text-[15.5px] font-extrabold tracking-[-0.02em] text-ink">
+                  Catering&nbsp;Berkah <span className="text-gold-text">1121</span>
+                </div>
+                <div className="mt-[3px] text-[8.5px] font-bold uppercase tracking-[0.24em] text-ink-faint">
+                  Platform Operasi
+                </div>
+              </div>
+            </div>
+            <div className="mt-2.5">
+              <TopSearch />
             </div>
           </header>
         )}
