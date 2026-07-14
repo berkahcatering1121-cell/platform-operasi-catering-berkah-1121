@@ -47,7 +47,8 @@ function composition(rows: { key: string | null; total: number }[]): Segment[] {
 
 export default function Dashboard() {
   const [year, setYear] = useState(TODAY_YEAR)
-  const [month, setMonth] = useState(0) // 0 = whole year; 1-12 = a specific month
+  // Default to the running month so login/refresh lands on the current month.
+  const [month, setMonth] = useState(new Date().getMonth() + 1) // 0 = whole year; 1-12 = month
   const [period, setPeriod] = useState<PeriodKey>('thisMonth')
   const [customDay, setCustomDay] = useState(isoDate(new Date()))
   const pnl = usePnl(year)

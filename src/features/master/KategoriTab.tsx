@@ -30,42 +30,60 @@ function ChipRow({ items }: { items: { name: string; tone?: 'green' | 'amber' | 
 // A category chip with inline rename + delete affordances.
 function EditableChip({
   item,
+  isDuplicate,
   onEdit,
   onDelete,
 }: {
   item: RefRow
+  isDuplicate: (name: string, exceptId: string) => boolean
   onEdit: (id: string, name: string) => void
   onDelete: (item: RefRow) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(item.name)
+  const [dup, setDup] = useState(false)
 
   const save = () => {
     const name = value.trim()
     if (!name || name === item.name) {
       setEditing(false)
       setValue(item.name)
+      setDup(false)
+      return
+    }
+    if (isDuplicate(name, item.id)) {
+      setDup(true)
       return
     }
     onEdit(item.id, name)
     setEditing(false)
+    setDup(false)
   }
 
   if (editing) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-pill border border-master-border bg-master-bg py-0.5 pl-2 pr-1">
+      <span
+        className={`inline-flex items-center gap-1 rounded-pill border py-0.5 pl-2 pr-1 ${
+          dup ? 'border-danger-border bg-danger-bg' : 'border-master-border bg-master-bg'
+        }`}
+        title={dup ? 'Nama sudah dipakai' : undefined}
+      >
         <input
           autoFocus
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value)
+            setDup(false)
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') save()
             if (e.key === 'Escape') {
               setEditing(false)
               setValue(item.name)
+              setDup(false)
             }
           }}
-          className="w-[120px] bg-transparent text-[12.5px] font-semibold text-master outline-none"
+          className={`w-[120px] bg-transparent text-[12.5px] font-semibold outline-none ${dup ? 'text-danger' : 'text-master'}`}
         />
         <button onClick={save} aria-label="Simpan" className="rounded-full p-1 text-master hover:bg-white/60">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -131,15 +149,26 @@ function AddableCategoryCard({
   table: RefTable
 }) {
   const [value, setValue] = useState('')
+  const [dupError, setDupError] = useState('')
   const [toDelete, setToDelete] = useState<RefRow | null>(null)
   const add = useAddRefCategory(table)
   const update = useUpdateRefCategory(table)
   const del = useDeleteRefCategory(table)
 
+  const list = items ?? []
+  // Case-insensitive duplicate check so "Nasi Campur" == "nasi campur".
+  const norm = (s: string) => s.trim().toLowerCase()
+  const isDuplicate = (name: string, exceptId?: string) =>
+    list.some((c) => c.id !== exceptId && norm(c.name) === norm(name))
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     const name = value.trim()
     if (!name || add.isPending) return
+    if (isDuplicate(name)) {
+      setDupError(`Kategori "${name}" sudah ada.`)
+      return
+    }
     add.mutate(name, { onSuccess: () => setValue('') })
   }
 
@@ -152,27 +181,41 @@ function AddableCategoryCard({
   const err = add.error || update.error || del.error
 
   return (
-    <Card title={title} subtitle={subtitle}>
+    <Card
+      title={title}
+      subtitle={subtitle}
+      action={
+        <span className="flex-none whitespace-nowrap rounded-pill border border-master-border bg-master-bg px-3 py-1 text-[12px] font-extrabold text-master">
+          {list.length} kategori
+        </span>
+      }
+    >
       <div className="mb-3">
-        {items && items.length > 0 ? (
+        {list.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {items.map((c) => (
+            {list.map((c) => (
               <EditableChip
                 key={c.id}
                 item={c}
+                isDuplicate={isDuplicate}
                 onEdit={(id, name) => update.mutate({ id, name })}
                 onDelete={(item) => setToDelete(item)}
               />
             ))}
           </div>
         ) : (
-          <div className="text-[12px] text-ink-muted">Belum ada kategori.</div>
+          <div className="rounded-field border border-dashed border-app-border py-6 text-center text-[12px] text-ink-muted">
+            Belum ada kategori.
+          </div>
         )}
       </div>
       <form onSubmit={submit} className="flex gap-2">
         <input
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value)
+            setDupError('')
+          }}
           placeholder="Tambah kategori baru…"
           className="field-manual h-10 flex-1 rounded-field px-3 text-[13px] font-semibold outline-none"
         />
@@ -184,7 +227,9 @@ function AddableCategoryCard({
           + Tambah
         </button>
       </form>
-      {err && <p className="mt-2 text-[11.5px] text-danger">{(err as Error).message}</p>}
+      {(dupError || err) && (
+        <p className="mt-2 text-[11.5px] text-danger">{dupError || (err as Error).message}</p>
+      )}
 
       <ConfirmDialog
         open={!!toDelete}
