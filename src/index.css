@@ -50,6 +50,18 @@
     background: #f2efea;
     border: 1.5px solid #e4ddd2;
   }
+
+  /* Native <select>: replace the cramped default arrow with a custom chevron.
+     Padding is applied per-select (pl-3 pr-8) so the text clears the chevron. */
+  .cb-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='16'%20height='16'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%236B5E4C'%20stroke-width='2.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='m6%209%206%206%206-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 15px;
+  }
 }
 
 /* Thin, unobtrusive scrollbars inside scroll areas. */

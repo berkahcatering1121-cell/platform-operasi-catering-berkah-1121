@@ -70,7 +70,7 @@ export function SelectField({
     <div className={className}>
       {label && <Label hint={hint}>{label}</Label>}
       <select
-        className={`h-11 w-full rounded-field px-3 text-[14px] font-semibold outline-none ${VARIANT_CLASS[variant]}`}
+        className={`cb-select h-11 w-full rounded-field pl-3 pr-8 text-[14px] font-semibold outline-none ${VARIANT_CLASS[variant]}`}
         {...rest}
       >
         {placeholder && <option value="">{placeholder}</option>}

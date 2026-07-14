@@ -205,7 +205,7 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
                     <select
                       value={r.unit}
                       onChange={(e) => setRow(i, { unit: e.target.value as Satuan })}
-                      className="field-manual h-10 rounded-field px-1.5 text-[12px] font-semibold outline-none"
+                      className="cb-select field-manual h-10 rounded-field pl-2 pr-6 text-[12px] font-semibold outline-none"
                     >
                       {SATUAN_OPTIONS.map((u) => (
                         <option key={u} value={u}>

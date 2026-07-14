@@ -138,7 +138,7 @@ export default function Dashboard() {
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="h-[38px] rounded-btn border border-app-border bg-app-card px-2.5 text-[13px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
+              className="cb-select h-[38px] rounded-btn border border-app-border bg-app-card pl-3 pr-8 text-[13px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
               aria-label="Pilih bulan"
             >
               <option value={0}>Semua bulan</option>
