@@ -32,7 +32,7 @@ export default function Login() {
       className="fixed inset-0 flex items-center justify-center p-4 animate-fadeIn"
       style={{
         background:
-          'linear-gradient(rgba(9,30,20,0.45), rgba(9,30,20,0.65)), url(/assets/login-bg.png) left center / cover no-repeat, #10362A',
+          'linear-gradient(rgba(9,30,20,0.45), rgba(9,30,20,0.65)), url(/assets/login-bg.png) center center / cover no-repeat, #10362A',
       }}
     >
       <form
