@@ -62,14 +62,18 @@ export default function BottomNav({ onOpenMenu }: Props) {
             <NavLink
               key={t.key}
               to={m.path}
-              className={({ isActive }) =>
-                `flex min-w-0 flex-col items-center gap-1 overflow-hidden whitespace-nowrap py-2 text-[10.5px] font-bold transition-colors ${
-                  isActive ? 'text-brand' : 'text-ink-muted'
-                }`
-              }
+              className="flex min-w-0 flex-col items-center gap-1 overflow-hidden whitespace-nowrap py-2 text-[10.5px] font-bold"
             >
-              <span className={iconWrap}>{m.icon}</span>
-              {t.label}
+              {({ isActive }) => (
+                <>
+                  {/* Active state colors the icon with the sidebar green; the
+                      label just darkens (not green). */}
+                  <span className={`${iconWrap} ${isActive ? 'text-brand-sidebar' : 'text-ink-muted'}`}>
+                    {m.icon}
+                  </span>
+                  <span className={isActive ? 'text-ink' : 'text-ink-muted'}>{t.label}</span>
+                </>
+              )}
             </NavLink>
           )
         })}

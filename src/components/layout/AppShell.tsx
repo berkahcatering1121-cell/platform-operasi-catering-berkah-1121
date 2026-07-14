@@ -126,8 +126,9 @@ export default function AppShell() {
         </main>
       </div>
 
-      {/* Mobile bottom navigation (hides on scroll-down, shows on scroll-up) */}
-      {isMobile && <BottomNav onOpenMenu={() => setDrawerOpen(true)} />}
+      {/* Mobile bottom navigation (hides on scroll-down, shows on scroll-up).
+          Hidden while the side drawer / Panduan is open to avoid double menus. */}
+      {isMobile && !drawerOpen && !panduanOpen && <BottomNav onOpenMenu={() => setDrawerOpen(true)} />}
 
       <PanduanDrawer open={panduanOpen} onClose={() => setPanduanOpen(false)} />
     </div>
