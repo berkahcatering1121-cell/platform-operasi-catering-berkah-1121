@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import PanduanDrawer from './PanduanDrawer'
+import BottomNav from './BottomNav'
 
 /**
  * Layout shell: fixed deep-green sidebar on desktop; hamburger drawer + sticky
@@ -117,10 +118,16 @@ export default function AppShell() {
           </header>
         )}
 
-        <main className="mx-auto w-full max-w-content flex-1 px-[clamp(14px,2.5vw,28px)] py-[clamp(14px,2.5vw,28px)]">
+        <main
+          className="mx-auto w-full max-w-content flex-1 px-[clamp(14px,2.5vw,28px)] py-[clamp(14px,2.5vw,28px)]"
+          style={isMobile ? { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)' } : undefined}
+        >
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile bottom navigation (hides on scroll-down, shows on scroll-up) */}
+      {isMobile && <BottomNav onOpenMenu={() => setDrawerOpen(true)} />}
 
       <PanduanDrawer open={panduanOpen} onClose={() => setPanduanOpen(false)} />
     </div>
