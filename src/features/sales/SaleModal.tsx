@@ -74,12 +74,21 @@ export default function SaleModal({ open, onClose, editing }: Props) {
     return list.map((m) => ({ value: m.id, label: `${m.name} · ${formatRupiah(m.sell_price)}` }))
   }, [menuItems.data, form.menu_category])
 
-  // Picking a menu fills name + price (green: from Master Data, overridable).
+  // Picking a sub-menu fills name + price (green: from Master Data).
   const pickMenu = (id: string) => {
     const m = (menuItems.data ?? []).find((x) => x.id === id)
     if (!m) return
     set({ menu_name: m.name, price_per_portion: String(m.sell_price), menu_category: m.category_name })
   }
+
+  // The sale stores the menu name; map it back to the item id so the dropdown
+  // shows the currently selected sub-menu.
+  const selectedMenuId = useMemo(() => {
+    const m = (menuItems.data ?? []).find(
+      (x) => x.name === form.menu_name && (!form.menu_category || x.category_name === form.menu_category),
+    )
+    return m?.id ?? ''
+  }, [menuItems.data, form.menu_name, form.menu_category])
 
   const submit = () => {
     if (!form.customer.trim() || save.isPending) return
@@ -154,22 +163,15 @@ export default function SaleModal({ open, onClose, editing }: Props) {
             onChange={(e) => set({ menu_category: e.target.value, menu_name: '' })}
           />
           <SelectField
-            label="Menu (dari Master Data)"
+            label="Sub-Menu (dari Master Data)"
             variant="master"
-            hint="mengisi nama & harga"
+            hint="harga terisi otomatis"
             options={menuOptions}
-            placeholder="Pilih menu…"
-            value=""
+            placeholder="Pilih sub-menu…"
+            value={selectedMenuId}
             onChange={(e) => pickMenu(e.target.value)}
           />
         </div>
-
-        <Field
-          label="Nama Menu"
-          value={form.menu_name}
-          onChange={(e) => set({ menu_name: e.target.value })}
-          placeholder="Ketik atau Pilih dari Menu di Atas"
-        />
 
         <div className="grid gap-3 sm:grid-cols-3">
           <Field
