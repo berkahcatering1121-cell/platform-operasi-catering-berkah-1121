@@ -77,15 +77,6 @@ export default function PayrollModal({ open, onClose, editing }: Props) {
   )
   const isHarian = emp?.salary_type === 'Harian'
   const days = form.work_dates.length
-
-  // Keep legacy / custom period labels selectable in the dropdown.
-  const weekOptions = useMemo(() => {
-    const opts = WEEK_OPTIONS.map((w) => ({ value: w, label: w }))
-    if (form.period_label && !WEEK_OPTIONS.includes(form.period_label)) {
-      opts.unshift({ value: form.period_label, label: form.period_label })
-    }
-    return opts
-  }, [form.period_label])
   const gajiDasar = emp ? (isHarian ? emp.daily_wage * days : emp.base_salary) : 0
   const totalBeban = gajiDasar + (Number(form.allowance) || 0) + (Number(form.bonus) || 0)
   const takeHome = totalBeban - (Number(form.deduction) || 0)
@@ -180,7 +171,7 @@ export default function PayrollModal({ open, onClose, editing }: Props) {
             <SelectField
               label="Periode Minggu"
               hint="satu entri per minggu"
-              options={weekOptions}
+              options={WEEK_OPTIONS.map((w) => ({ value: w, label: w }))}
               placeholder="Pilih minggu…"
               value={form.period_label}
               onChange={(e) => set({ period_label: e.target.value })}

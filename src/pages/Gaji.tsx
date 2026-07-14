@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/ui/Button'
 import { Card, EmptyState, ErrorState, LoadingRows } from '@/components/ui/Card'
@@ -12,6 +12,17 @@ import { useAuth } from '@/auth/AuthProvider'
 import { usePayroll, useDeletePayroll } from '@/features/payroll/api'
 import PayrollModal from '@/features/payroll/PayrollModal'
 import type { PayrollView } from '@/lib/db'
+
+const WEEK_ORDER = ['pertama', 'kedua', 'ketiga', 'keempat', 'kelima']
+const weekRank = (label: string | null) => {
+  const l = (label ?? '').toLowerCase()
+  const i = WEEK_ORDER.findIndex((w) => l.includes(w))
+  return i < 0 ? 99 : i
+}
+const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase())
+// Row label under an employee: the (title-cased) week, or a monthly-salary tag.
+const weekLabel = (r: PayrollView) =>
+  r.period_label ? titleCase(r.period_label) : r.salary_type === 'Harian' ? '—' : 'Gaji Bulanan'
 
 export default function Gaji() {
   const { isAdminOrSuper } = useAuth()
@@ -56,14 +67,27 @@ export default function Gaji() {
           {groups.map((g) => {
             const subBeban = g.rows.reduce((t, r) => t + r.total_beban, 0)
             const subThp = g.rows.reduce((t, r) => t + r.take_home, 0)
+
+            // Group entries by employee so each name appears once, with its
+            // weeks (Minggu Pertama, Kedua, …) listed underneath.
+            const byEmp = new Map<string, PayrollView[]>()
+            for (const r of g.rows) {
+              const arr = byEmp.get(r.employee_id) ?? []
+              arr.push(r)
+              byEmp.set(r.employee_id, arr)
+            }
+            const employees = [...byEmp.values()].sort((a, b) =>
+              a[0].employee_name.localeCompare(b[0].employee_name),
+            )
+            const cols = isAdminOrSuper ? 11 : 10
+
             return (
               <Card key={g.key} title={g.label} subtitle={`${g.rows.length} entri gaji`} bodyClassName="">
                 <div className="cb-scroll overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr>
-                        <th className={TH}>Karyawan</th>
-                        <th className={TH}>Tipe Gaji</th>
+                        <th className={TH}>Karyawan / Minggu</th>
                         <th className={TH_R}>Upah / Hari</th>
                         <th className={TH_R}>Hari Kerja</th>
                         <th className={TH_R}>Gaji Dasar</th>
@@ -77,40 +101,50 @@ export default function Gaji() {
                       </tr>
                     </thead>
                     <tbody>
-                      {g.rows.map((r) => {
-                        const harian = r.salary_type === 'Harian'
+                      {employees.map((rows) => {
+                        const first = rows[0]
+                        const weeks = [...rows].sort(
+                          (a, b) => weekRank(a.period_label) - weekRank(b.period_label),
+                        )
                         return (
-                          <tr key={r.id}>
-                            <td className={TD}>
-                              <div className="font-bold text-ink">{r.employee_name}</div>
-                              {r.period_label && (
-                                <div className="text-[11px] text-ink-faint">{r.period_label}</div>
-                              )}
-                            </td>
-                            <td className={TD}>
-                              <StatusBadge status={r.salary_type} />
-                            </td>
-                            <td className={TD_R}>{harian ? formatRupiah(r.daily_wage) : '—'}</td>
-                            <td className={TD_R}>{harian ? r.days_worked : '—'}</td>
-                            <td className={TD_R}>{formatRupiah(r.base_pay)}</td>
-                            <td className={TD_R}>{formatRupiah(r.allowance)}</td>
-                            <td className={TD_R}>{formatRupiah(r.bonus)}</td>
-                            <td className={TD_R}>{formatRupiah(r.deduction)}</td>
-                            <td className={TD_R + ' font-extrabold text-ink'}>{formatRupiah(r.total_beban)}</td>
-                            <td className={TD_R + ' font-extrabold text-ok'}>{formatRupiah(r.take_home)}</td>
-                            <td className={TD}>
-                              <StatusBadge status={statusLabel(r.status)} />
-                            </td>
-                            {isAdminOrSuper && (
-                              <td className={TD_R}>
-                                <RowActions onEdit={() => openEdit(r)} onDelete={() => setToDelete(r)} />
+                          <Fragment key={first.employee_id}>
+                            <tr>
+                              <td colSpan={cols} className="border-t border-[#F1EBE2] bg-[#F1F6F2] px-3 py-2">
+                                <span className="text-[13px] font-extrabold text-ink">{first.employee_name}</span>
+                                <span className="ml-2 align-middle">
+                                  <StatusBadge status={first.salary_type} />
+                                </span>
                               </td>
-                            )}
-                          </tr>
+                            </tr>
+                            {weeks.map((r) => {
+                              const rh = r.salary_type === 'Harian'
+                              return (
+                                <tr key={r.id}>
+                                  <td className={TD + ' pl-6 font-semibold text-ink-body'}>{weekLabel(r)}</td>
+                                  <td className={TD_R}>{rh ? formatRupiah(r.daily_wage) : '—'}</td>
+                                  <td className={TD_R}>{rh ? r.days_worked : '—'}</td>
+                                  <td className={TD_R}>{formatRupiah(r.base_pay)}</td>
+                                  <td className={TD_R}>{formatRupiah(r.allowance)}</td>
+                                  <td className={TD_R}>{formatRupiah(r.bonus)}</td>
+                                  <td className={TD_R}>{formatRupiah(r.deduction)}</td>
+                                  <td className={TD_R + ' font-extrabold text-ink'}>{formatRupiah(r.total_beban)}</td>
+                                  <td className={TD_R + ' font-extrabold text-ok'}>{formatRupiah(r.take_home)}</td>
+                                  <td className={TD}>
+                                    <StatusBadge status={statusLabel(r.status)} />
+                                  </td>
+                                  {isAdminOrSuper && (
+                                    <td className={TD_R}>
+                                      <RowActions onEdit={() => openEdit(r)} onDelete={() => setToDelete(r)} />
+                                    </td>
+                                  )}
+                                </tr>
+                              )
+                            })}
+                          </Fragment>
                         )
                       })}
                       <tr>
-                        <td className={SUB_L} colSpan={8}>
+                        <td className={SUB_L} colSpan={7}>
                           Subtotal {g.label}
                         </td>
                         <td className={SUB_R}>{formatRupiah(subBeban)}</td>
