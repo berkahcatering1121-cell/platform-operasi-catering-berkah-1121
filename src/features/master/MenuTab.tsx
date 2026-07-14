@@ -18,6 +18,7 @@ export default function MenuTab() {
 
   const [editor, setEditor] = useState<{ item: MenuItemView | null; categoryId?: string } | null>(null)
   const [toDelete, setToDelete] = useState<MenuItemView | null>(null)
+  const [q, setQ] = useState('')
 
   const byCategory = useMemo(() => {
     const map = new Map<string, MenuItemView[]>()
@@ -35,18 +36,60 @@ export default function MenuTab() {
 
   const categories = cats.data ?? []
 
+  // Search: match by menu name (or category name → show whole category).
+  const term = q.trim().toLowerCase()
+  const visible = categories
+    .map((cat) => {
+      const all = byCategory.get(cat.id) ?? []
+      if (!term) return { cat, list: all, show: true }
+      const catMatch = cat.name.toLowerCase().includes(term)
+      const list = catMatch ? all : all.filter((m) => m.name.toLowerCase().includes(term))
+      return { cat, list, show: catMatch || list.length > 0 }
+    })
+    .filter((v) => v.show)
+  const totalMatches = term ? visible.reduce((t, v) => t + v.list.length, 0) : 0
+
   return (
     <>
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[12.5px] text-ink-muted">
           Satu tabel per kategori menu. Tekan “+ Menu” pada kategori untuk menambah sub-menu di dalamnya.
-          HPP, laba, dan margin dihitung otomatis dari resep.
         </p>
+        <div className="relative w-full sm:w-[320px]">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          </span>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Cari menu…"
+            className="field-manual h-10 w-full rounded-field pl-9 pr-9 text-[13px] font-semibold outline-none"
+          />
+          {q && (
+            <button
+              onClick={() => setQ('')}
+              aria-label="Bersihkan"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-muted hover:text-ink"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
+      {term && (
+        <p className="mb-3 text-[12px] text-ink-muted">
+          {totalMatches > 0 ? `${totalMatches} menu cocok dengan “${q.trim()}”` : `Tidak ada menu cocok dengan “${q.trim()}”`}
+        </p>
+      )}
+
       <div className="space-y-4">
-        {categories.map((cat) => {
-          const list = byCategory.get(cat.id) ?? []
+        {visible.map(({ cat, list }) => {
           return (
             <Card
               key={cat.id}
