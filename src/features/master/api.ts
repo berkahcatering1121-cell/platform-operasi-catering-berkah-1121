@@ -70,11 +70,19 @@ export function usePaymentStatuses() {
 }
 
 type RefTable = 'ingredient_categories' | 'menu_categories'
+// Map a Postgres unique-violation (23505) to a friendly Indonesian message.
+function dedupError(error: { code?: string; message: string } | null, name: string): void {
+  if (!error) return
+  if (error.code === '23505') throw new Error(`Kategori "${name.trim()}" sudah ada.`)
+  throw new Error(error.message)
+}
+
 export function useAddRefCategory(table: RefTable) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (name: string) => {
-      unwrap(await supabase.from(table).insert({ name: name.trim(), sort: 999 }).select('id'))
+      const { error } = await supabase.from(table).insert({ name: name.trim(), sort: 999 }).select('id')
+      dedupError(error, name)
     },
     onSuccess: () => qc.invalidateQueries(),
   })
@@ -84,7 +92,8 @@ export function useUpdateRefCategory(table: RefTable) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      unwrap(await supabase.from(table).update({ name: name.trim() }).eq('id', id).select('id'))
+      const { error } = await supabase.from(table).update({ name: name.trim() }).eq('id', id).select('id')
+      dedupError(error, name)
     },
     // Renaming an ingredient category cascades to suppliers/purchases in the DB,
     // so refresh all master queries to stay in sync.
