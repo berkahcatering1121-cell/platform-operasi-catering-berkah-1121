@@ -1,0 +1,16 @@
+{
+  "name": "Catering Berkah 1121",
+  "short_name": "Catering Berkah",
+  "description": "Platform Operasi — Purchasing & Finance",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#10362A",
+  "theme_color": "#10362A",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
