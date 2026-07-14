@@ -10,7 +10,7 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { usernameToEmail } from '@/lib/env'
-import type { ModuleKey } from '@/lib/modules'
+import { MODULES, type ModuleKey } from '@/lib/modules'
 
 export interface Profile {
   id: string
@@ -30,6 +30,8 @@ interface AuthContextValue {
   isAdminOrSuper: boolean
   /** Whether the current user may see/operate a module. Mirrors the RLS rules. */
   canAccess: (key: ModuleKey) => boolean
+  /** First accessible route (sidebar order); null when the user has no modules. */
+  landingPath: string | null
   signIn: (username: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   /** Re-fetch the current user's profile (e.g. after a forced password change). */
@@ -120,13 +122,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const canAccess = useCallback(
     (key: ModuleKey) => {
       if (!profile) return false
-      if (key === 'dashboard' || key === 'pnl') return true
       if (profile.role === 'Super Admin') return true
       if (key === 'pengguna') return false // Super Admin only
+      // Dashboard & P&L are now regular, revocable permissions like the rest.
       return profile.modules.includes(key)
     },
     [profile],
   )
+
+  // First module the user can open (in sidebar order) — used as the landing
+  // route and as the redirect target for guarded pages. null = no access.
+  const landingPath = useMemo(() => MODULES.find((m) => canAccess(m.key))?.path ?? null, [canAccess])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -136,11 +142,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSuperAdmin,
       isAdminOrSuper,
       canAccess,
+      landingPath,
       signIn,
       signOut,
       refreshProfile,
     }),
-    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canAccess, signIn, signOut, refreshProfile],
+    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canAccess, landingPath, signIn, signOut, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -18,11 +18,9 @@ export interface RoleRow {
   is_core: boolean
 }
 
-// Modules an admin can grant. dashboard & pnl are implicit; pengguna is
-// Super-Admin-only, so neither is a checkbox.
-export const ASSIGNABLE_MODULES = MODULES.filter(
-  (m) => !['dashboard', 'pnl', 'pengguna'].includes(m.key),
-)
+// Modules an admin can grant. Dashboard & P&L are now revocable permissions
+// too; only Manajemen Pengguna (pengguna) stays Super-Admin-only.
+export const ASSIGNABLE_MODULES = MODULES.filter((m) => m.key !== 'pengguna')
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
   if (res.error) throw new Error(res.error.message)

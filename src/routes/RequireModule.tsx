@@ -14,7 +14,7 @@ export default function RequireModule({
   module: ModuleKey
   children: React.ReactNode
 }) {
-  const { canAccess } = useAuth()
-  if (!canAccess(module)) return <Navigate to="/dashboard" replace />
+  const { canAccess, landingPath } = useAuth()
+  if (!canAccess(module)) return <Navigate to={landingPath ?? '/tanpa-akses'} replace />
   return <>{children}</>
 }

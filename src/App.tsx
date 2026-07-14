@@ -20,7 +20,7 @@ import PnL from '@/pages/PnL'
 import Pengguna from '@/pages/Pengguna'
 
 export default function App() {
-  const { loading, session, profile } = useAuth()
+  const { loading, session, profile, landingPath } = useAuth()
 
   // Branded splash: show for ~2.2s, then fade out (matches prototype timing).
   const [booting, setBooting] = useState(true)
@@ -46,11 +46,23 @@ export default function App() {
   // First-login: force the user to replace their temporary password.
   if (profile?.must_change_password) return <ChangePassword />
 
+  // A user with no accessible module at all (everything unchecked).
+  if (!landingPath) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-app-bg px-6 text-center">
+        <div className="text-[15px] font-extrabold text-ink">Tidak ada modul yang dapat diakses</div>
+        <p className="max-w-sm text-[13px] text-ink-muted">
+          Akun Anda belum diberi izin modul apa pun. Hubungi Super Admin untuk mengatur hak akses.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route index element={<Navigate to={landingPath} replace />} />
+        <Route path="/dashboard" element={<RequireModule module="dashboard"><Dashboard /></RequireModule>} />
         <Route path="/master" element={<RequireModule module="master"><MasterData /></RequireModule>} />
         <Route path="/pembelian" element={<RequireModule module="pembelian"><Pembelian /></RequireModule>} />
         <Route path="/penjualan" element={<RequireModule module="penjualan"><Penjualan /></RequireModule>} />
@@ -59,9 +71,9 @@ export default function App() {
         <Route path="/hutang" element={<RequireModule module="hutang"><Hutang /></RequireModule>} />
         <Route path="/petty" element={<RequireModule module="petty"><PettyCash /></RequireModule>} />
         <Route path="/aset" element={<RequireModule module="aset"><Aset /></RequireModule>} />
-        <Route path="/pnl" element={<PnL />} />
+        <Route path="/pnl" element={<RequireModule module="pnl"><PnL /></RequireModule>} />
         <Route path="/pengguna" element={<RequireModule module="pengguna"><Pengguna /></RequireModule>} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to={landingPath} replace />} />
       </Route>
     </Routes>
   )

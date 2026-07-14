@@ -28,7 +28,8 @@ function toForm(u?: UserRow | null): FormState {
     role: u?.role ?? 'Admin',
     customRole: '',
     useCustomRole: false,
-    modules: u?.modules ?? [],
+    // New users default to seeing Dashboard & P&L; admin can uncheck them.
+    modules: u ? u.modules : (['dashboard', 'pnl'] as ModuleKey[]),
   }
 }
 
@@ -274,7 +275,8 @@ export default function UserModal({ open, onClose, editing, roles }: Props) {
                   ))}
                 </div>
                 <p className="mt-1.5 text-[11px] text-ink-faint">
-                  Dashboard & P&L selalu dapat diakses semua pengguna.
+                  Centang modul yang boleh diakses. Hilangkan centang Dashboard bila mis. staf dapur tak
+                  perlu melihatnya.
                 </p>
               </>
             )}
