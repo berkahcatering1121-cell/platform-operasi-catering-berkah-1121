@@ -1,20 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 
-// Swap this many seconds before the end. The incoming copy is already decoded
-// and parked on frame 0, so the hand-off is instant.
-const SWAP = 0.09 // ~2 frames at 25fps
+// Start the standby copy this many seconds before the loop point, while it is
+// still hidden, so it is actually decoding/painting by the time we reveal it.
+const LEAD = 0.4
+// Reveal the standby at the exact crossing point (LEAD/2): because the boomerang
+// is time-symmetric around the loop point, the outgoing (reversing) copy and the
+// incoming (forward) copy show the *same* frame there — so the hard cut has no
+// black blink (standby already painted) and no positional jump (frames match).
+const REVEAL_DELAY = (LEAD / 2) * 1000 // ms
 
 /**
  * Truly seamless looping background video — no black flash, no blend.
  *
- * The source is a *boomerang* clip (plays forward, then the same footage in
- * reverse), so its first and last frames are the same image. Instead of relying
- * on the browser's native `loop` — which briefly shows a black frame while the
- * decoder reseeks to the start — we double-buffer: two stacked copies, and at
- * the loop point we HARD-CUT (instant opacity swap, no transition) to the other
- * copy, which is already playing fresh from frame 0. Because both copies show
- * the identical boomerang frame at the cut, the swap is invisible, and the
- * incoming copy never reseeks on-screen, so there is no black flash at all.
+ * The source is a *boomerang* clip (forward, then the same footage reversed), so
+ * its first and last frames are identical AND the footage is time-symmetric
+ * around the loop point. We double-buffer two copies and hand off like this:
+ *
+ *   1. A short moment (LEAD) before the active copy ends, we start the standby
+ *      copy from frame 0 while it is still hidden — it begins decoding/painting.
+ *   2. After REVEAL_DELAY we hard-cut (instant opacity flip) to the standby.
+ *      Because the boomerang is symmetric around the loop point, both copies are
+ *      showing the same frame during this overlap, so the cut is invisible — and
+ *      the standby is already painted, so there is no black blink.
+ *   3. The copy we left finishes off-screen, then rewinds to frame 0 to re-arm.
  *
  * Muted + playsInline so autoplay is allowed everywhere (incl. iOS Safari).
  */
@@ -30,26 +38,29 @@ export default function LoopBgVideo({ src }: { src: string }) {
     let raf = 0
     let swapping = false
 
-    // Start the first copy; keep the second parked on frame 0, decoded & ready.
     vids[0].play().catch(() => {})
     vids[1].pause()
     try {
       vids[1].currentTime = 0
     } catch {
-      /* not seekable yet — will settle once metadata loads */
+      /* not seekable yet */
     }
 
     const tick = () => {
       const a = vids[cur]
       const b = vids[cur ^ 1]
-      if (a && b && !swapping && a.duration && a.currentTime >= a.duration - SWAP) {
+      if (a && b && !swapping && a.duration && a.currentTime >= a.duration - LEAD) {
         swapping = true
-        // Hand off to the standby copy (already on frame 0) with an instant cut.
-        b.play().catch(() => {})
         const prev = cur
-        cur ^= 1
-        setActive(cur)
-        // Re-arm the copy we just left: rewind (off-screen) so it's ready next time.
+        // 1) Start the standby copy from the top while still hidden.
+        b.currentTime = 0
+        b.play().catch(() => {})
+        // 2) Reveal it once it has painted a few frames — invisible hard cut.
+        window.setTimeout(() => {
+          cur ^= 1
+          setActive(cur)
+        }, REVEAL_DELAY)
+        // 3) Re-arm the copy we left, off-screen, after it has fully ended.
         window.setTimeout(() => {
           const p = vids[prev]
           if (p) {
@@ -61,7 +72,7 @@ export default function LoopBgVideo({ src }: { src: string }) {
             }
           }
           swapping = false
-        }, 120)
+        }, LEAD * 1000 + 150)
       }
       raf = requestAnimationFrame(tick)
     }
