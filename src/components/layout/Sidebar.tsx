@@ -56,7 +56,9 @@ export default function Sidebar({
   }
 
   return (
-    <div className="flex h-full flex-col bg-brand-sidebar text-white">
+    <div className="relative isolate flex h-full flex-col overflow-hidden bg-brand-sidebar text-white">
+      {/* Ambient moving light behind the content — keeps the screen lively. */}
+      <div className="sidebar-aurora" aria-hidden />
       {/* Brand header */}
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
