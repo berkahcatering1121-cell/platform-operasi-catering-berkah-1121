@@ -57,11 +57,23 @@ export default function Sidebar({
 
   return (
     <div className="relative isolate flex h-full flex-col overflow-hidden bg-brand-sidebar text-white">
-      {/* Ambient moving light behind the content — keeps the screen lively. */}
-      <div className="sidebar-aurora" aria-hidden>
-        <span className="b1" />
-        <span className="b2" />
-        <span className="b3" />
+      {/* Looping background video — muted + autoplay + loop, tidak pernah
+          berhenti. Overlay hijau gelap menjaga menu tetap terbaca. */}
+      <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden>
+        <video
+          className="h-full w-full object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+        >
+          <source src="/assets/sidebar-bg.mp4" type="video/mp4" />
+        </video>
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(180deg, rgba(16,54,42,0.60), rgba(11,42,32,0.82))' }}
+        />
       </div>
       {/* Brand header */}
       <div className="px-4 pt-4 pb-3">
