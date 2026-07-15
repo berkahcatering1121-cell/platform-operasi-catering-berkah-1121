@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 
-// Length of the crossfade at the loop point. Short + on a boomerang source
-// (near-identical frames at the seam) = a very soft, barely-there blend.
-const FADE = 0.7 // seconds
+// Length of the crossfade where the end of the clip dissolves into its start.
+const FADE = 0.9 // seconds
 
 /**
- * Seamless looping background video — a soft blend, never a black flash.
+ * Seamless one-directional looping background video.
  *
- * The source is a *boomerang* clip (forward, then the same footage reversed), so
- * the frames at the loop point are nearly identical. Two stacked copies crossfade
- * there: because the seam frames match, the blend is extremely subtle, and
- * fading the incoming copy up from opacity 0 hides any not-yet-painted frame, so
- * there is no black blink. The result is one continuous, softly-looping motion.
+ * The clip always plays forward, so the motion flows continuously (no boomerang
+ * bounce that reads as a "replay"). To hide the restart, two stacked copies
+ * crossfade at the loop point: as the active copy nears its end, the other copy
+ * starts from the top and we fade across over FADE seconds. Both copies are
+ * moving in the same (forward) direction during the blend, so it flows smoothly,
+ * and fading the incoming copy up from opacity 0 masks any not-yet-painted frame
+ * — so there is no black flash.
  *
  * Muted + playsInline so autoplay is allowed everywhere (incl. iOS Safari).
  */
