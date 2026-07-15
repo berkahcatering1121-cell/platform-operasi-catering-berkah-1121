@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { MODULE_BY_KEY, NAV } from '@/lib/modules'
 import { useAuth } from '@/auth/AuthProvider'
+import LoopBgVideo from './LoopBgVideo'
 
 interface SidebarProps {
   onNavigate?: () => void
@@ -57,19 +58,10 @@ export default function Sidebar({
 
   return (
     <div className="relative isolate flex h-full flex-col overflow-hidden bg-brand-sidebar text-white">
-      {/* Looping background video — muted + autoplay + loop, tidak pernah
-          berhenti. Overlay hijau gelap menjaga menu tetap terbaca. */}
-      <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-        <video
-          className="h-full w-full object-cover"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-        >
-          <source src="/assets/sidebar-bg.mp4" type="video/mp4" />
-        </video>
+      {/* Seamless looping background video (dua video saling crossfade agar
+          tidak ada kedip hitam saat mengulang). Overlay menjaga keterbacaan. */}
+      <div className="absolute inset-0 -z-10 overflow-hidden bg-brand-sidebar" aria-hidden>
+        <LoopBgVideo src="/assets/sidebar-bg.mp4" />
         <div
           className="absolute inset-0"
           style={{ background: 'linear-gradient(180deg, rgba(16,54,42,0.60), rgba(11,42,32,0.82))' }}
