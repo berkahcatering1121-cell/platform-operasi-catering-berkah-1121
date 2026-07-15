@@ -58,8 +58,9 @@ export default function Sidebar({
 
   return (
     <div className="relative isolate flex h-full flex-col overflow-hidden bg-brand-sidebar text-white">
-      {/* Seamless looping background video (dua video saling crossfade agar
-          tidak ada kedip hitam saat mengulang). Overlay menjaga keterbacaan. */}
+      {/* Seamless looping background video (klip boomerang: maju lalu mundur,
+          sehingga awal & akhir frame-nya identik → loop tanpa kedip/blend).
+          Overlay gelap menjaga keterbacaan teks menu. */}
       <div className="absolute inset-0 -z-10 overflow-hidden bg-brand-sidebar" aria-hidden>
         <LoopBgVideo src="/assets/sidebar-bg.mp4" />
         <div
