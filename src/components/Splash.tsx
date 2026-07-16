@@ -2,60 +2,78 @@ interface SplashProps {
   leaving: boolean
 }
 
+// A few gold dust motes with varied position / size / timing for organic drift.
+const DUST = [
+  { left: '18%', bottom: '26%', size: 3, dur: 6.5, delay: 0 },
+  { left: '32%', bottom: '18%', size: 4, dur: 7.8, delay: 1.2 },
+  { left: '50%', bottom: '30%', size: 2.5, dur: 6.0, delay: 2.1 },
+  { left: '64%', bottom: '20%', size: 4, dur: 8.4, delay: 0.7 },
+  { left: '78%', bottom: '28%', size: 3, dur: 7.0, delay: 1.7 },
+  { left: '44%', bottom: '14%', size: 2.5, dur: 9.0, delay: 3.0 },
+]
+
 /**
- * Pre-login brand splash: radial green gradient, pulsing gold ring behind the
- * app icon, title with gold "1121", italic tagline, and a gold progress bar.
- * Auto-dismiss + fade-out are driven by the parent (App).
+ * Premium boot splash: a cinematic, Framer-Motion-like reveal built from pure
+ * CSS — drifting ambient orbs, a breathing halo, a slowly rotating gold arc, a
+ * shine sweep over the brand mark, floating gold dust, staggered fade-ups, and a
+ * glowing progress bar. Auto-dismiss + fade-out are driven by the parent (App).
  */
 export default function Splash({ leaving }: SplashProps) {
   return (
-    <div
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center ${
-        leaving ? 'animate-cbFadeOut' : ''
-      }`}
-      style={{
-        background:
-          'radial-gradient(120% 120% at 50% 30%, #1B5138 0%, #10362A 55%, #0C2A20 100%)',
-      }}
-    >
-      <div className="relative flex items-center justify-center">
+    <div className={`splash ${leaving ? 'splash--leaving' : ''}`}>
+      {/* Ambient background light */}
+      <span className="splash__orb splash__orb--gold" aria-hidden />
+      <span className="splash__orb splash__orb--emerald" aria-hidden />
+
+      {/* Floating gold dust */}
+      {DUST.map((d, i) => (
         <span
-          className="absolute rounded-full animate-cbRing"
+          key={i}
+          className="splash__dust"
+          aria-hidden
           style={{
-            width: 210,
-            height: 210,
-            background:
-              'radial-gradient(circle, rgba(201,169,59,0.35) 0%, rgba(201,169,59,0) 70%)',
-            boxShadow: '0 0 0 2px rgba(201,169,59,0.35)',
+            left: d.left,
+            bottom: d.bottom,
+            width: d.size,
+            height: d.size,
+            animationDuration: `${d.dur}s`,
+            animationDelay: `${d.delay}s`,
           }}
         />
-        <img
-          src="/assets/app-icon-white.png"
-          alt="Catering Berkah"
-          width={168}
-          height={168}
-          className="relative"
-          style={{ filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.35))' }}
-        />
+      ))}
+
+      {/* Icon stage */}
+      <div className="splash__stage">
+        <span className="splash__halo" aria-hidden />
+        <span className="splash__ring-static" aria-hidden />
+        <span className="splash__ring-spin" aria-hidden />
+        <div className="splash__icon">
+          <img
+            src="/assets/app-icon-white.png"
+            alt="Catering Berkah"
+            width={168}
+            height={168}
+          />
+          <span className="splash__shine" aria-hidden />
+        </div>
       </div>
 
-      <div className="mt-1 text-center animate-cbFadeUp">
-        <div className="text-[26px] font-extrabold tracking-tight text-white">
-          Catering Berkah <span className="text-gold">1121</span>
-        </div>
-        <div className="mt-[7px] text-[12px] font-semibold italic tracking-[0.04em] text-side-inactive">
-          for your every moment
+      {/* Wordmark */}
+      <div className="splash__title mt-1 text-center">
+        <div className="text-[27px] font-extrabold tracking-tight text-white">
+          Catering Berkah <span className="splash__accent text-gold">1121</span>
         </div>
       </div>
+      <div className="splash__tag mt-[7px] text-[12px] font-semibold italic tracking-[0.04em] text-side-inactive">
+        for your every moment
+      </div>
 
-      <div
-        className="mt-[22px] h-1 w-[180px] overflow-hidden rounded-pill"
-        style={{ background: 'rgba(255,255,255,0.12)' }}
-      >
-        <div
-          className="h-full animate-cbBarFill rounded-pill"
-          style={{ background: 'linear-gradient(90deg, #C9A93B, #E2C77E)' }}
-        />
+      {/* Progress */}
+      <div className="splash__barwrap mt-[22px]">
+        <div className="splash__bar">
+          <div className="splash__bar-fill" />
+          <div className="splash__bar-shine" />
+        </div>
       </div>
     </div>
   )
