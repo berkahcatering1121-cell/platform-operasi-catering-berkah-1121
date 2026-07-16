@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import Splash from '@/components/Splash'
-import WelcomeScreen from '@/components/WelcomeScreen'
 import Login from '@/pages/Login'
 import ChangePassword from '@/pages/ChangePassword'
 import AppShell from '@/components/layout/AppShell'
@@ -21,7 +20,7 @@ import PnL from '@/pages/PnL'
 import Pengguna from '@/pages/Pengguna'
 
 export default function App() {
-  const { loading, session, profile, landingPath, justLoggedIn, endWelcome } = useAuth()
+  const { loading, session, profile, landingPath } = useAuth()
 
   // Branded splash: show for ~2.2s, then fade out (matches prototype timing).
   const [booting, setBooting] = useState(true)
@@ -46,14 +45,6 @@ export default function App() {
   if (!session) return <Login />
   // First-login: force the user to replace their temporary password.
   if (profile?.must_change_password) return <ChangePassword />
-
-  // Personalised welcome, shown once right after an interactive login. While the
-  // profile is still loading, hold on the branded splash (avoids a flash of the
-  // "no module" screen) and greet by name as soon as it's ready.
-  if (justLoggedIn) {
-    if (!profile) return <Splash leaving={false} />
-    return <WelcomeScreen name={profile.full_name} role={profile.role} onDone={endWelcome} />
-  }
 
   // A user with no accessible module at all (everything unchecked).
   if (!landingPath) {
