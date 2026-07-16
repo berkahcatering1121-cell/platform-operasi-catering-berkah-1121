@@ -308,29 +308,27 @@
   60% { opacity: 1; filter: blur(0); }
   100% { opacity: 1; transform: scale(1); }
 }
-/* Shine sweep across the icon. */
-.splash__shine {
-  position: absolute;
-  width: 168px;
-  height: 168px;
-  border-radius: 9999px;
+/* Glossy shine sweep travelling across the wordmark (like light over the text). */
+.splash__wordmark {
+  position: relative;
+  display: inline-block;
   overflow: hidden;
-  pointer-events: none;
 }
-.splash__shine::before {
+.splash__wordmark::after {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -70%;
-  width: 45%;
-  height: 200%;
-  transform: rotate(18deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  animation: splashShine 3.4s ease-in-out 0.8s infinite;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+  width: 26%;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: splashTextShine 3.6s ease-in-out 1s infinite;
+  pointer-events: none;
 }
-@keyframes splashShine {
-  0% { left: -70%; }
-  40%, 100% { left: 140%; }
+@keyframes splashTextShine {
+  0% { left: -45%; }
+  42%, 100% { left: 135%; }
 }
 
 /* Drifting gold dust particles. */
@@ -412,7 +410,7 @@
   .splash__orb,
   .splash__halo,
   .splash__ring-spin,
-  .splash__shine::before,
+  .splash__wordmark::after,
   .splash__dust,
   .splash__accent,
   .splash__bar-shine {
