@@ -35,6 +35,10 @@ interface AuthContextValue {
   canAccess: (key: ModuleKey) => boolean
   /** First accessible route (sidebar order); null when the user has no modules. */
   landingPath: string | null
+  /** True right after an interactive sign-in — used to show the welcome screen once. */
+  justLoggedIn: boolean
+  /** Dismiss the post-login welcome so the app renders. */
+  endWelcome: () => void
   signIn: (username: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   /** Re-fetch the current user's profile (e.g. after a forced password change). */
@@ -89,6 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  // Set only by an interactive signIn() so the welcome screen appears once per
+  // login (not on page refresh, where the session is silently restored).
+  const [justLoggedIn, setJustLoggedIn] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -118,12 +125,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     })
     if (error) return { error: 'ID Pengguna atau password salah.' }
+    setJustLoggedIn(true)
     return { error: null }
   }, [])
+
+  const endWelcome = useCallback(() => setJustLoggedIn(false), [])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     setProfile(null)
+    setJustLoggedIn(false)
   }, [])
 
   const refreshProfile = useCallback(async () => {
@@ -160,11 +171,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canSettle,
       canAccess,
       landingPath,
+      justLoggedIn,
+      endWelcome,
       signIn,
       signOut,
       refreshProfile,
     }),
-    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canSettle, canAccess, landingPath, signIn, signOut, refreshProfile],
+    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canSettle, canAccess, landingPath, justLoggedIn, endWelcome, signIn, signOut, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
