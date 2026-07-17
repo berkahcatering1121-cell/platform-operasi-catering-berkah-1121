@@ -57,10 +57,13 @@ export default function Splash({ leaving }: SplashProps) {
         </div>
       </div>
 
-      {/* Wordmark — a glossy shine sweeps across the text */}
+      {/* Wordmark — a glossy shine, clipped to the letter shapes, glides across */}
       <div className="splash__title mt-1 text-center">
         <div className="splash__wordmark text-[27px] font-extrabold tracking-tight text-white">
           Catering Berkah <span className="splash__accent text-gold">1121</span>
+          <span className="splash__wordmark-shine" aria-hidden>
+            Catering Berkah 1121
+          </span>
         </div>
       </div>
       <div className="splash__tag mt-[7px] text-[12px] font-semibold italic tracking-[0.04em] text-side-inactive">

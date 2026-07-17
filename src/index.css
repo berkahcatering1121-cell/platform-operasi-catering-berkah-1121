@@ -308,27 +308,34 @@
   60% { opacity: 1; filter: blur(0); }
   100% { opacity: 1; transform: scale(1); }
 }
-/* Glossy shine sweep travelling across the wordmark (like light over the text). */
+/* Glossy shine that follows the letter shapes (not a box). A duplicate of the
+   wordmark is filled with a moving highlight band and clipped to the glyphs, so
+   the sweep appears only on the letters themselves. */
 .splash__wordmark {
   position: relative;
   display: inline-block;
-  overflow: hidden;
 }
-.splash__wordmark::after {
-  content: '';
+.splash__wordmark-shine {
   position: absolute;
+  left: 0;
   top: 0;
-  bottom: 0;
-  left: -45%;
-  width: 26%;
-  transform: skewX(-18deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
-  animation: splashTextShine 3.6s ease-in-out 1s infinite;
   pointer-events: none;
+  color: transparent;
+  background-image: linear-gradient(
+    100deg,
+    transparent 43%,
+    rgba(255, 244, 214, 0.95) 50%,
+    transparent 57%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: splashTextShine 3.6s ease-in-out 1s infinite;
 }
 @keyframes splashTextShine {
-  0% { left: -45%; }
-  42%, 100% { left: 135%; }
+  0% { background-position: 160% 0; }
+  45%, 100% { background-position: -60% 0; }
 }
 
 /* Drifting gold dust particles. */
@@ -410,7 +417,7 @@
   .splash__orb,
   .splash__halo,
   .splash__ring-spin,
-  .splash__wordmark::after,
+  .splash__wordmark-shine,
   .splash__dust,
   .splash__accent,
   .splash__bar-shine {
