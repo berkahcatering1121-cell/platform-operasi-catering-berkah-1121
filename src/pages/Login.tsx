@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
+import { useT } from '@/lib/i18n'
+import LanguageToggle from '@/components/LanguageToggle'
 
 /**
  * Login screen with two distinct layouts:
@@ -10,6 +12,7 @@ import { useAuth } from '@/auth/AuthProvider'
  */
 export default function Login() {
   const { signIn } = useAuth()
+  const { t } = useT()
   const [id, setId] = useState('')
   const [pw, setPw] = useState('')
   const [show, setShow] = useState(false)
@@ -43,10 +46,12 @@ export default function Login() {
         boxShadow: '0 24px 80px rgba(6,20,12,0.6)',
       }}
     >
-      <h1 className="text-[22px] font-extrabold text-white">Login</h1>
-      <p className="mb-5 mt-1 text-[12px] text-side-inactive">Catering Berkah 1121 · Platform Operasi</p>
+      <h1 className="text-[22px] font-extrabold text-white">{t('Login')}</h1>
+      <p className="mb-5 mt-1 text-[12px] text-side-inactive">
+        Catering Berkah 1121 · {t('Platform Operasi')}
+      </p>
 
-      <label className="mb-1.5 block text-[13px] font-bold text-gold">ID Pengguna</label>
+      <label className="mb-1.5 block text-[13px] font-bold text-gold">{t('ID Pengguna')}</label>
       <input
         value={id}
         onChange={(e) => setId(e.target.value)}
@@ -55,7 +60,7 @@ export default function Login() {
         style={inputStyle}
       />
 
-      <label className="mb-1.5 block text-[13px] font-bold text-gold">Password</label>
+      <label className="mb-1.5 block text-[13px] font-bold text-gold">{t('Password')}</label>
       <div className="relative mb-2">
         <input
           value={pw}
@@ -68,7 +73,7 @@ export default function Login() {
         <button
           type="button"
           onClick={() => setShow((v) => !v)}
-          aria-label={show ? 'Sembunyikan password' : 'Tampilkan password'}
+          aria-label={show ? t('Sembunyikan password') : t('Tampilkan password')}
           className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-gold hover:text-gold-light"
         >
           {show ? (
@@ -90,7 +95,7 @@ export default function Login() {
           className="mb-2 mt-3 rounded-xl px-3 py-2 text-[12.5px] font-medium text-white"
           style={{ background: 'rgba(179,38,30,0.25)', border: '1px solid rgba(245,198,189,0.4)' }}
         >
-          {error}
+          {t(error)}
         </div>
       )}
 
@@ -100,7 +105,7 @@ export default function Login() {
         className="mt-5 h-12 w-full rounded-xl text-[15px] font-extrabold text-[#1A2A1F] transition-colors disabled:opacity-70"
         style={{ background: '#C9A93B', boxShadow: '0 6px 20px rgba(201,154,59,0.4)' }}
       >
-        {busy ? 'Memproses…' : 'Masuk'}
+        {busy ? t('Memproses…') : t('Masuk')}
       </button>
     </form>
   )
@@ -120,6 +125,14 @@ export default function Login() {
         className="pointer-events-none absolute inset-0 md:hidden"
         style={{ background: 'radial-gradient(125% 80% at 50% 0%, #1B4E36 0%, #10362A 46%, #0A2419 100%)' }}
       />
+
+      {/* Language switch (ID / EN) */}
+      <div
+        className="absolute right-4 z-10 w-[112px]"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
+      >
+        <LanguageToggle />
+      </div>
 
       {/* ---------- Mobile layout: logo header + card ---------- */}
       <div className="relative flex min-h-full flex-col md:hidden">

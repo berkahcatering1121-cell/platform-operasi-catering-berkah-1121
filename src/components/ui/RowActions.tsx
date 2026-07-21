@@ -1,3 +1,5 @@
+import { useT } from '@/lib/i18n'
+
 interface Props {
   onEdit?: () => void
   onDelete?: () => void
@@ -5,13 +7,14 @@ interface Props {
 
 /** Compact Edit / Hapus icon buttons for table rows. */
 export default function RowActions({ onEdit, onDelete }: Props) {
+  const { t } = useT()
   return (
     <div className="flex items-center justify-end gap-1">
       {onEdit && (
         <button
           onClick={onEdit}
-          aria-label="Edit"
-          title="Edit"
+          aria-label={t('Edit')}
+          title={t('Edit')}
           className="rounded-md p-1.5 text-ink-secondary transition hover:bg-app-panel hover:text-brand"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -23,8 +26,8 @@ export default function RowActions({ onEdit, onDelete }: Props) {
       {onDelete && (
         <button
           onClick={onDelete}
-          aria-label="Hapus"
-          title="Hapus"
+          aria-label={t('Hapus')}
+          title={t('Hapus')}
           className="rounded-md p-1.5 text-ink-secondary transition hover:bg-danger-bg hover:text-danger"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">

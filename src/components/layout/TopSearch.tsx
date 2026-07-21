@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MODULES } from '@/lib/modules'
 import { useAuth } from '@/auth/AuthProvider'
+import { useT } from '@/lib/i18n'
 
 /**
  * Functional module search for the mobile top bar: type to filter the modules
@@ -9,6 +10,7 @@ import { useAuth } from '@/auth/AuthProvider'
  */
 export default function TopSearch() {
   const { canAccess } = useAuth()
+  const { t } = useT()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [focused, setFocused] = useState(false)
@@ -17,8 +19,14 @@ export default function TopSearch() {
   const results = useMemo(() => {
     const term = q.trim().toLowerCase()
     if (!term) return []
-    return MODULES.filter((m) => canAccess(m.key) && m.label.toLowerCase().includes(term)).slice(0, 6)
-  }, [q, canAccess])
+    // Match either the Indonesian label or its translation, so search works in
+    // whichever language the user is typing.
+    return MODULES.filter(
+      (m) =>
+        canAccess(m.key) &&
+        (m.label.toLowerCase().includes(term) || t(m.label).toLowerCase().includes(term)),
+    ).slice(0, 6)
+  }, [q, canAccess, t])
 
   const go = (path: string) => {
     navigate(path)
@@ -45,11 +53,11 @@ export default function TopSearch() {
           onBlur={() => {
             blurTimer.current = window.setTimeout(() => setFocused(false), 120)
           }}
-          placeholder="Cari modul…"
+          placeholder={t('Cari modul…')}
           className="min-w-0 flex-1 bg-transparent text-[14px] text-ink outline-none placeholder:text-ink-faint"
         />
         {q && (
-          <button onClick={() => setQ('')} aria-label="Bersihkan" className="text-ink-faint hover:text-ink-muted">
+          <button onClick={() => setQ('')} aria-label={t('Bersihkan')} className="text-ink-faint hover:text-ink-muted">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
@@ -70,7 +78,7 @@ export default function TopSearch() {
               className="flex w-full items-center gap-2.5 border-b border-app-border/60 px-3 py-2.5 text-left last:border-0 hover:bg-app-panel"
             >
               <span className="flex text-brand [&>svg]:h-[18px] [&>svg]:w-[18px]">{m.icon}</span>
-              <span className="text-[13px] font-semibold text-ink">{m.label}</span>
+              <span className="text-[13px] font-semibold text-ink">{t(m.label)}</span>
             </button>
           ))}
         </div>

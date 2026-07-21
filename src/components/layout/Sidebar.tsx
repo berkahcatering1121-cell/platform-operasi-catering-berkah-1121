@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { MODULE_BY_KEY, NAV } from '@/lib/modules'
 import { useAuth } from '@/auth/AuthProvider'
+import { useT } from '@/lib/i18n'
 import LoopBgVideo from './LoopBgVideo'
+import LanguageToggle from '@/components/LanguageToggle'
 
 interface SidebarProps {
   onNavigate?: () => void
@@ -27,6 +29,7 @@ export default function Sidebar({
   onOpenPanduan,
 }: SidebarProps) {
   const { profile, canAccess, signOut } = useAuth()
+  const { t } = useT()
   const location = useLocation()
 
   // Which collapsible group (if any) contains the current route.
@@ -77,7 +80,7 @@ export default function Sidebar({
               Catering Berkah 1121
             </div>
             <div className="mt-[3px] text-[9.5px] font-bold tracking-[0.2em] text-[#86A092]">
-              PLATFORM OPERASI
+              {t('PLATFORM OPERASI')}
             </div>
           </div>
         </div>
@@ -92,7 +95,7 @@ export default function Sidebar({
             <path d="m21 21-4.3-4.3" />
           </svg>
           <input
-            placeholder="Cari modul…"
+            placeholder={t('Cari modul…')}
             className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-[#7C948A]"
           />
           <span
@@ -144,7 +147,7 @@ export default function Sidebar({
                     >
                       {m.icon}
                     </span>
-                    <span className="flex-1 truncate">{m.label}</span>
+                    <span className="flex-1 truncate">{t(m.label)}</span>
                   </>
                 )}
               </NavLink>
@@ -173,7 +176,7 @@ export default function Sidebar({
                 >
                   {entry.icon}
                 </span>
-                <span className="flex-1 text-left">{entry.title}</span>
+                <span className="flex-1 text-left">{t(entry.title)}</span>
                 <svg
                   width="14"
                   height="14"
@@ -208,7 +211,7 @@ export default function Sidebar({
                         isActive ? { background: 'rgba(201,169,59,0.12)' } : undefined
                       }
                     >
-                      <span className="flex-1 truncate">{m.label}</span>
+                      <span className="flex-1 truncate">{t(m.label)}</span>
                     </NavLink>
                   ))}
                 </div>
@@ -233,6 +236,8 @@ export default function Sidebar({
           </div>
         </div>
 
+        <LanguageToggle />
+
         <button
           onClick={onToggleImmersive}
           className="mb-2 flex w-full items-center justify-center gap-2 rounded-field py-2.5 text-[12px] font-bold text-white/90 transition-colors hover:text-white"
@@ -245,7 +250,7 @@ export default function Sidebar({
               <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
             )}
           </svg>
-          {immersive ? 'Keluar layar penuh' : 'Layar penuh'}
+          {immersive ? t('Keluar layar penuh') : t('Layar penuh')}
         </button>
 
         <div className="flex gap-2">
@@ -254,14 +259,14 @@ export default function Sidebar({
             className="flex flex-1 items-center justify-center gap-1.5 rounded-field py-2.5 text-[12px] font-bold text-white/90 hover:text-white"
             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            Panduan
+            {t('Panduan')}
           </button>
           <button
             onClick={() => void signOut()}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-field py-2.5 text-[12px] font-bold text-white/90 hover:text-white"
             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            Keluar
+            {t('Keluar')}
           </button>
         </div>
       </div>

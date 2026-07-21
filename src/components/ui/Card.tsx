@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useT } from '@/lib/i18n'
 
 interface CardProps {
   title?: ReactNode
@@ -27,11 +28,12 @@ export function Card({ title, subtitle, action, children, className = '', bodyCl
 }
 
 // Small state helpers for query panels.
-export function LoadingRows({ label = 'Memuat data…' }: { label?: string }) {
+export function LoadingRows({ label }: { label?: string }) {
+  const { t } = useT()
   return (
     <div className="flex items-center justify-center gap-2 py-10 text-[12.5px] text-ink-muted">
       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-app-border border-t-brand" />
-      {label}
+      {label ?? t('Memuat data…')}
     </div>
   )
 }

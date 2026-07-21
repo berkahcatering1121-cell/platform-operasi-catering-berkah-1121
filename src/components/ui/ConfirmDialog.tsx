@@ -1,5 +1,6 @@
 import Modal from './Modal'
 import Button from './Button'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   open: boolean
@@ -13,25 +14,26 @@ interface Props {
 
 export default function ConfirmDialog({
   open,
-  title = 'Hapus data',
+  title,
   message,
-  confirmLabel = 'Hapus',
+  confirmLabel,
   busy,
   onConfirm,
   onClose,
 }: Props) {
+  const { t } = useT()
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={title}
+      title={title ?? t('Hapus data')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={busy}>
-            Batal
+            {t('Batal')}
           </Button>
           <Button variant="danger" onClick={onConfirm} disabled={busy}>
-            {busy ? 'Menghapus…' : confirmLabel}
+            {busy ? t('Menghapus…') : confirmLabel ?? t('Hapus')}
           </Button>
         </>
       }

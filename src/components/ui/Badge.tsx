@@ -1,4 +1,5 @@
 import type { MarginHealth } from '@/lib/db'
+import { useT } from '@/lib/i18n'
 
 type Tone = 'green' | 'amber' | 'red' | 'blue' | 'neutral'
 
@@ -29,7 +30,8 @@ const STATUS_TONE: Record<string, Tone> = {
 }
 
 export function StatusBadge({ status }: { status: string }) {
-  return <Badge tone={STATUS_TONE[status] ?? 'neutral'}>{status}</Badge>
+  const { t } = useT()
+  return <Badge tone={STATUS_TONE[status] ?? 'neutral'}>{t(status)}</Badge>
 }
 
 // Margin health pill for the Menu table + recipe editor.

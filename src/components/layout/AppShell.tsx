@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import PanduanDrawer from './PanduanDrawer'
 import BottomNav from './BottomNav'
 import TopSearch from './TopSearch'
+import { useT } from '@/lib/i18n'
 
 /**
  * Layout shell: fixed deep-green sidebar on desktop; hamburger drawer + sticky
@@ -11,6 +12,7 @@ import TopSearch from './TopSearch'
  * the mobile drawer or Panduan is open.
  */
 export default function AppShell() {
+  const { t } = useT()
   const [isMobile, setIsMobile] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [immersive, setImmersive] = useState(false)
@@ -106,7 +108,7 @@ export default function AppShell() {
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setDrawerOpen(true)}
-                aria-label="Buka menu"
+                aria-label={t('Buka menu')}
                 className="-ml-1 rounded-md p-1.5 text-ink-secondary"
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -119,7 +121,7 @@ export default function AppShell() {
                   Catering&nbsp;Berkah <span className="text-gold-text">1121</span>
                 </div>
                 <div className="mt-[3px] text-[8.5px] font-bold uppercase tracking-[0.24em] text-ink-faint">
-                  Platform Operasi
+                  {t('Platform Operasi')}
                 </div>
               </div>
             </div>
