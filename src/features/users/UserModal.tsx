@@ -3,6 +3,7 @@ import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { Field, InputLegend, SelectField } from '@/components/ui/Field'
 import type { ModuleKey } from '@/lib/modules'
+import { useT } from '@/lib/i18n'
 import {
   ASSIGNABLE_MODULES,
   useResetPassword,
@@ -42,6 +43,7 @@ interface Props {
 
 // Panel shown after create / reset: the temporary password to hand over.
 function CredentialsPanel({ username, password }: { username: string; password: string }) {
+  const { t } = useT()
   const [copied, setCopied] = useState(false)
   const copy = async () => {
     try {
@@ -59,18 +61,17 @@ function CredentialsPanel({ username, password }: { username: string; password: 
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 6 9 17l-5-5" />
           </svg>
-          Akun berhasil dibuat
+          {t('Akun berhasil dibuat')}
         </div>
         <p className="mt-1 text-[12px] leading-relaxed text-ink-body">
-          Berikan ID & password sementara ini kepada pengguna. Saat login pertama, ia akan diminta membuat
-          password sendiri. Anda tetap bisa melihat password terbarunya di tabel.
+          {t('Berikan ID & password sementara ini kepada pengguna. Saat login pertama, ia akan diminta membuat password sendiri. Anda tetap bisa melihat password terbarunya di tabel.')}
         </p>
       </div>
 
       <div className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 rounded-field border border-app-border bg-app-panel px-4 py-3.5">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">ID Pengguna</span>
+        <span className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">{t('ID Pengguna')}</span>
         <span className="font-mono text-[14px] font-bold text-ink">{username}</span>
-        <span className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">Password</span>
+        <span className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">{t('Password')}</span>
         <span className="font-mono text-[16px] font-extrabold tracking-wide text-brand">{password}</span>
       </div>
 
@@ -83,13 +84,14 @@ function CredentialsPanel({ username, password }: { username: string; password: 
           <rect x="9" y="9" width="13" height="13" rx="2" />
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
         </svg>
-        {copied ? 'Tersalin!' : 'Salin ID & Password'}
+        {copied ? t('Tersalin!') : t('Salin ID & Password')}
       </button>
     </div>
   )
 }
 
 export default function UserModal({ open, onClose, editing, roles }: Props) {
+  const { t } = useT()
   const save = useSaveUser()
   const reset = useResetPassword()
   const [form, setForm] = useState<FormState>(toForm())
@@ -194,7 +196,7 @@ export default function UserModal({ open, onClose, editing, roles }: Props) {
           {editing ? (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-field border border-app-border bg-app-panel px-3.5 py-2.5">
               <div className="text-[12px] text-ink-body">
-                <div className="font-bold text-ink">Password</div>
+                <div className="font-bold text-ink">{t('Password')}</div>
                 <div className="text-ink-muted">
                   {editing.visible_password
                     ? 'Password saat ini dapat dilihat di tabel.'
@@ -211,13 +213,12 @@ export default function UserModal({ open, onClose, editing, roles }: Props) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16" />
                 </svg>
-                {reset.isPending ? 'Memproses…' : 'Reset Password'}
+                {reset.isPending ? t('Memproses…') : t('Reset Password')}
               </button>
             </div>
           ) : (
             <div className="rounded-field border border-manual-border bg-manual-bg px-3.5 py-2.5 text-[12px] leading-relaxed text-ink-body">
-              <b className="text-manual">Password otomatis:</b> sistem akan membuat password sementara yang
-              acak. Setelah disimpan, password akan ditampilkan untuk Anda berikan ke pengguna.
+              <b className="text-manual">{t('Password otomatis:')}</b>{t(' sistem akan membuat password sementara yang acak. Setelah disimpan, password akan ditampilkan untuk Anda berikan ke pengguna.')}
             </div>
           )}
 
@@ -245,7 +246,7 @@ export default function UserModal({ open, onClose, editing, roles }: Props) {
                   onChange={(e) => set({ useCustomRole: e.target.checked })}
                   className="h-4 w-4 accent-[#16603F]"
                 />
-                Buat role baru (custom)
+                {t('Buat role baru (custom)')}
               </span>
             </label>
           </div>
@@ -254,7 +255,7 @@ export default function UserModal({ open, onClose, editing, roles }: Props) {
             <div className="mb-1.5 text-[12px] font-semibold text-ink-body">Izin Modul</div>
             {isSuperAdmin ? (
               <div className="rounded-field border border-master-border bg-master-bg px-3 py-2.5 text-[12px] text-master">
-                <b>Super Admin</b> memiliki akses penuh ke semua modul secara otomatis.
+                <b>Super Admin</b>{t(' memiliki akses penuh ke semua modul secara otomatis.')}
               </div>
             ) : (
               <>

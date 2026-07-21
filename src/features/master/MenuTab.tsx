@@ -7,11 +7,13 @@ import { MarginBadge, marginNote } from '@/components/ui/Badge'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatRupiah, formatPercentInt } from '@/lib/format'
 import { titleCase } from '@/lib/text'
+import { useT } from '@/lib/i18n'
 import MenuEditorModal from './MenuEditorModal'
 import { useDeleteMenuItem, useMenuCategories, useMenuItems } from './api'
 import type { MenuItemView } from '@/lib/db'
 
 export default function MenuTab() {
+  const { t } = useT()
   const cats = useMenuCategories()
   const items = useMenuItems()
   const del = useDeleteMenuItem()
@@ -129,7 +131,7 @@ export default function MenuTab() {
                             {m.ingredient_count > 0 ? (
                               <span className="font-bold text-ink">{formatRupiah(m.hpp)}</span>
                             ) : (
-                              <span className="italic text-ink-faint">Belum diisi</span>
+                              <span className="italic text-ink-faint">{t('Belum diisi')}</span>
                             )}
                           </td>
                           <td className={TD_R + ' font-bold text-ink'}>{formatRupiah(m.sell_price)}</td>
@@ -139,7 +141,7 @@ export default function MenuTab() {
                                 health={m.margin_health}
                                 label={m.margin_health === 'none' ? '—' : formatPercentInt(m.margin ?? 0)}
                               />
-                              <span className="text-[10px] text-ink-faint">{marginNote(m.margin_health)}</span>
+                              <span className="text-[10px] text-ink-faint">{t(marginNote(m.margin_health))}</span>
                             </div>
                           </td>
                           <td className={TD_R}>

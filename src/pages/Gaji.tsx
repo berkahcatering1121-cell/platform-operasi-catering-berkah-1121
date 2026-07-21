@@ -89,7 +89,7 @@ export default function Gaji() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr>
-                        <th className={TH}>Karyawan / Minggu</th>
+                        <th className={TH}>{t('Karyawan / Minggu')}</th>
                         <th className={TH_R}>{t('Upah / Hari')}</th>
                         <th className={TH_R}>{t('Hari Kerja')}</th>
                         <th className={TH_R}>{t('Gaji Dasar')}</th>

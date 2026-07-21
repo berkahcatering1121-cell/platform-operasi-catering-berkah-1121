@@ -425,6 +425,18 @@ export const EN: Record<string, string> = {
   ', demi keamanan silakan ganti password sementara Anda dengan password pilihan sendiri sebelum melanjutkan.':
     ', for security please replace your temporary password with one of your own before continuing.',
 
+  // ── Misc remaining ────────────────────────────────────────────────────
+  'Belum diisi': 'Not filled',
+  'Belum ada data.': 'No data yet.',
+  'Akun berhasil dibuat': 'Account created',
+  'Berikan ID & password sementara ini kepada pengguna. Saat login pertama, ia akan diminta membuat password sendiri. Anda tetap bisa melihat password terbarunya di tabel.':
+    'Give this ID & temporary password to the user. On first login they will be asked to set their own password. You can still see their latest password in the table.',
+  'Password otomatis:': 'Auto password:',
+  ' sistem akan membuat password sementara yang acak. Setelah disimpan, password akan ditampilkan untuk Anda berikan ke pengguna.':
+    ' the system will generate a random temporary password. Once saved, it will be shown for you to give to the user.',
+  'Buat role baru (custom)': 'Create a new (custom) role',
+  ' memiliki akses penuh ke semua modul secara otomatis.': ' automatically has full access to all modules.',
+
   // ── Months (long) ─────────────────────────────────────────────────────
   'Januari': 'January', 'Februari': 'February', 'Maret': 'March', 'April': 'April',
   'Mei': 'May', 'Juni': 'June', 'Juli': 'July', 'Agustus': 'August',

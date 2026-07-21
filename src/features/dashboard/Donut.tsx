@@ -1,4 +1,5 @@
 import { formatPercent, formatRupiah } from '@/lib/format'
+import { useT } from '@/lib/i18n'
 
 export interface Segment {
   label: string
@@ -18,6 +19,7 @@ export function paletteColor(i: number) {
 
 /** Composition donut via CSS conic-gradient + a legend with % and amounts. */
 export default function Donut({ segments }: Props) {
+  const { t } = useT()
   const total = segments.reduce((t, s) => t + s.value, 0)
   const withPct = segments.map((s) => ({ ...s, pct: total > 0 ? s.value / total : 0 }))
 
@@ -50,7 +52,7 @@ export default function Donut({ segments }: Props) {
         </div>
       </div>
       <div className="min-w-[180px] flex-1 space-y-1.5">
-        {withPct.length === 0 && <div className="text-[12px] text-ink-muted">Belum ada data.</div>}
+        {withPct.length === 0 && <div className="text-[12px] text-ink-muted">{t('Belum ada data.')}</div>}
         {withPct.map((s) => (
           <div key={s.label} className="flex items-center gap-2 text-[12px]">
             <span className="h-2.5 w-2.5 flex-none rounded-sm" style={{ background: s.color }} />

@@ -232,7 +232,7 @@ export default function Pengguna() {
                   <tr>
                     <th className={TH}>Nama</th>
                     <th className={TH}>ID</th>
-                    <th className={TH}>Password</th>
+                    <th className={TH}>{t('Password')}</th>
                     <th className={TH}>Role</th>
                     <th className={TH}>Izin Modul</th>
                     <th className={TH}>Approve Settle</th>
@@ -257,7 +257,7 @@ export default function Pengguna() {
                         </td>
                         <td className={TD}>
                           {u.role === 'Super Admin' ? (
-                            <span className="text-[11px] font-semibold text-ink-faint">Otomatis</span>
+                            <span className="text-[11px] font-semibold text-ink-faint">{t('Otomatis')}</span>
                           ) : (
                             <button
                               onClick={() => setCanSettle.mutate({ id: u.id, can_settle: !u.can_settle })}
