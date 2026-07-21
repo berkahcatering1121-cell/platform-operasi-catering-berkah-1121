@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
-import { formatPercent, formatRupiahShort } from '@/lib/format'
-import { ID_MONTHS_SHORT } from '@/lib/format'
+import { formatPercent, formatRupiahShort, months as monthNames, monthsShort } from '@/lib/format'
+import { useT } from '@/lib/i18n'
 import { usePnl } from '@/features/pnl/api'
 import { usePurchases } from '@/features/purchases/api'
 import { useSales } from '@/features/sales/api'
@@ -13,10 +13,6 @@ import PeriodPicker from '@/features/dashboard/PeriodPicker'
 import { periodRange, formatRangeLabel, isoDate, type PeriodKey } from '@/features/dashboard/period'
 
 const TODAY_YEAR = new Date().getFullYear()
-const MONTHS_FULL = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-]
 
 function Kpi({ label, value, sub, accent }: { label: string; value: string; sub: string; accent?: 'green' | 'dark' }) {
   return (
@@ -50,6 +46,7 @@ function composition(rows: { key: string | null; total: number }[]): Segment[] {
 }
 
 export default function Dashboard() {
+  const { t } = useT()
   const [year, setYear] = useState(TODAY_YEAR)
   // Default to the running month so login/refresh lands on the current month.
   const [month, setMonth] = useState(new Date().getMonth() + 1) // 0 = whole year; 1-12 = month
@@ -92,7 +89,7 @@ export default function Dashboard() {
     }
   }, [scopedMonths])
 
-  const scopeLabel = month ? `${MONTHS_FULL[month - 1]} ${year}` : `tahun ${year}`
+  const scopeLabel = month ? `${monthNames()[month - 1]} ${year}` : `${t('tahun')} ${year}`
   const monthPrefix = month ? `${String(month).padStart(2, '0')}` : null
 
   // Donuts follow the same year (+ optional month) scope as the KPIs.
@@ -120,16 +117,16 @@ export default function Dashboard() {
   )
 
   const kpis = [
-    { label: 'Total Pendapatan', value: formatRupiahShort(totals.rev), sub: `Total ${scopeLabel}` },
+    { label: t('Total Pendapatan'), value: formatRupiahShort(totals.rev), sub: `Total ${scopeLabel}` },
     {
-      label: 'Total Pembelian Bahan Baku',
+      label: t('Total Pembelian Bahan Baku'),
       value: formatRupiahShort(totals.purch),
-      sub: totals.rev > 0 ? `${formatPercent(totals.purch / totals.rev)} dari pendapatan` : '—',
+      sub: totals.rev > 0 ? `${formatPercent(totals.purch / totals.rev)} ${t('dari pendapatan')}` : '—',
     },
-    { label: 'Total Beban Gaji', value: formatRupiahShort(totals.gaji), sub: 'seluruh karyawan' },
-    { label: 'Laba Bersih', value: formatRupiahShort(totals.net), sub: 'setelah semua beban', accent: 'green' as const },
-    { label: 'Margin Kotor', value: formatPercent(totals.marginKotor), sub: 'laba kotor / pendapatan' },
-    { label: 'Margin Bersih', value: formatPercent(totals.marginBersih), sub: 'laba bersih / pendapatan', accent: 'dark' as const },
+    { label: t('Total Beban Gaji'), value: formatRupiahShort(totals.gaji), sub: t('seluruh karyawan') },
+    { label: t('Laba Bersih'), value: formatRupiahShort(totals.net), sub: t('setelah semua beban'), accent: 'green' as const },
+    { label: t('Margin Kotor'), value: formatPercent(totals.marginKotor), sub: t('laba kotor / pendapatan') },
+    { label: t('Margin Bersih'), value: formatPercent(totals.marginBersih), sub: t('laba bersih / pendapatan'), accent: 'dark' as const },
   ]
 
   return (
@@ -143,10 +140,10 @@ export default function Dashboard() {
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
               className="cb-select h-[38px] rounded-btn border border-app-border bg-app-card pl-3 pr-8 text-[13px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
-              aria-label="Pilih bulan"
+              aria-label={t('Pilih bulan')}
             >
-              <option value={0}>Semua bulan</option>
-              {MONTHS_FULL.map((m, i) => (
+              <option value={0}>{t('Semua bulan')}</option>
+              {monthNames().map((m, i) => (
                 <option key={m} value={i + 1}>
                   {m}
                 </option>
@@ -156,7 +153,7 @@ export default function Dashboard() {
               <button
                 onClick={() => setYear((y) => y - 1)}
                 className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-                aria-label="Tahun sebelumnya"
+                aria-label={t('Tahun sebelumnya')}
               >
                 ‹
               </button>
@@ -164,7 +161,7 @@ export default function Dashboard() {
               <button
                 onClick={() => setYear((y) => y + 1)}
                 className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-                aria-label="Tahun berikutnya"
+                aria-label={t('Tahun berikutnya')}
               >
                 ›
               </button>
@@ -194,12 +191,12 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Kpi label="Pendapatan" value={formatRupiahShort(periodSummary.rev)} sub={`${periodSummary.nSales} penjualan`} />
-              <Kpi label="Pembelian" value={formatRupiahShort(periodSummary.buy)} sub={`${periodSummary.nBuy} pembelian`} />
-              <Kpi label="Laba Kotor" value={formatRupiahShort(periodSummary.gross)} sub="pendapatan − pembelian" accent="green" />
-              <Kpi label="Margin Kotor" value={formatPercent(periodSummary.margin)} sub="laba kotor / pendapatan" accent="dark" />
+              <Kpi label={t('Pendapatan')} value={formatRupiahShort(periodSummary.rev)} sub={`${periodSummary.nSales} ${t('penjualan')}`} />
+              <Kpi label={t('Pembelian')} value={formatRupiahShort(periodSummary.buy)} sub={`${periodSummary.nBuy} ${t('pembelian')}`} />
+              <Kpi label={t('Laba Kotor')} value={formatRupiahShort(periodSummary.gross)} sub={t('pendapatan − pembelian')} accent="green" />
+              <Kpi label={t('Margin Kotor')} value={formatPercent(periodSummary.margin)} sub={t('laba kotor / pendapatan')} accent="dark" />
             </div>
-            <div className="mt-2.5 text-[11.5px] font-medium text-ink-faint">Periode: {formatRangeLabel(range)}</div>
+            <div className="mt-2.5 text-[11.5px] font-medium text-ink-faint">{t('Periode')}: {formatRangeLabel(range)}</div>
           </div>
 
           {/* Yearly KPI cards */}
@@ -219,12 +216,12 @@ export default function Dashboard() {
               ].map(([label, color]) => (
                 <span key={label} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-ink-body">
                   <span className="h-2.5 w-4 rounded-full" style={{ background: color }} />
-                  {label}
+                  {t(label)}
                 </span>
               ))}
             </div>
             <LineChart
-              labels={months.map((m) => ID_MONTHS_SHORT[m.month_no - 1])}
+              labels={months.map((m) => monthsShort()[m.month_no - 1])}
               series={[
                 { label: 'Pendapatan', color: '#C9A93B', values: months.map((m) => m.pendapatan) },
                 { label: 'Pembelian', color: '#6BA588', values: months.map((m) => m.hpp) },

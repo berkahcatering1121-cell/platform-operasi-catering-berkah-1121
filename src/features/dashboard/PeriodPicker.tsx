@@ -1,15 +1,7 @@
 import { useState } from 'react'
 import { PERIOD_OPTIONS, type PeriodKey } from './period'
-
-const ID_MONTHS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
-]
-
-function customLabel(day: string): string {
-  const [y, m, d] = day.split('-').map(Number)
-  if (!y) return 'Pilih tanggal'
-  return `${d} ${ID_MONTHS[m - 1]} ${y}`
-}
+import { useT } from '@/lib/i18n'
+import { monthsShort } from '@/lib/format'
 
 interface Props {
   period: PeriodKey
@@ -19,12 +11,19 @@ interface Props {
 
 /** Single dropdown box to pick the summary period (incl. a specific day). */
 export default function PeriodPicker({ period, customDay, onSelect }: Props) {
+  const { t } = useT()
   const [open, setOpen] = useState(false)
+
+  const customLabel = (day: string): string => {
+    const [y, m, d] = day.split('-').map(Number)
+    if (!y) return t('Pilih tanggal')
+    return `${d} ${monthsShort()[m - 1]} ${y}`
+  }
 
   const label =
     period === 'custom'
       ? customLabel(customDay)
-      : PERIOD_OPTIONS.find((p) => p.key === period)?.label ?? 'Periode'
+      : t(PERIOD_OPTIONS.find((p) => p.key === period)?.label ?? 'Periode')
 
   return (
     <div className="relative">
@@ -57,7 +56,7 @@ export default function PeriodPicker({ period, customDay, onSelect }: Props) {
                   period === p.key ? 'bg-brand text-white' : 'text-ink-body hover:bg-app-panel'
                 }`}
               >
-                {p.label}
+                {t(p.label)}
                 {period === p.key && (
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6 9 17l-5-5" />
@@ -77,7 +76,7 @@ export default function PeriodPicker({ period, customDay, onSelect }: Props) {
                   <rect x="3" y="4" width="18" height="17" rx="2" />
                   <path d="M16 2v4M8 2v4M3 10h18" />
                 </svg>
-                Pilih tanggal
+                {t('Pilih tanggal')}
               </span>
               <input
                 type="date"

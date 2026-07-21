@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react'
-
-const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
-const MONTHS = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-]
+import { days, months } from '@/lib/format'
+import { useT } from '@/lib/i18n'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** Live day + date + running digital clock (updates every second). */
 export default function LiveClock() {
+  useT() // re-render when the language switches
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000)
@@ -26,7 +23,7 @@ export default function LiveClock() {
       </span>
       <div className="leading-tight">
         <div className="text-[12.5px] font-semibold text-ink-body">
-          {DAYS[now.getDay()]}, {now.getDate()} {MONTHS[now.getMonth()]} {now.getFullYear()}
+          {days()[now.getDay()]}, {now.getDate()} {months()[now.getMonth()]} {now.getFullYear()}
         </div>
         <div className="font-mono text-[22px] font-extrabold tracking-tight text-ink tabular-nums">
           {pad(now.getHours())}:{pad(now.getMinutes())}:{pad(now.getSeconds())}

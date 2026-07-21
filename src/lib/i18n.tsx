@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { EN } from './dictionary'
+import { setFormatLang } from './format'
 
 export type Lang = 'id' | 'en'
 const STORAGE_KEY = 'cb-lang'
@@ -39,6 +40,9 @@ function initialLang(): Lang {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(initialLang)
+
+  // Keep the date/number formatter in sync before the first paint of each change.
+  setFormatLang(lang)
 
   useEffect(() => {
     document.documentElement.lang = lang

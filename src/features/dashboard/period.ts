@@ -1,4 +1,4 @@
-import { ID_MONTHS_SHORT } from '@/lib/format'
+import { monthsShort } from '@/lib/format'
 
 export type PeriodKey =
   | 'today'
@@ -76,7 +76,7 @@ export function periodRange(key: PeriodKey, ref: Date, customDay?: string): Rang
 export function formatRangeLabel(r: Range): string {
   const fmt = (iso: string) => {
     const [y, m, d] = iso.split('-').map(Number)
-    return { d, m: ID_MONTHS_SHORT[m - 1], y }
+    return { d, m: monthsShort()[m - 1], y }
   }
   const a = fmt(r.start)
   const b = fmt(r.end)

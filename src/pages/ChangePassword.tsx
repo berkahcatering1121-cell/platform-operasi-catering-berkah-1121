@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
+import { useT } from '@/lib/i18n'
 import { supabase } from '@/lib/supabase'
 
 /**
@@ -10,6 +11,7 @@ import { supabase } from '@/lib/supabase'
  */
 export default function ChangePassword() {
   const { profile, signOut, refreshProfile } = useAuth()
+  const { t } = useT()
   const [pw, setPw] = useState('')
   const [pw2, setPw2] = useState('')
   const [show, setShow] = useState(false)
@@ -67,13 +69,13 @@ export default function ChangePassword() {
           boxShadow: '0 24px 80px rgba(6,20,12,0.6)',
         }}
       >
-        <h1 className="text-[22px] font-extrabold text-white">Buat Password Baru</h1>
+        <h1 className="text-[22px] font-extrabold text-white">{t('Buat Password Baru')}</h1>
         <p className="mb-5 mt-1 text-[12px] leading-relaxed text-side-inactive">
-          Halo <b className="text-gold-pale">{profile?.full_name}</b>, demi keamanan silakan ganti password
-          sementara Anda dengan password pilihan sendiri sebelum melanjutkan.
+          {t('Halo')} <b className="text-gold-pale">{profile?.full_name}</b>
+          {t(', demi keamanan silakan ganti password sementara Anda dengan password pilihan sendiri sebelum melanjutkan.')}
         </p>
 
-        <label className="mb-1.5 block text-[13px] font-bold text-gold">Password Baru</label>
+        <label className="mb-1.5 block text-[13px] font-bold text-gold">{t('Password Baru')}</label>
         <div className="relative mb-4">
           <input
             value={pw}
@@ -81,14 +83,14 @@ export default function ChangePassword() {
             type={show ? 'text' : 'password'}
             autoFocus
             autoComplete="new-password"
-            placeholder="Minimal 6 Karakter"
+            placeholder={t('Minimal 6 Karakter')}
             className="h-12 w-full rounded-xl px-3.5 pr-11 text-[14px] text-white outline-none placeholder:text-white/35 focus:ring-2 focus:ring-gold/40"
             style={inputStyle}
           />
           <button
             type="button"
             onClick={() => setShow((v) => !v)}
-            aria-label={show ? 'Sembunyikan password' : 'Tampilkan password'}
+            aria-label={show ? t('Sembunyikan password') : t('Tampilkan password')}
             className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-gold hover:text-gold-light"
           >
             {show ? (
@@ -105,13 +107,13 @@ export default function ChangePassword() {
           </button>
         </div>
 
-        <label className="mb-1.5 block text-[13px] font-bold text-gold">Ulangi Password Baru</label>
+        <label className="mb-1.5 block text-[13px] font-bold text-gold">{t('Ulangi Password Baru')}</label>
         <input
           value={pw2}
           onChange={(e) => setPw2(e.target.value)}
           type={show ? 'text' : 'password'}
           autoComplete="new-password"
-          placeholder="Ketik Ulang Password"
+          placeholder={t('Ketik Ulang Password')}
           className="mb-2 h-12 w-full rounded-xl px-3.5 text-[14px] text-white outline-none placeholder:text-white/35 focus:ring-2 focus:ring-gold/40"
           style={inputStyle}
         />
@@ -121,7 +123,7 @@ export default function ChangePassword() {
             className="mb-2 mt-3 rounded-xl px-3 py-2 text-[12.5px] font-medium text-white"
             style={{ background: 'rgba(179,38,30,0.25)', border: '1px solid rgba(245,198,189,0.4)' }}
           >
-            {error}
+            {t(error)}
           </div>
         )}
 
@@ -131,7 +133,7 @@ export default function ChangePassword() {
           className="mt-5 h-12 w-full rounded-xl text-[15px] font-extrabold text-[#1A2A1F] transition-colors disabled:opacity-70"
           style={{ background: '#C9A93B', boxShadow: '0 6px 20px rgba(201,154,59,0.4)' }}
         >
-          {busy ? 'Menyimpan…' : 'Simpan & Lanjutkan'}
+          {busy ? t('Menyimpan…') : t('Simpan & Lanjutkan')}
         </button>
 
         <button
@@ -139,7 +141,7 @@ export default function ChangePassword() {
           onClick={() => signOut()}
           className="mt-3 h-10 w-full rounded-xl text-[13px] font-semibold text-side-inactive hover:text-white"
         >
-          Keluar
+          {t('Keluar')}
         </button>
       </form>
     </div>

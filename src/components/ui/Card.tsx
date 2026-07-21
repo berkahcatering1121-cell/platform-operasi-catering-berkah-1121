@@ -11,13 +11,22 @@ interface CardProps {
 }
 
 export function Card({ title, subtitle, action, children, className = '', bodyClassName = '' }: CardProps) {
+  const { t } = useT()
   return (
     <div className={`cb-card overflow-hidden ${className}`}>
       {(title || action) && (
         <div className="flex items-center justify-between gap-2 border-b border-app-border px-4 py-3">
           <div>
-            {title && <div className="text-[13.5px] font-extrabold text-ink">{title}</div>}
-            {subtitle && <div className="mt-0.5 text-[11.5px] text-ink-muted">{subtitle}</div>}
+            {title && (
+              <div className="text-[13.5px] font-extrabold text-ink">
+                {typeof title === 'string' ? t(title) : title}
+              </div>
+            )}
+            {subtitle && (
+              <div className="mt-0.5 text-[11.5px] text-ink-muted">
+                {typeof subtitle === 'string' ? t(subtitle) : subtitle}
+              </div>
+            )}
           </div>
           {action}
         </div>

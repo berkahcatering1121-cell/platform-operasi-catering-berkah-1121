@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
-import { formatPercent, ID_MONTHS_SHORT } from '@/lib/format'
+import { formatPercent, monthsShort } from '@/lib/format'
+import { useT } from '@/lib/i18n'
 import { usePnl, type PnlMonth } from '@/features/pnl/api'
 
 const TODAY_YEAR = new Date().getFullYear()
@@ -48,6 +49,7 @@ const ROWS: RowDef[] = [
 ]
 
 export default function PnL() {
+  const { t } = useT()
   const [year, setYear] = useState(TODAY_YEAR)
   const pnl = usePnl(year)
   const months = pnl.data ?? []
@@ -72,7 +74,7 @@ export default function PnL() {
             <button
               onClick={() => setYear((y) => y - 1)}
               className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-              aria-label="Tahun sebelumnya"
+              aria-label={t('Tahun sebelumnya')}
             >
               ‹
             </button>
@@ -80,7 +82,7 @@ export default function PnL() {
             <button
               onClick={() => setYear((y) => y + 1)}
               className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-              aria-label="Tahun berikutnya"
+              aria-label={t('Tahun berikutnya')}
             >
               ›
             </button>
@@ -95,7 +97,7 @@ export default function PnL() {
       ) : (
         <Card bodyClassName="">
           <div className="border-b border-app-border px-4 py-2 text-[11px] text-ink-muted">
-            Semua angka dalam ribu Rupiah (Rp '000) · read-only, dihitung otomatis · EBITDA = Laba Bersih + Depresiasi Aset
+            {t("Semua angka dalam ribu Rupiah (Rp '000) · read-only, dihitung otomatis · EBITDA = Laba Bersih + Depresiasi Aset")}
           </div>
           <div className="cb-scroll overflow-x-auto">
             <table className="w-full border-collapse">
@@ -104,20 +106,20 @@ export default function PnL() {
                   <th
                     className={`${labelBase} sticky top-0 bg-app-panel text-left text-[10.5px] font-extrabold uppercase tracking-[0.07em] text-ink-muted`}
                   >
-                    Keterangan
+                    {t('Keterangan')}
                   </th>
                   {months.map((m) => (
                     <th
                       key={m.month_no}
                       className={`${cellBase} bg-app-panel text-[10.5px] font-extrabold uppercase tracking-[0.05em] text-ink-muted`}
                     >
-                      {ID_MONTHS_SHORT[m.month_no - 1]}
+                      {monthsShort()[m.month_no - 1]}
                     </th>
                   ))}
                   <th
                     className={`${cellBase} bg-gold-tint text-[10.5px] font-extrabold uppercase tracking-[0.05em] text-brand-dark`}
                   >
-                    Total {year}
+                    {t('Total')} {year}
                   </th>
                 </tr>
               </thead>
@@ -127,7 +129,7 @@ export default function PnL() {
                     return (
                       <tr key={ri}>
                         <td className={`${labelBase} bg-[#F1F6F2] text-[11px] font-extrabold uppercase tracking-[0.05em] text-brand`}>
-                          {row.label}
+                          {t(row.label)}
                         </td>
                         <td className="bg-[#F1F6F2] border-t border-[#E1EBE3]" colSpan={13} />
                       </tr>
@@ -139,7 +141,7 @@ export default function PnL() {
                     const annDen = annual.sum(row.den)
                     return (
                       <tr key={ri}>
-                        <td className={`${labelBase} bg-app-card italic text-ink-muted`}>{row.label}</td>
+                        <td className={`${labelBase} bg-app-card italic text-ink-muted`}>{t(row.label)}</td>
                         {months.map((m) => {
                           const d = row.den(m)
                           return (
@@ -181,7 +183,7 @@ export default function PnL() {
                   const annualVal = annual.sum(row.get)
                   return (
                     <tr key={ri}>
-                      <td className={labelCls}>{row.label}</td>
+                      <td className={labelCls}>{t(row.label)}</td>
                       {months.map((m) => (
                         <td key={m.month_no} className={valueCls(row.get(m))}>
                           {num(row.get(m))}

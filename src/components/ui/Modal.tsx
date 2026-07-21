@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { useT } from '@/lib/i18n'
 
 interface ModalProps {
   open: boolean
@@ -16,6 +17,7 @@ interface ModalProps {
  * and closes on Esc / scrim click.
  */
 export default function Modal({ open, onClose, title, subtitle, children, footer, wide }: ModalProps) {
+  const { t } = useT()
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
@@ -38,19 +40,19 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={t(title)}
         className={`relative flex max-h-[92vh] w-full flex-col overflow-hidden bg-app-card shadow-modal ${
           wide ? 'sm:max-w-[720px]' : 'sm:max-w-[460px]'
         } rounded-t-modal sm:rounded-modal animate-sheetUp sm:animate-fadeIn`}
       >
         <div className="flex items-start justify-between gap-3 border-b border-app-border px-5 py-4">
           <div className="min-w-0">
-            <h2 className="text-[15.5px] font-extrabold text-ink">{title}</h2>
-            {subtitle && <p className="mt-0.5 text-[12px] text-ink-muted">{subtitle}</p>}
+            <h2 className="text-[15.5px] font-extrabold text-ink">{t(title)}</h2>
+            {subtitle && <p className="mt-0.5 text-[12px] text-ink-muted">{t(subtitle)}</p>}
           </div>
           <button
             onClick={onClose}
-            aria-label="Tutup"
+            aria-label={t('Tutup')}
             className="-mr-1.5 rounded-md p-1.5 text-ink-secondary hover:bg-app-panel"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

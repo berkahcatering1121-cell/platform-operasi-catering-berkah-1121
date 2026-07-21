@@ -1,4 +1,5 @@
 import type { ReactNode, InputHTMLAttributes, SelectHTMLAttributes } from 'react'
+import { useT } from '@/lib/i18n'
 
 // Input-colour convention:
 //   manual = blue  (user types it)
@@ -29,9 +30,11 @@ interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Field({ label, hint, variant = 'manual', prefix, className = '', ...rest }: FieldProps) {
+  const { t } = useT()
+  const placeholder = typeof rest.placeholder === 'string' ? t(rest.placeholder) : rest.placeholder
   return (
     <div className={className}>
-      {label && <Label hint={hint}>{label}</Label>}
+      {label && <Label hint={hint ? t(hint) : undefined}>{typeof label === 'string' ? t(label) : label}</Label>}
       <div className="relative">
         {prefix && (
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-ink-muted">
@@ -43,6 +46,7 @@ export function Field({ label, hint, variant = 'manual', prefix, className = '',
             prefix ? 'pl-9 pr-3' : 'px-3'
           } ${rest.readOnly ? 'cursor-default' : ''}`}
           {...rest}
+          placeholder={placeholder}
         />
       </div>
     </div>
@@ -66,17 +70,18 @@ export function SelectField({
   className = '',
   ...rest
 }: SelectFieldProps) {
+  const { t } = useT()
   return (
     <div className={className}>
-      {label && <Label hint={hint}>{label}</Label>}
+      {label && <Label hint={hint ? t(hint) : undefined}>{typeof label === 'string' ? t(label) : label}</Label>}
       <select
         className={`cb-select h-11 w-full rounded-field pl-3 pr-8 text-[14px] font-semibold outline-none ${VARIANT_CLASS[variant]}`}
         {...rest}
       >
-        {placeholder && <option value="">{placeholder}</option>}
+        {placeholder && <option value="">{t(placeholder)}</option>}
         {options.map((o) => (
           <option key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </option>
         ))}
       </select>
@@ -86,10 +91,11 @@ export function SelectField({
 
 // The blue/green/neutral legend shown in add/edit modals.
 export function InputLegend() {
+  const { t } = useT()
   const items: { v: FieldVariant; label: string }[] = [
-    { v: 'manual', label: 'Input manual' },
-    { v: 'master', label: 'Dari Master Data' },
-    { v: 'auto', label: 'Otomatis' },
+    { v: 'manual', label: t('Input manual') },
+    { v: 'master', label: t('Dari Master Data') },
+    { v: 'auto', label: t('Otomatis') },
   ]
   const dot: Record<FieldVariant, string> = {
     manual: 'bg-manual',
