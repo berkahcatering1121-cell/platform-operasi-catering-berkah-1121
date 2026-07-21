@@ -14,8 +14,10 @@ import { useEmployees } from '@/features/master/api'
 import { usePurchases, useDeletePurchase } from '@/features/purchases/api'
 import PurchaseModal from '@/features/purchases/PurchaseModal'
 import type { PurchaseView } from '@/lib/db'
+import { useT } from '@/lib/i18n'
 
 export default function Pembelian() {
+  const { t } = useT()
   const purchases = usePurchases()
   const employees = useEmployees()
   const del = useDeletePurchase()
@@ -48,7 +50,7 @@ export default function Pembelian() {
       <PageHeader
         title="Pembelian Bahan Baku"
         subtitle="Transaksi dikelompokkan per bulan dengan subtotal otomatis."
-        actions={<Button onClick={openAdd}>+ Pembelian</Button>}
+        actions={<Button onClick={openAdd}>{t('+ Pembelian')}</Button>}
       />
 
       {purchases.isLoading ? (
@@ -72,13 +74,13 @@ export default function Pembelian() {
                         <th className={TH}>Tanggal</th>
                         <th className={TH}>Bahan</th>
                         <th className={TH}>Supplier</th>
-                        <th className={TH_R}>Qty</th>
-                        <th className={TH_R}>Harga Satuan</th>
-                        <th className={TH_R}>Total</th>
+                        <th className={TH_R}>{t('Qty')}</th>
+                        <th className={TH_R}>{t('Harga Satuan')}</th>
+                        <th className={TH_R}>{t('Total')}</th>
                         <th className={TH}>Status</th>
                         <th className={TH}>Foto</th>
                         <th className={TH}>PIC</th>
-                        <th className={TH_R}>Aksi</th>
+                        <th className={TH_R}>{t('Aksi')}</th>
                       </tr>
                     </thead>
                     <tbody>

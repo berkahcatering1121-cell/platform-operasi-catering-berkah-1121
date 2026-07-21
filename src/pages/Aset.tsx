@@ -11,6 +11,7 @@ import { titleCase } from '@/lib/text'
 import { useAssets, useDeleteAsset } from '@/features/assets/api'
 import AssetModal from '@/features/assets/AssetModal'
 import type { AssetView } from '@/lib/db'
+import { useT } from '@/lib/i18n'
 
 function SummaryCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -23,6 +24,7 @@ function SummaryCard({ label, value, sub }: { label: string; value: string; sub?
 }
 
 export default function Aset() {
+  const { t } = useT()
   const assets = useAssets()
   const del = useDeleteAsset()
 
@@ -55,7 +57,7 @@ export default function Aset() {
       <PageHeader
         title="Aset & Depresiasi"
         subtitle="Depresiasi garis lurus; beban mengalir otomatis ke P&L."
-        actions={<Button onClick={openAdd}>+ Aset</Button>}
+        actions={<Button onClick={openAdd}>{t('+ Aset')}</Button>}
       />
 
       {assets.isLoading ? (
@@ -78,14 +80,14 @@ export default function Aset() {
                   <tr>
                     <th className={TH}>Tgl Perolehan</th>
                     <th className={TH}>Nama Aset</th>
-                    <th className={TH_R}>Harga Perolehan</th>
-                    <th className={TH_R}>Umur</th>
-                    <th className={TH_R}>Nilai Residu</th>
-                    <th className={TH_R}>Depresiasi / Bulan</th>
-                    <th className={TH_R}>Akum. Depresiasi</th>
-                    <th className={TH_R}>Nilai Buku</th>
+                    <th className={TH_R}>{t('Harga Perolehan')}</th>
+                    <th className={TH_R}>{t('Umur')}</th>
+                    <th className={TH_R}>{t('Nilai Residu')}</th>
+                    <th className={TH_R}>{t('Depresiasi / Bulan')}</th>
+                    <th className={TH_R}>{t('Akum. Depresiasi')}</th>
+                    <th className={TH_R}>{t('Nilai Buku')}</th>
                     <th className={TH}>Status</th>
-                    <th className={TH_R}>Aksi</th>
+                    <th className={TH_R}>{t('Aksi')}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -13,8 +13,10 @@ import { groupByMonth } from '@/lib/grouping'
 import { useOperationalCosts, useDeleteOpex } from '@/features/opex/api'
 import OpexModal from '@/features/opex/OpexModal'
 import type { OperationalCost } from '@/lib/db'
+import { useT } from '@/lib/i18n'
 
 export default function Operasional() {
+  const { t } = useT()
   const opex = useOperationalCosts()
   const del = useDeleteOpex()
 
@@ -41,7 +43,7 @@ export default function Operasional() {
       <PageHeader
         title="Biaya Operasional"
         subtitle="Beban per kategori dengan foto nota; subtotal per bulan otomatis."
-        actions={<Button onClick={openAdd}>+ Biaya</Button>}
+        actions={<Button onClick={openAdd}>{t('+ Biaya')}</Button>}
       />
 
       {opex.isLoading ? (
@@ -65,11 +67,11 @@ export default function Operasional() {
                         <th className={TH}>Tanggal</th>
                         <th className={TH}>Keterangan</th>
                         <th className={TH}>Kategori</th>
-                        <th className={TH_R}>Jumlah</th>
+                        <th className={TH_R}>{t('Jumlah')}</th>
                         <th className={TH}>Metode</th>
                         <th className={TH}>Foto Nota</th>
                         <th className={TH}>Catatan</th>
-                        <th className={TH_R}>Aksi</th>
+                        <th className={TH_R}>{t('Aksi')}</th>
                       </tr>
                     </thead>
                     <tbody>

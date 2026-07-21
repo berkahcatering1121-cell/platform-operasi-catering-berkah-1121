@@ -19,6 +19,7 @@ import {
   type UserRow,
 } from '@/features/users/api'
 import UserModal from '@/features/users/UserModal'
+import { useT } from '@/lib/i18n'
 
 // Super-Admin-only view of a user's current password: masked by default with
 // an eye toggle and copy button. Shows a status hint while the user still
@@ -184,6 +185,7 @@ function RolesCard({ users, roles }: { users: UserRow[]; roles: RoleRow[] }) {
 }
 
 export default function Pengguna() {
+  const { t } = useT()
   const { profile } = useAuth()
   const users = useUsers()
   const roles = useRoles()
@@ -214,7 +216,7 @@ export default function Pengguna() {
       <PageHeader
         title="Manajemen Pengguna"
         subtitle="Kelola akun, peran, dan izin per-modul (khusus Super Admin)."
-        actions={<Button onClick={openAdd}>+ Pengguna</Button>}
+        actions={<Button onClick={openAdd}>{t('+ Pengguna')}</Button>}
       />
 
       {users.isLoading || roles.isLoading ? (
@@ -235,7 +237,7 @@ export default function Pengguna() {
                     <th className={TH}>Izin Modul</th>
                     <th className={TH}>Approve Settle</th>
                     <th className={TH}>Status</th>
-                    <th className={TH_R}>Aksi</th>
+                    <th className={TH_R}>{t('Aksi')}</th>
                   </tr>
                 </thead>
                 <tbody>

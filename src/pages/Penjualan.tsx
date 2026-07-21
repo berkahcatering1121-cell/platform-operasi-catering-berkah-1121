@@ -13,8 +13,10 @@ import { useEmployees } from '@/features/master/api'
 import { useSales, useDeleteSale } from '@/features/sales/api'
 import SaleModal from '@/features/sales/SaleModal'
 import type { SaleView } from '@/lib/db'
+import { useT } from '@/lib/i18n'
 
 export default function Penjualan() {
+  const { t } = useT()
   const sales = useSales()
   const employees = useEmployees()
   const del = useDeleteSale()
@@ -45,7 +47,7 @@ export default function Penjualan() {
       <PageHeader
         title="Penjualan"
         subtitle="Pesanan customer & event; harga per porsi ditarik dari Master Data."
-        actions={<Button onClick={openAdd}>+ Penjualan</Button>}
+        actions={<Button onClick={openAdd}>{t('+ Penjualan')}</Button>}
       />
 
       {sales.isLoading ? (
@@ -70,13 +72,13 @@ export default function Penjualan() {
                         <th className={TH}>Tanggal</th>
                         <th className={TH}>Customer / Event</th>
                         <th className={TH}>Menu</th>
-                        <th className={TH_R}>Porsi</th>
-                        <th className={TH_R}>Harga / Porsi</th>
-                        <th className={TH_R}>Total</th>
-                        <th className={TH_R}>Sisa Pembayaran</th>
+                        <th className={TH_R}>{t('Porsi')}</th>
+                        <th className={TH_R}>{t('Harga / Porsi')}</th>
+                        <th className={TH_R}>{t('Total')}</th>
+                        <th className={TH_R}>{t('Sisa Pembayaran')}</th>
                         <th className={TH}>Status</th>
                         <th className={TH}>PIC</th>
-                        <th className={TH_R}>Aksi</th>
+                        <th className={TH_R}>{t('Aksi')}</th>
                       </tr>
                     </thead>
                     <tbody>

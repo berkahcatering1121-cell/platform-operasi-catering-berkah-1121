@@ -20,8 +20,10 @@ import {
 import PeriodModal from '@/features/petty/PeriodModal'
 import EntryModal from '@/features/petty/EntryModal'
 import type { PettyEntryView, PettyPeriod } from '@/lib/db'
+import { useT } from '@/lib/i18n'
 
 export default function PettyCash() {
+  const { t } = useT()
   const { canSettle } = useAuth()
   const periods = usePettyPeriods()
   const entries = usePettyEntries()
@@ -137,10 +139,10 @@ export default function PettyCash() {
                         <th className={TH}>Tanggal</th>
                         <th className={TH}>Keterangan</th>
                         <th className={TH}>Foto Bukti</th>
-                        <th className={TH_R}>Masuk</th>
-                        <th className={TH_R}>Keluar</th>
-                        <th className={TH_R}>Saldo</th>
-                        <th className={TH_R}>Aksi</th>
+                        <th className={TH_R}>{t('Masuk', 'In')}</th>
+                        <th className={TH_R}>{t('Keluar', 'Out')}</th>
+                        <th className={TH_R}>{t('Saldo')}</th>
+                        <th className={TH_R}>{t('Aksi')}</th>
                       </tr>
                     </thead>
                     <tbody>

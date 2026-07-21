@@ -13,6 +13,7 @@ import { useAuth } from '@/auth/AuthProvider'
 import { usePayroll, useDeletePayroll } from '@/features/payroll/api'
 import PayrollModal from '@/features/payroll/PayrollModal'
 import type { PayrollView } from '@/lib/db'
+import { useT } from '@/lib/i18n'
 
 const WEEK_ORDER = ['pertama', 'kedua', 'ketiga', 'keempat', 'kelima']
 const weekRank = (label: string | null) => {
@@ -25,6 +26,7 @@ const weekLabel = (r: PayrollView) =>
   r.period_label ? titleCase(r.period_label) : r.salary_type === 'Harian' ? '—' : 'Gaji Bulanan'
 
 export default function Gaji() {
+  const { t } = useT()
   const { isAdminOrSuper } = useAuth()
   const payroll = usePayroll()
   const del = useDeletePayroll()
@@ -51,7 +53,7 @@ export default function Gaji() {
       <PageHeader
         title="Gaji Karyawan"
         subtitle="Karyawan harian dihitung dari hari kerja; karyawan bulanan gaji tetap."
-        actions={<Button onClick={openAdd}>+ Gaji</Button>}
+        actions={<Button onClick={openAdd}>{t('+ Gaji')}</Button>}
       />
 
       {payroll.isLoading ? (
@@ -88,16 +90,16 @@ export default function Gaji() {
                     <thead>
                       <tr>
                         <th className={TH}>Karyawan / Minggu</th>
-                        <th className={TH_R}>Upah / Hari</th>
-                        <th className={TH_R}>Hari Kerja</th>
-                        <th className={TH_R}>Gaji Dasar</th>
-                        <th className={TH_R}>Tunjangan</th>
-                        <th className={TH_R}>Bonus / Lembur</th>
-                        <th className={TH_R}>Potongan</th>
-                        <th className={TH_R}>Total Beban</th>
-                        <th className={TH_R}>Take Home Pay</th>
+                        <th className={TH_R}>{t('Upah / Hari')}</th>
+                        <th className={TH_R}>{t('Hari Kerja')}</th>
+                        <th className={TH_R}>{t('Gaji Dasar')}</th>
+                        <th className={TH_R}>{t('Tunjangan')}</th>
+                        <th className={TH_R}>{t('Bonus / Lembur')}</th>
+                        <th className={TH_R}>{t('Potongan')}</th>
+                        <th className={TH_R}>{t('Total Beban')}</th>
+                        <th className={TH_R}>{t('Take Home Pay')}</th>
                         <th className={TH}>Status</th>
-                        {isAdminOrSuper && <th className={TH_R}>Aksi</th>}
+                        {isAdminOrSuper && <th className={TH_R}>{t('Aksi')}</th>}
                       </tr>
                     </thead>
                     <tbody>

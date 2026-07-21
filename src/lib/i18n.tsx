@@ -16,8 +16,13 @@ interface I18nValue {
   lang: Lang
   setLang: (l: Lang) => void
   toggle: () => void
-  /** Translate an Indonesian source string; falls back to the input itself. */
-  t: (id: string) => string
+  /**
+   * Translate an Indonesian source string. Pass `en` to give a context-specific
+   * English word when the same Indonesian term means different things in
+   * different places (e.g. "Keluar" = Log out vs. cash Out). Falls back to the
+   * dictionary, then to the input string itself.
+   */
+  t: (id: string, en?: string) => string
 }
 
 const I18nContext = createContext<I18nValue | null>(null)
@@ -50,7 +55,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const toggle = useCallback(() => setLang(lang === 'id' ? 'en' : 'id'), [lang, setLang])
 
-  const t = useCallback((id: string) => (lang === 'en' ? EN[id] ?? id : id), [lang])
+  const t = useCallback(
+    (id: string, en?: string) => (lang === 'en' ? en ?? EN[id] ?? id : id),
+    [lang],
+  )
 
   const value = useMemo<I18nValue>(() => ({ lang, setLang, toggle, t }), [lang, setLang, toggle, t])
 

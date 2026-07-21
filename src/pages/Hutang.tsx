@@ -11,6 +11,7 @@ import { titleCase } from '@/lib/text'
 import { useDebts, useDeleteDebt } from '@/features/debts/api'
 import DebtModal from '@/features/debts/DebtModal'
 import type { DebtView } from '@/lib/db'
+import { useT } from '@/lib/i18n'
 
 function SummaryCard({ label, value, tone }: { label: string; value: string; tone?: 'red' | 'green' }) {
   return (
@@ -28,6 +29,7 @@ function SummaryCard({ label, value, tone }: { label: string; value: string; ton
 }
 
 export default function Hutang() {
+  const { t } = useT()
   const debts = useDebts()
   const del = useDeleteDebt()
 
@@ -58,7 +60,7 @@ export default function Hutang() {
       <PageHeader
         title="Hutang"
         subtitle="Sisa & status hutang dihitung otomatis (Lunas / Belum Lunas / Jatuh Tempo)."
-        actions={<Button onClick={openAdd}>+ Hutang</Button>}
+        actions={<Button onClick={openAdd}>{t('+ Hutang')}</Button>}
       />
 
       {debts.isLoading ? (
@@ -81,12 +83,12 @@ export default function Hutang() {
                     <th className={TH}>Tgl Hutang</th>
                     <th className={TH}>Kreditur</th>
                     <th className={TH}>Keterangan</th>
-                    <th className={TH_R}>Jumlah</th>
+                    <th className={TH_R}>{t('Jumlah')}</th>
                     <th className={TH}>Jatuh Tempo</th>
-                    <th className={TH_R}>Sudah Dibayar</th>
-                    <th className={TH_R}>Sisa</th>
+                    <th className={TH_R}>{t('Sudah Dibayar')}</th>
+                    <th className={TH_R}>{t('Sisa')}</th>
                     <th className={TH}>Status</th>
-                    <th className={TH_R}>Aksi</th>
+                    <th className={TH_R}>{t('Aksi')}</th>
                   </tr>
                 </thead>
                 <tbody>
