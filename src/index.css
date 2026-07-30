@@ -138,6 +138,75 @@
   }
 }
 
+/* =========================================================================
+   Futuristic login background — pure CSS so it renders on EVERY device
+   (incl. iOS Safari, unlike WebGPU): dark food photo + drifting tech grid +
+   a sweeping gold scan line with glow + vignette.
+   ========================================================================= */
+.login-fx {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(6, 22, 14, 0.66), rgba(5, 16, 10, 0.9)),
+    url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80')
+      center / cover no-repeat,
+    radial-gradient(120% 90% at 50% 0%, #14442f 0%, #0b2a1f 45%, #06140c 100%);
+}
+/* Drifting tech grid */
+.login-fx::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background-image:
+    linear-gradient(rgba(201, 169, 59, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 169, 59, 0.09) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(120% 85% at 50% 42%, #000 28%, transparent 86%);
+  mask-image: radial-gradient(120% 85% at 50% 42%, #000 28%, transparent 86%);
+  animation: loginGridDrift 20s linear infinite;
+}
+@keyframes loginGridDrift {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 46px 46px, 46px 46px; }
+}
+/* Sweeping gold scan line with a soft glow trailing above it */
+.login-fx__scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40%;
+  top: -40%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(201, 169, 59, 0.08) 62%,
+    rgba(226, 199, 126, 0.5) 92%,
+    rgba(255, 246, 224, 0.9) 100%
+  );
+  box-shadow: 0 2px 34px 6px rgba(201, 169, 59, 0.4);
+  mix-blend-mode: screen;
+  animation: loginScan 4.6s cubic-bezier(0.55, 0, 0.4, 1) infinite;
+}
+@keyframes loginScan {
+  0% { top: -42%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+/* Vignette for depth + card legibility */
+.login-fx__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 100% at 50% 45%, transparent 42%, rgba(0, 0, 0, 0.52) 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-fx::before,
+  .login-fx__scan {
+    animation: none;
+  }
+}
+
 /* Thin, unobtrusive scrollbars inside scroll areas. */
 .cb-scroll::-webkit-scrollbar {
   height: 8px;

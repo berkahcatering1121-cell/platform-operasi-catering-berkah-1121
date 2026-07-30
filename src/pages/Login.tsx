@@ -1,13 +1,7 @@
-import { lazy, Suspense, useState } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
 import { useT } from '@/lib/i18n'
 import LanguageToggle from '@/components/LanguageToggle'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
-
-// Heavy WebGPU hero — loaded only when the browser supports WebGPU (desktop
-// Chrome/Edge). On iOS/Safari it never downloads; the static photo is used.
-const HeroFuturistic = lazy(() => import('@/components/ui/hero-futuristic'))
-const hasWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator
 
 /**
  * Login screen with two distinct layouts:
@@ -118,37 +112,12 @@ export default function Login() {
 
   return (
     <div className="fixed inset-0 animate-fadeIn overflow-y-auto bg-brand-sidebar">
-      {/* Desktop: photo background (also the instant fallback under the hero) */}
-      <div
-        className="pointer-events-none absolute inset-0 hidden bg-cover bg-center md:block"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(9,30,20,0.45), rgba(9,30,20,0.65)), url(/assets/login-bg.png)',
-        }}
-      />
-
-      {/* Desktop: animated WebGPU hero (gold scan + bloom) over the photo.
-          Only mounted where WebGPU exists; the static photo shows meanwhile. */}
-      {hasWebGPU && (
-        <div className="pointer-events-none absolute inset-0 hidden md:block">
-          <ErrorBoundary fallback={null}>
-            <Suspense fallback={null}>
-              <HeroFuturistic />
-            </Suspense>
-          </ErrorBoundary>
-          {/* Legibility overlay for the login card (kept light so the animated
-              photo + gold scan stay visible; the card has its own dark glass) */}
-          <div
-            className="absolute inset-0"
-            style={{ background: 'linear-gradient(90deg, rgba(6,20,12,0.15), rgba(6,20,12,0.45))' }}
-          />
-        </div>
-      )}
-      {/* Mobile: green gradient background */}
-      <div
-        className="pointer-events-none absolute inset-0 md:hidden"
-        style={{ background: 'radial-gradient(125% 80% at 50% 0%, #1B4E36 0%, #10362A 46%, #0A2419 100%)' }}
-      />
+      {/* Futuristic background — pure CSS, renders on every device (incl. iPhone):
+          dark food photo + drifting tech grid + sweeping gold scan line. */}
+      <div className="login-fx pointer-events-none absolute inset-0">
+        <span className="login-fx__scan" />
+        <div className="login-fx__vignette" />
+      </div>
 
       {/* Language switch (ID / EN) */}
       <div
