@@ -121,7 +121,7 @@ export default function Login() {
 
       {/* Brand logo — top-left (desktop; mobile has its own centered header) */}
       <div
-        className="absolute left-5 z-10 hidden items-center gap-2.5 md:flex"
+        className="absolute left-5 z-20 hidden items-center gap-2.5 md:flex"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
       >
         <img src="/assets/app-icon-white.png" alt="Catering Berkah" width={42} height={42} className="drop-shadow-lg" />
@@ -135,9 +135,9 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Language switch (ID / EN) */}
+      {/* Language switch (ID / EN) — above the form container so it stays clickable */}
       <div
-        className="absolute right-4 z-10 w-[112px]"
+        className="absolute right-4 z-20 w-[112px]"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
       >
         <LanguageToggle />
