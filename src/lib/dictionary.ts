@@ -439,6 +439,17 @@ export const EN: Record<string, string> = {
 
   // ── P&L internal analysis ─────────────────────────────────────────────
   'Catatan Analisis Internal': 'Internal Analysis Notes',
+  'Unduh PDF': 'Download PDF',
+  'Menyiapkan…': 'Preparing…',
+  'Laporan Laba Rugi (P&L)': 'Profit & Loss Report (P&L)',
+  'Tahun': 'Year',
+  'Dibuat': 'Generated',
+  'Hal': 'Page',
+  'Semua nilai dalam Rupiah (Rp)': 'All values in Rupiah (Rp)',
+  'Metrik': 'Metric',
+  'Nilai': 'Value',
+  'maks': 'max',
+  'min': 'min',
   'Rasio biaya & margin terhadap pendapatan · acuan umum industri F&B, sesuaikan dengan bisnis Anda.':
     'Cost & margin ratios vs. revenue · general F&B industry benchmarks, adjust to your business.',
   'Setahun (Total)': 'Full Year (Total)',

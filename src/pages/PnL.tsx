@@ -5,29 +5,7 @@ import { Badge } from '@/components/ui/Badge'
 import { formatPercent, formatPercentInt, months as monthNames, monthsShort } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { usePnl, type PnlMonth } from '@/features/pnl/api'
-
-// F&B / catering reference targets (as % of revenue). `cost` = lower is better,
-// `margin` = higher is better. Adjust to the business as needed.
-type Metric = {
-  label: string
-  hint: string
-  value: number
-  target: number
-  kind: 'cost' | 'margin'
-  /** Short auto-tip shown when the metric is not ideal (Over / below target). */
-  note: string
-}
-
-function verdict(m: Metric): { label: string; tone: 'green' | 'amber' | 'red' } {
-  if (m.kind === 'cost') {
-    if (m.value <= m.target) return { label: 'Ideal', tone: 'green' }
-    if (m.value <= m.target * 1.15) return { label: 'Sedikit Over', tone: 'amber' }
-    return { label: 'Over', tone: 'red' }
-  }
-  if (m.value >= m.target) return { label: 'Sehat', tone: 'green' }
-  if (m.value >= m.target * 0.7) return { label: 'Cukup', tone: 'amber' }
-  return { label: 'Kurang', tone: 'red' }
-}
+import { ROWS, computeMetrics, scopeRevenue, verdict } from '@/features/pnl/model'
 
 const TODAY_YEAR = new Date().getFullYear()
 
@@ -37,40 +15,6 @@ function num(n: number) {
   const v = Math.round(n)
   return v === 0 ? '-' : v.toLocaleString('id-ID')
 }
-
-type RowDef =
-  | { kind: 'header'; label: string }
-  | {
-      kind: 'money'
-      label: string
-      get: (m: PnlMonth) => number
-      strong?: boolean
-      tint?: string
-      indent?: boolean
-      accent?: 'green'
-    }
-  | { kind: 'pct'; label: string; numr: (m: PnlMonth) => number; den: (m: PnlMonth) => number }
-
-const ROWS: RowDef[] = [
-  { kind: 'money', label: 'Pendapatan', get: (m) => m.pendapatan, strong: true },
-  { kind: 'money', label: 'HPP (Pembelian Bahan Baku)', get: (m) => m.hpp },
-  { kind: 'money', label: 'Laba Kotor', get: (m) => m.laba_kotor, strong: true, tint: 'bg-app-panel' },
-  { kind: 'pct', label: 'Margin Kotor (%)', numr: (m) => m.laba_kotor, den: (m) => m.pendapatan },
-  { kind: 'header', label: 'Beban Operasional' },
-  { kind: 'money', label: 'Gaji Karyawan', get: (m) => m.beban_gaji, indent: true },
-  { kind: 'money', label: 'Sewa Tempat & Dapur', get: (m) => m.beban_sewa, indent: true },
-  { kind: 'money', label: 'Listrik, Air & Gas', get: (m) => m.beban_listrik, indent: true },
-  { kind: 'money', label: 'Transportasi & Pengiriman', get: (m) => m.beban_transport, indent: true },
-  { kind: 'money', label: 'Marketing & Promosi', get: (m) => m.beban_marketing, indent: true },
-  { kind: 'money', label: 'Biaya Lain-lain', get: (m) => m.beban_lain, indent: true },
-  { kind: 'money', label: 'Depresiasi Aset', get: (m) => m.beban_depresiasi, indent: true },
-  { kind: 'money', label: 'Total Beban Operasional', get: (m) => m.total_beban_operasional, strong: true, tint: 'bg-app-panel' },
-  // EBITDA = Laba Bersih + Depresiasi Aset (no interest/tax/amortisation tracked here).
-  { kind: 'money', label: 'EBITDA', get: (m) => m.laba_bersih + m.beban_depresiasi, strong: true, tint: 'bg-[#EDF5EF]', accent: 'green' },
-  { kind: 'pct', label: '% EBITDA', numr: (m) => m.laba_bersih + m.beban_depresiasi, den: (m) => m.pendapatan },
-  { kind: 'money', label: 'Laba Bersih', get: (m) => m.laba_bersih, strong: true, tint: 'bg-gold-tint', accent: 'green' },
-  { kind: 'pct', label: 'Margin Bersih (%)', numr: (m) => m.laba_bersih, den: (m) => m.pendapatan },
-]
 
 export default function PnL() {
   const { t } = useT()
@@ -87,45 +31,23 @@ export default function PnL() {
 
   // Internal analysis scope: 0 = whole year, 1-12 = a single month.
   const [anMonth, setAnMonth] = useState(0)
-  const metrics = useMemo<Metric[]>(() => {
-    const src = anMonth === 0 ? months : months.filter((m) => m.month_no === anMonth)
-    const sum = (f: (m: PnlMonth) => number) => src.reduce((a, m) => a + f(m), 0)
-    const rev = sum((m) => m.pendapatan)
-    const p = (n: number) => (rev > 0 ? n / rev : 0)
-    const hpp = sum((m) => m.hpp)
-    const gaji = sum((m) => m.beban_gaji)
-    const opex = sum((m) => m.total_beban_operasional)
-    return [
-      {
-        label: 'Food Cost (COGS)', hint: 'HPP ÷ Pendapatan', value: p(hpp), target: 0.35, kind: 'cost',
-        note: 'Biaya bahan baku terlalu tinggi. Cek harga jual, standar porsi/HPP, dan stok pembelian yang berlebih.',
-      },
-      {
-        label: 'Labor Cost', hint: 'Beban Gaji ÷ Pendapatan', value: p(gaji), target: 0.3, kind: 'cost',
-        note: 'Beban gaji tinggi terhadap pendapatan. Tinjau jumlah staf & lembur, atau dorong penjualan.',
-      },
-      {
-        label: 'Prime Cost', hint: '(HPP + Gaji) ÷ Pendapatan', value: p(hpp + gaji), target: 0.6, kind: 'cost',
-        note: 'Bahan baku + gaji melebihi ideal, umumnya dipicu Food Cost. Tekan HPP lebih dulu.',
-      },
-      {
-        label: 'Overhead (Opex non-Gaji)', hint: '(Opex − Gaji) ÷ Pendapatan', value: p(opex - gaji), target: 0.25, kind: 'cost',
-        note: 'Biaya operasional non-gaji tinggi (sewa, listrik, transport, marketing). Tinjau pos terbesar.',
-      },
-      {
-        label: 'Margin Kotor', hint: 'Laba Kotor ÷ Pendapatan', value: p(sum((m) => m.laba_kotor)), target: 0.65, kind: 'margin',
-        note: 'Margin kotor di bawah ideal, biasanya akibat Food Cost tinggi. Naikkan harga jual atau tekan HPP.',
-      },
-      {
-        label: 'Margin Bersih', hint: 'Laba Bersih ÷ Pendapatan', value: p(sum((m) => m.laba_bersih)), target: 0.1, kind: 'margin',
-        note: 'Laba bersih tipis. Tinjau biaya terbesar (bahan baku, gaji, atau operasional).',
-      },
-    ]
-  }, [months, anMonth])
-  const anRevenue = useMemo(() => {
-    const src = anMonth === 0 ? months : months.filter((m) => m.month_no === anMonth)
-    return src.reduce((a, m) => a + m.pendapatan, 0)
-  }, [months, anMonth])
+  const metrics = useMemo(() => computeMetrics(months, anMonth), [months, anMonth])
+  const anRevenue = useMemo(() => scopeRevenue(months, anMonth), [months, anMonth])
+
+  // PDF download.
+  const [dlOpen, setDlOpen] = useState(false)
+  const [dlBusy, setDlBusy] = useState(false)
+  const download = async (scope: number) => {
+    setDlOpen(false)
+    setDlBusy(true)
+    try {
+      // Lazy-load jsPDF only when the user actually downloads.
+      const { exportPnlPdf } = await import('@/features/pnl/exportPdf')
+      await exportPnlPdf({ months, year, scope, t, generatedAt: new Date() })
+    } finally {
+      setDlBusy(false)
+    }
+  }
 
   const labelBase = 'sticky left-0 z-10 px-3 py-[10px] text-[12px] whitespace-nowrap border-t border-[#F1EBE2]'
   const cellBase = 'px-3 py-[10px] text-[12px] text-right tabular-nums whitespace-nowrap border-t border-[#F1EBE2]'
@@ -136,22 +58,63 @@ export default function PnL() {
         title="P&L (Laba Rugi)"
         subtitle="Laporan read-only 12 bulan + total tahunan, roll-up otomatis dari semua modul."
         actions={
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setYear((y) => y - 1)}
-              className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-              aria-label={t('Tahun sebelumnya')}
-            >
-              ‹
-            </button>
-            <span className="min-w-[62px] text-center text-[14px] font-extrabold text-ink">{year}</span>
-            <button
-              onClick={() => setYear((y) => y + 1)}
-              className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-              aria-label={t('Tahun berikutnya')}
-            >
-              ›
-            </button>
+          <div className="flex items-center gap-2">
+            {/* Download PDF (per month or full year) */}
+            <div className="relative">
+              <button
+                onClick={() => setDlOpen((o) => !o)}
+                disabled={dlBusy || months.length === 0}
+                className="flex items-center gap-1.5 rounded-btn bg-brand px-3 py-2 text-[13px] font-bold text-white transition hover:bg-brand-dark disabled:opacity-60"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                </svg>
+                {dlBusy ? t('Menyiapkan…') : t('Unduh PDF')}
+              </button>
+              {dlOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setDlOpen(false)} />
+                  <div className="absolute right-0 z-50 mt-1.5 w-52 overflow-hidden rounded-field border border-app-border bg-app-card py-1 shadow-card">
+                    <button
+                      onClick={() => download(0)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left text-[13px] font-bold text-ink hover:bg-app-panel"
+                    >
+                      {t('Setahun (Total)')} {year}
+                    </button>
+                    <div className="my-1 border-t border-app-border" />
+                    <div className="cb-scroll max-h-[240px] overflow-y-auto">
+                      {monthNames().map((m, i) => (
+                        <button
+                          key={m}
+                          onClick={() => download(i + 1)}
+                          className="flex w-full items-center px-3 py-1.5 text-left text-[12.5px] font-semibold text-ink-body hover:bg-app-panel"
+                        >
+                          {m} {year}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setYear((y) => y - 1)}
+                className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
+                aria-label={t('Tahun sebelumnya')}
+              >
+                ‹
+              </button>
+              <span className="min-w-[62px] text-center text-[14px] font-extrabold text-ink">{year}</span>
+              <button
+                onClick={() => setYear((y) => y + 1)}
+                className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
+                aria-label={t('Tahun berikutnya')}
+              >
+                ›
+              </button>
+            </div>
           </div>
         }
       />
