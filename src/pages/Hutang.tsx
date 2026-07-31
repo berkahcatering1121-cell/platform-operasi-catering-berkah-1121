@@ -39,9 +39,13 @@ export default function Hutang() {
 
   const totals = useMemo(() => {
     const rows = debts.data ?? []
+    // "Sudah Dibayar" is capped at each debt's amount: paying more than the debt
+    // (an over-entered row) must not inflate the paid total beyond Total Hutang.
+    // This keeps the three cards consistent: Total Hutang = Sudah Dibayar + Sisa,
+    // because min(paid, amount) + max(0, amount − paid) === amount for every row.
     return {
       total: rows.reduce((t, r) => t + r.amount, 0),
-      paid: rows.reduce((t, r) => t + r.paid_amount, 0),
+      paid: rows.reduce((t, r) => t + Math.min(r.paid_amount, r.amount), 0),
       sisa: rows.reduce((t, r) => t + r.sisa, 0),
     }
   }, [debts.data])
@@ -105,7 +109,7 @@ export default function Hutang() {
                         </td>
                         <td className={TD_R + ' font-extrabold text-ink'}>{formatRupiah(r.amount)}</td>
                         <td className={TD + ' whitespace-nowrap'}>{formatDate(r.due_date)}</td>
-                        <td className={TD_R}>{formatRupiah(r.paid_amount)}</td>
+                        <td className={TD_R}>{formatRupiah(Math.min(r.paid_amount, r.amount))}</td>
                         <td className={TD_R + ' font-bold ' + (r.sisa > 0 ? 'text-danger' : 'text-ink')}>
                           {formatRupiah(r.sisa)}
                         </td>
