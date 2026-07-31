@@ -43,8 +43,11 @@ export default function App() {
 
   if (booting || loading) return <Splash leaving={splashLeaving} />
   if (!session) return <Login />
+  // Logged in but the profile is still loading — hold on the splash so we never
+  // flash the "no module" screen before we actually know the user's permissions.
+  if (!profile) return <Splash leaving={false} />
   // First-login: force the user to replace their temporary password.
-  if (profile?.must_change_password) return <ChangePassword />
+  if (profile.must_change_password) return <ChangePassword />
 
   // A user with no accessible module at all (everything unchecked).
   if (!landingPath) {
