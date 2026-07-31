@@ -437,6 +437,25 @@ export const EN: Record<string, string> = {
   'Buat role baru (custom)': 'Create a new (custom) role',
   ' memiliki akses penuh ke semua modul secara otomatis.': ' automatically has full access to all modules.',
 
+  // ── P&L internal analysis ─────────────────────────────────────────────
+  'Catatan Analisis Internal': 'Internal Analysis Notes',
+  'Rasio biaya & margin terhadap pendapatan · acuan umum industri F&B, sesuaikan dengan bisnis Anda.':
+    'Cost & margin ratios vs. revenue · general F&B industry benchmarks, adjust to your business.',
+  'Setahun (Total)': 'Full Year (Total)',
+  'Food Cost (COGS)': 'Food Cost (COGS)',
+  'Labor Cost': 'Labor Cost',
+  'Prime Cost': 'Prime Cost',
+  'Overhead (Opex non-Gaji)': 'Overhead (non-payroll Opex)',
+  'Target': 'Target',
+  'Ideal': 'Ideal',
+  'Sedikit Over': 'Slightly Over',
+  'Over': 'Over',
+  'Sehat': 'Healthy',
+  'Cukup': 'Fair',
+  'Kurang': 'Below',
+  'Belum ada pendapatan pada periode ini — rasio belum dapat dihitung.':
+    'No revenue in this period yet — ratios cannot be computed.',
+
   // ── Months (long) ─────────────────────────────────────────────────────
   'Januari': 'January', 'Februari': 'February', 'Maret': 'March', 'April': 'April',
   'Mei': 'May', 'Juni': 'June', 'Juli': 'July', 'Agustus': 'August',

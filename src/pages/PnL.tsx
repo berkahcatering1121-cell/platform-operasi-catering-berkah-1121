@@ -1,9 +1,25 @@
 import { useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
-import { formatPercent, monthsShort } from '@/lib/format'
+import { Badge } from '@/components/ui/Badge'
+import { formatPercent, formatPercentInt, months as monthNames, monthsShort } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { usePnl, type PnlMonth } from '@/features/pnl/api'
+
+// F&B / catering reference targets (as % of revenue). `cost` = lower is better,
+// `margin` = higher is better. Adjust to the business as needed.
+type Metric = { label: string; hint: string; value: number; target: number; kind: 'cost' | 'margin' }
+
+function verdict(m: Metric): { label: string; tone: 'green' | 'amber' | 'red' } {
+  if (m.kind === 'cost') {
+    if (m.value <= m.target) return { label: 'Ideal', tone: 'green' }
+    if (m.value <= m.target * 1.15) return { label: 'Sedikit Over', tone: 'amber' }
+    return { label: 'Over', tone: 'red' }
+  }
+  if (m.value >= m.target) return { label: 'Sehat', tone: 'green' }
+  if (m.value >= m.target * 0.7) return { label: 'Cukup', tone: 'amber' }
+  return { label: 'Kurang', tone: 'red' }
+}
 
 const TODAY_YEAR = new Date().getFullYear()
 
@@ -61,6 +77,30 @@ export default function PnL() {
     return { sum }
   }, [months])
 
+  // Internal analysis scope: 0 = whole year, 1-12 = a single month.
+  const [anMonth, setAnMonth] = useState(0)
+  const metrics = useMemo<Metric[]>(() => {
+    const src = anMonth === 0 ? months : months.filter((m) => m.month_no === anMonth)
+    const sum = (f: (m: PnlMonth) => number) => src.reduce((a, m) => a + f(m), 0)
+    const rev = sum((m) => m.pendapatan)
+    const p = (n: number) => (rev > 0 ? n / rev : 0)
+    const hpp = sum((m) => m.hpp)
+    const gaji = sum((m) => m.beban_gaji)
+    const opex = sum((m) => m.total_beban_operasional)
+    return [
+      { label: 'Food Cost (COGS)', hint: 'HPP ÷ Pendapatan', value: p(hpp), target: 0.35, kind: 'cost' },
+      { label: 'Labor Cost', hint: 'Beban Gaji ÷ Pendapatan', value: p(gaji), target: 0.3, kind: 'cost' },
+      { label: 'Prime Cost', hint: '(HPP + Gaji) ÷ Pendapatan', value: p(hpp + gaji), target: 0.6, kind: 'cost' },
+      { label: 'Overhead (Opex non-Gaji)', hint: '(Opex − Gaji) ÷ Pendapatan', value: p(opex - gaji), target: 0.25, kind: 'cost' },
+      { label: 'Margin Kotor', hint: 'Laba Kotor ÷ Pendapatan', value: p(sum((m) => m.laba_kotor)), target: 0.65, kind: 'margin' },
+      { label: 'Margin Bersih', hint: 'Laba Bersih ÷ Pendapatan', value: p(sum((m) => m.laba_bersih)), target: 0.1, kind: 'margin' },
+    ]
+  }, [months, anMonth])
+  const anRevenue = useMemo(() => {
+    const src = anMonth === 0 ? months : months.filter((m) => m.month_no === anMonth)
+    return src.reduce((a, m) => a + m.pendapatan, 0)
+  }, [months, anMonth])
+
   const labelBase = 'sticky left-0 z-10 px-3 py-[10px] text-[12px] whitespace-nowrap border-t border-[#F1EBE2]'
   const cellBase = 'px-3 py-[10px] text-[12px] text-right tabular-nums whitespace-nowrap border-t border-[#F1EBE2]'
 
@@ -95,10 +135,8 @@ export default function PnL() {
       ) : pnl.error ? (
         <ErrorState message={(pnl.error as Error).message} />
       ) : (
+        <>
         <Card bodyClassName="">
-          <div className="border-b border-app-border px-4 py-2 text-[11px] text-ink-muted">
-            {t("Semua angka dalam ribu Rupiah (Rp '000) · read-only, dihitung otomatis · EBITDA = Laba Bersih + Depresiasi Aset")}
-          </div>
           <div className="cb-scroll overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -203,6 +241,63 @@ export default function PnL() {
             </table>
           </div>
         </Card>
+
+        {/* ---------- Internal analysis notes (cost/margin ratios) ---------- */}
+        <div className="mt-4">
+          <Card
+            title={t('Catatan Analisis Internal')}
+            subtitle={t('Rasio biaya & margin terhadap pendapatan · acuan umum industri F&B, sesuaikan dengan bisnis Anda.')}
+            action={
+              <select
+                value={anMonth}
+                onChange={(e) => setAnMonth(Number(e.target.value))}
+                className="cb-select h-[36px] rounded-btn border border-app-border bg-app-card pl-3 pr-8 text-[12.5px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
+                aria-label={t('Pilih bulan')}
+              >
+                <option value={0}>{t('Setahun (Total)')}</option>
+                {monthNames().map((m, i) => (
+                  <option key={m} value={i + 1}>
+                    {m} {year}
+                  </option>
+                ))}
+              </select>
+            }
+          >
+            {anRevenue <= 0 ? (
+              <p className="py-6 text-center text-[12.5px] text-ink-muted">
+                {t('Belum ada pendapatan pada periode ini — rasio belum dapat dihitung.')}
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {metrics.map((m) => {
+                  const v = verdict(m)
+                  const numColor =
+                    v.tone === 'green' ? 'text-ok' : v.tone === 'amber' ? 'text-warn' : 'text-danger'
+                  return (
+                    <div key={m.label} className="cb-card p-3.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-[12.5px] font-extrabold text-ink">{t(m.label)}</div>
+                          <div className="mt-0.5 text-[10.5px] text-ink-faint">{m.hint}</div>
+                        </div>
+                        <Badge tone={v.tone}>{t(v.label)}</Badge>
+                      </div>
+                      <div className="mt-2 flex items-end justify-between gap-2">
+                        <div className={`text-[23px] font-extrabold tabular-nums ${numColor}`}>
+                          {formatPercent(m.value)}
+                        </div>
+                        <div className="pb-0.5 text-[10.5px] font-semibold text-ink-muted">
+                          {t('Target')} {m.kind === 'cost' ? '≤' : '≥'} {formatPercentInt(m.target)}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+        </div>
+        </>
       )}
     </>
   )
