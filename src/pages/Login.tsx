@@ -119,6 +119,22 @@ export default function Login() {
         <div className="login-fx__vignette" />
       </div>
 
+      {/* Brand logo — top-left (desktop; mobile has its own centered header) */}
+      <div
+        className="absolute left-5 z-10 hidden items-center gap-2.5 md:flex"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
+      >
+        <img src="/assets/app-icon-white.png" alt="Catering Berkah" width={42} height={42} className="drop-shadow-lg" />
+        <div className="leading-tight">
+          <div className="text-[15.5px] font-extrabold text-white">
+            Catering Berkah <span className="text-gold">1121</span>
+          </div>
+          <div className="mt-[2px] text-[9px] font-bold uppercase tracking-[0.28em] text-gold/70">
+            For Your Every Moment
+          </div>
+        </div>
+      </div>
+
       {/* Language switch (ID / EN) */}
       <div
         className="absolute right-4 z-10 w-[112px]"
