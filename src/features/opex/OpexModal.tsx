@@ -125,7 +125,7 @@ export default function OpexModal({ open, onClose, editing }: Props) {
           label="Catatan"
           value={form.notes}
           onChange={(e) => set({ notes: e.target.value })}
-          placeholder="Opsional — Ketik Catatan"
+          placeholder="Opsional, Ketik Catatan"
         />
 
         <PhotoUploader

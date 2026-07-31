@@ -5,7 +5,7 @@ import { supabase } from './supabase'
 const BUCKET = 'proofs'
 
 // Downscale + re-encode an image so multi-MB phone photos become ~150–350 KB
-// JPEGs — saves storage and speeds up uploads. Falls back to the original file
+// JPEGs - saves storage and speeds up uploads. Falls back to the original file
 // if the image can't be decoded (e.g. HEIC in a browser without support).
 async function compressImage(file: File, maxDim = 1600, quality = 0.72): Promise<Blob> {
   if (!file.type.startsWith('image/')) return file

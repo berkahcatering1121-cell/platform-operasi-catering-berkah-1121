@@ -7,7 +7,7 @@ import { formatRupiah } from '@/lib/format'
 import { useSaveDebt, type DebtInput } from './api'
 import type { DebtView } from '@/lib/db'
 
-// Jenis hutang yang umum — biar pencatatan lebih cepat & konsisten.
+// Jenis hutang yang umum - biar pencatatan lebih cepat & konsisten.
 const DEBT_TYPES = [
   'Pinjaman Bank',
   'Pinjaman Bank (KUR)',
@@ -24,7 +24,7 @@ interface FormState {
   debt_date: string
   creditor: string
   debt_type: string
-  customMode: boolean // "Lainnya" — ketik jenis sendiri
+  customMode: boolean // "Lainnya": ketik jenis sendiri
   description: string
   amount: string
   due_date: string

@@ -14,7 +14,7 @@ interface Props {
 }
 
 /**
- * Monthly line chart (inline SVG) — Pendapatan / Pembelian / Laba Bersih.
+ * Monthly line chart (inline SVG) - Pendapatan / Pembelian / Laba Bersih.
  * Values are scaled to the combined maximum; the y-axis is labelled in juta.
  */
 export default function LineChart({ series, labels }: Props) {

@@ -131,7 +131,7 @@ export function useResetPassword() {
 }
 
 // Designate (or revoke) a Finance approver for Petty Cash settle.
-// Direct profiles update — RLS restricts this to Super Admin.
+// Direct profiles update - RLS restricts this to Super Admin.
 export function useSetCanSettle() {
   const qc = useQueryClient()
   return useMutation({

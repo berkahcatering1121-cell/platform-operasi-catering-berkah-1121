@@ -13,7 +13,7 @@ interface Props {
 /**
  * Multi-image proof field: upload to the private "proofs" bucket, show
  * removable thumbnails (via signed URLs). Removing only detaches the path
- * from the row — orphaned objects are harmless and can be swept later.
+ * from the row - orphaned objects are harmless and can be swept later.
  */
 export default function PhotoUploader({ prefix, value, onChange, label = 'Foto Bukti' }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)

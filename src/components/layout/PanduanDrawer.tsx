@@ -7,7 +7,7 @@ interface Guide {
   terhubung: string
 }
 
-// Detailed, beginner-friendly guide for every module — what it does, how to use
+// Detailed, beginner-friendly guide for every module - what it does, how to use
 // it, and how it connects to the rest of the app (data flow).
 const GUIDE: Record<ModuleKey, Guide> = {
   dashboard: {
@@ -15,7 +15,7 @@ const GUIDE: Record<ModuleKey, Guide> = {
     fungsi:
       'Ringkasan keuangan sekilas: kartu KPI (total pendapatan, pembelian, beban gaji, laba bersih, margin), grafik tren bulanan, dan komposisi pembelian & penjualan.',
     cara: [
-      'Cukup dilihat — tidak ada input di sini.',
+      'Cukup dilihat, tidak ada input di sini.',
       'Pilih tahun di kanan atas untuk mengganti periode.',
       'Semua angka terisi otomatis dari transaksi yang Anda catat.',
     ],
@@ -117,7 +117,7 @@ const GUIDE: Record<ModuleKey, Guide> = {
     fungsi:
       'Laporan Laba Rugi otomatis: 12 bulan + total tahunan, lengkap dengan EBITDA & margin. Bersifat read-only (hanya lihat).',
     cara: [
-      'Cukup dilihat — tidak ada input.',
+      'Cukup dilihat, tidak ada input.',
       'Pilih tahun di kanan atas. Semua baris terisi & dijumlah otomatis.',
     ],
     terhubung:
@@ -131,7 +131,7 @@ const GUIDE: Record<ModuleKey, Guide> = {
       'Kelola daftar peran pada kartu “Daftar Peran”.',
     ],
     terhubung:
-      'Menentukan siapa boleh membuka & mengedit modul apa — menegakkan hak akses di seluruh aplikasi.',
+      'Menentukan siapa boleh membuka & mengedit modul apa, menegakkan hak akses di seluruh aplikasi.',
   },
 }
 
@@ -170,9 +170,9 @@ export default function PanduanDrawer({ open, onClose }: Props) {
           <div className="mb-4 rounded-card border border-master-border bg-master-bg p-4">
             <div className="text-[13px] font-extrabold text-master">Cara kerja singkat</div>
             <ol className="mt-2 space-y-1.5 text-[12.5px] leading-relaxed text-ink-body">
-              <li><b>1. Isi Master Data dulu</b> — supplier, karyawan, dan menu (+ harga & resep).</li>
-              <li><b>2. Catat transaksi harian</b> — Pembelian, Penjualan, Gaji, Biaya Operasional, Petty Cash, Hutang, Aset.</li>
-              <li><b>3. Hasil muncul otomatis</b> — semua mengalir ke <b>P&L</b> & <b>Dashboard</b> tanpa dihitung manual.</li>
+              <li><b>1. Isi Master Data dulu</b>: supplier, karyawan, dan menu (+ harga & resep).</li>
+              <li><b>2. Catat transaksi harian</b>: Pembelian, Penjualan, Gaji, Biaya Operasional, Petty Cash, Hutang, Aset.</li>
+              <li><b>3. Hasil muncul otomatis</b>: semua mengalir ke <b>P&L</b> & <b>Dashboard</b> tanpa dihitung manual.</li>
             </ol>
           </div>
 

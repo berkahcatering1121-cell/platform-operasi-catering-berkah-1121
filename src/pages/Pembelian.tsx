@@ -91,7 +91,7 @@ export default function Pembelian() {
                             <div className="font-bold text-ink">{titleCase(r.material_name)}</div>
                             {r.category && <div className="text-[11px] text-ink-faint">{r.category}</div>}
                           </td>
-                          <td className={TD}>{r.supplier_name ?? '—'}</td>
+                          <td className={TD}>{r.supplier_name ?? '-'}</td>
                           <td className={TD_R}>
                             {r.qty}
                             {r.unit ? ` ${r.unit}` : ''}
@@ -105,7 +105,7 @@ export default function Pembelian() {
                             <PhotoCell paths={r.photos} title={r.material_name} />
                           </td>
                           <td className={TD}>
-                            {empName(r.pic_employee_id) || <span className="text-ink-faint">—</span>}
+                            {empName(r.pic_employee_id) || <span className="text-ink-faint">-</span>}
                           </td>
                           <td className={TD_R}>
                             <RowActions onEdit={() => openEdit(r)} onDelete={() => setToDelete(r)} />

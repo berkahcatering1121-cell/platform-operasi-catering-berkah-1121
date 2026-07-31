@@ -219,7 +219,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
           <SelectField
             label="PIC"
             variant="master"
-            options={(employees.data ?? []).map((e) => ({ value: e.id, label: `${e.name} — ${e.position ?? '-'}` }))}
+            options={(employees.data ?? []).map((e) => ({ value: e.id, label: `${e.name} · ${e.position ?? '-'}` }))}
             placeholder="Pilih PIC…"
             value={form.pic_employee_id}
             onChange={(e) => set({ pic_employee_id: e.target.value })}
@@ -230,7 +230,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
           label="Catatan"
           value={form.notes}
           onChange={(e) => set({ notes: e.target.value })}
-          placeholder="Opsional — Ketik Catatan"
+          placeholder="Opsional, Ketik Catatan"
         />
 
         <PhotoUploader prefix="sales" value={form.photos} onChange={(photos) => set({ photos })} />

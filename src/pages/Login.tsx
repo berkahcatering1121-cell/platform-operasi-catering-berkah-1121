@@ -5,7 +5,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 
 /**
  * Login screen with two distinct layouts:
- *  - Mobile (< md): dedicated app-like layout — real logo mark + wordmark on a
+ *  - Mobile (< md): dedicated app-like layout - real logo mark + wordmark on a
  *    green gradient at the top, login card below. The logo is a DOM element so
  *    it never gets cropped like a background image would on tall screens.
  *  - Desktop (>= md): full-bleed photo background with the card centered.
@@ -112,14 +112,14 @@ export default function Login() {
 
   return (
     <div className="fixed inset-0 animate-fadeIn overflow-y-auto bg-brand-sidebar">
-      {/* Futuristic background — pure CSS, renders on every device (incl. iPhone):
+      {/* Futuristic background - pure CSS, renders on every device (incl. iPhone):
           dark food photo + drifting tech grid + sweeping gold scan line. */}
       <div className="login-fx pointer-events-none absolute inset-0">
         <span className="login-fx__scan" />
         <div className="login-fx__vignette" />
       </div>
 
-      {/* Brand logo — top-left (desktop; mobile has its own centered header) */}
+      {/* Brand logo - top-left (desktop; mobile has its own centered header) */}
       <div
         className="absolute left-5 z-20 hidden items-center gap-2.5 md:flex"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
@@ -135,7 +135,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Language switch (ID / EN) — above the form container so it stays clickable */}
+      {/* Language switch (ID / EN) - above the form container so it stays clickable */}
       <div
         className="absolute right-4 z-20 w-[112px]"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}

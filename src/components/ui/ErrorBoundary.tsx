@@ -19,7 +19,7 @@ export default class ErrorBoundary extends Component<Props, { failed: boolean }>
   }
 
   componentDidCatch() {
-    /* swallow — the fallback UI is enough */
+    /* swallow - the fallback UI is enough */
   }
 
   render() {

@@ -238,7 +238,7 @@ export function useSaveMenuItem() {
       let itemId = input.id
       if (itemId) {
         unwrap(await supabase.from('menu_items').update(itemPayload).eq('id', itemId).select('id'))
-        // Replace recipe rows wholesale — simplest correct sync for a small list.
+        // Replace recipe rows wholesale - simplest correct sync for a small list.
         unwrap(await supabase.from('menu_ingredients').delete().eq('menu_item_id', itemId).select('id'))
       } else {
         const rows = unwrap<{ id: string }[]>(

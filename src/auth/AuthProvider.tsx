@@ -45,7 +45,7 @@ interface AuthContextValue {
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
 async function loadProfile(userId: string): Promise<Profile | null> {
-  // Core fields only — these always exist, so the profile never fails to load.
+  // Core fields only - these always exist, so the profile never fails to load.
   const { data, error } = await supabase
     .from('profiles')
     .select('id, username, full_name, role, modules, is_active')
@@ -66,7 +66,7 @@ async function loadProfile(userId: string): Promise<Profile | null> {
     mustChange = (pw as { must_change_password: boolean }).must_change_password
   }
 
-  // `can_settle` (Petty Cash approval) — also read defensively.
+  // `can_settle` (Petty Cash approval) - also read defensively.
   let canSettleFlag = false
   const { data: cs } = await supabase
     .from('profiles')
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [profile],
   )
 
-  // First module the user can open (in sidebar order) — used as the landing
+  // First module the user can open (in sidebar order) - used as the landing
   // route and as the redirect target for guarded pages. null = no access.
   const landingPath = useMemo(() => MODULES.find((m) => canAccess(m.key))?.path ?? null, [canAccess])
 

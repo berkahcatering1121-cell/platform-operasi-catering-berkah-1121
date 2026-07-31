@@ -165,7 +165,7 @@ export const EN: Record<string, string> = {
   'Total Beban Gaji': 'Total Payroll Cost',
   'Depresiasi Aset': 'Asset Depreciation',
   'Biaya Lain-lain': 'Other Costs',
-  'HPP — Pembelian Bahan Baku': 'COGS — Raw Material Purchases',
+  'HPP (Pembelian Bahan Baku)': 'COGS (Raw Material Purchases)',
   "Semua angka dalam ribu Rupiah (Rp '000) · read-only, dihitung otomatis · EBITDA = Laba Bersih + Depresiasi Aset":
     "All figures in thousands of Rupiah (Rp '000) · read-only, auto-computed · EBITDA = Net Profit + Asset Depreciation",
   'Tren Bulanan': 'Monthly Trend',
@@ -299,7 +299,7 @@ export const EN: Record<string, string> = {
   'Masukkan Jumlah': 'Enter Amount',
   'Masukkan Nominal': 'Enter Amount',
   'Minimal 6 Karakter': 'At least 6 characters',
-  'Opsional — Ketik Catatan': 'Optional — Type Notes',
+  'Opsional, Ketik Catatan': 'Optional, Type Notes',
   'Tambah kategori baru…': 'Add new category…',
   'Tambah role baru…': 'Add new role…',
   'Pilih PIC…': 'Select PIC…',
@@ -453,14 +453,14 @@ export const EN: Record<string, string> = {
   'Sehat': 'Healthy',
   'Cukup': 'Fair',
   'Kurang': 'Below',
-  'Belum ada pendapatan pada periode ini — rasio belum dapat dihitung.':
-    'No revenue in this period yet — ratios cannot be computed.',
+  'Belum ada pendapatan pada periode ini, rasio belum dapat dihitung.':
+    'No revenue in this period yet, ratios cannot be computed.',
   'Biaya bahan baku terlalu tinggi. Cek harga jual, standar porsi/HPP, dan stok pembelian yang berlebih.':
     'Raw-material cost is too high. Review selling prices, portion/COGS standards, and excess purchases.',
   'Beban gaji tinggi terhadap pendapatan. Tinjau jumlah staf & lembur, atau dorong penjualan.':
     'Payroll is high relative to revenue. Review headcount & overtime, or grow sales.',
-  'Bahan baku + gaji melebihi ideal — umumnya dipicu Food Cost. Tekan HPP lebih dulu.':
-    'Food + labor exceed the ideal — usually driven by Food Cost. Cut COGS first.',
+  'Bahan baku + gaji melebihi ideal, umumnya dipicu Food Cost. Tekan HPP lebih dulu.':
+    'Food + labor exceed the ideal, usually driven by Food Cost. Cut COGS first.',
   'Biaya operasional non-gaji tinggi (sewa, listrik, transport, marketing). Tinjau pos terbesar.':
     'Non-payroll operating costs are high (rent, utilities, transport, marketing). Review the largest items.',
   'Margin kotor di bawah ideal, biasanya akibat Food Cost tinggi. Naikkan harga jual atau tekan HPP.':

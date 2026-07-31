@@ -12,7 +12,7 @@ const FADE = 0.9 // seconds
  * starts from the top and we fade across over FADE seconds. Both copies are
  * moving in the same (forward) direction during the blend, so it flows smoothly,
  * and fading the incoming copy up from opacity 0 masks any not-yet-painted frame
- * — so there is no black flash.
+ * - so there is no black flash.
  *
  * Muted + playsInline so autoplay is allowed everywhere (incl. iOS Safari).
  */

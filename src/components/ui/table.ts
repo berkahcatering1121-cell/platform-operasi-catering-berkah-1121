@@ -9,7 +9,7 @@ export const TD_R = TD + ' text-right tnum whitespace-nowrap'
 export const TD_B = TD + ' font-bold text-ink'
 export const TD_RB = TD_R + ' font-extrabold text-ink'
 
-// Monthly subtotal row (gold-tinted) — used by transaction modules.
+// Monthly subtotal row (gold-tinted) - used by transaction modules.
 export const SUB_L =
   'px-3 py-[11px] text-right text-[11px] font-extrabold uppercase tracking-[0.05em] text-brand-dark bg-gold-tint border-t-2 border-gold-border whitespace-nowrap'
 export const SUB_R =

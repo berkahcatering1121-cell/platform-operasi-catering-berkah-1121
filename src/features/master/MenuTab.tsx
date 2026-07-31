@@ -139,7 +139,7 @@ export default function MenuTab() {
                             <div className="flex flex-col items-end gap-1">
                               <MarginBadge
                                 health={m.margin_health}
-                                label={m.margin_health === 'none' ? '—' : formatPercentInt(m.margin ?? 0)}
+                                label={m.margin_health === 'none' ? '-' : formatPercentInt(m.margin ?? 0)}
                               />
                               <span className="text-[10px] text-ink-faint">{t(marginNote(m.margin_health))}</span>
                             </div>

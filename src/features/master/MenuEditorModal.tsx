@@ -18,7 +18,7 @@ interface Props {
 }
 
 // Seed ingredient rows from a composition string when a recipe hasn't been
-// entered yet — mirrors the prototype's descToBahan (drops garnish-only items).
+// entered yet - mirrors the prototype's descToBahan (drops garnish-only items).
 function descToDrafts(desc: string): IngredientDraft[] {
   return (desc || '')
     .split(',')
@@ -122,7 +122,7 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
         <InputLegend />
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {/* Kategori terkunci — ditentukan dari kategori tempat menu ditambahkan. */}
+          {/* Kategori terkunci - ditentukan dari kategori tempat menu ditambahkan. */}
           <div>
             <div className="mb-1 flex items-baseline justify-between gap-2">
               <label className="text-[12px] font-semibold text-ink-body">Kategori Menu</label>
@@ -130,7 +130,7 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
             </div>
             <div className="field-master flex h-11 items-center justify-between rounded-field px-3">
               <span className="truncate text-[14px] font-semibold text-master">
-                {categoryName || '—'}
+                {categoryName || '-'}
               </span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-none text-master/70">
                 <rect x="5" y="11" width="14" height="9" rx="2" />
@@ -265,7 +265,7 @@ export default function MenuEditorModal({ open, onClose, categories, item, defau
             <div className="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">Margin</div>
             <div className="mt-1 flex items-center gap-2">
               <span className="text-[15px] font-extrabold tabular-nums text-ink">
-                {hasRows && priceNum > 0 ? formatPercentInt(margin) : '—'}
+                {hasRows && priceNum > 0 ? formatPercentInt(margin) : '-'}
               </span>
               <MarginBadge health={health} label={marginNote(health)} />
             </div>

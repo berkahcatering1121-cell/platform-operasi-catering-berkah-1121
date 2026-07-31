@@ -32,10 +32,10 @@ function verdict(m: Metric): { label: string; tone: 'green' | 'amber' | 'red' } 
 const TODAY_YEAR = new Date().getFullYear()
 
 // Values are shown in thousands of Rupiah (Rp '000) to keep the 13-column
-// report compact. Negatives render in red; a true zero shows an em dash.
+// report compact. Negatives render in red; a true zero shows a dash.
 function num(n: number) {
   const v = Math.round(n / 1000)
-  return v === 0 ? '—' : v.toLocaleString('id-ID')
+  return v === 0 ? '-' : v.toLocaleString('id-ID')
 }
 
 type RowDef =
@@ -53,7 +53,7 @@ type RowDef =
 
 const ROWS: RowDef[] = [
   { kind: 'money', label: 'Pendapatan', get: (m) => m.pendapatan, strong: true },
-  { kind: 'money', label: 'HPP — Pembelian Bahan Baku', get: (m) => m.hpp },
+  { kind: 'money', label: 'HPP (Pembelian Bahan Baku)', get: (m) => m.hpp },
   { kind: 'money', label: 'Laba Kotor', get: (m) => m.laba_kotor, strong: true, tint: 'bg-app-panel' },
   { kind: 'pct', label: 'Margin Kotor (%)', numr: (m) => m.laba_kotor, den: (m) => m.pendapatan },
   { kind: 'header', label: 'Beban Operasional' },
@@ -106,7 +106,7 @@ export default function PnL() {
       },
       {
         label: 'Prime Cost', hint: '(HPP + Gaji) ÷ Pendapatan', value: p(hpp + gaji), target: 0.6, kind: 'cost',
-        note: 'Bahan baku + gaji melebihi ideal — umumnya dipicu Food Cost. Tekan HPP lebih dulu.',
+        note: 'Bahan baku + gaji melebihi ideal, umumnya dipicu Food Cost. Tekan HPP lebih dulu.',
       },
       {
         label: 'Overhead (Opex non-Gaji)', hint: '(Opex − Gaji) ÷ Pendapatan', value: p(opex - gaji), target: 0.25, kind: 'cost',
@@ -210,12 +210,12 @@ export default function PnL() {
                           const d = row.den(m)
                           return (
                             <td key={m.month_no} className={`${cellBase} bg-app-card text-ink-muted`}>
-                              {d > 0 ? formatPercent(row.numr(m) / d) : '—'}
+                              {d > 0 ? formatPercent(row.numr(m) / d) : '-'}
                             </td>
                           )
                         })}
                         <td className={`${cellBase} bg-gold-tint font-bold text-brand-dark`}>
-                          {annDen > 0 ? formatPercent(annNum / annDen) : '—'}
+                          {annDen > 0 ? formatPercent(annNum / annDen) : '-'}
                         </td>
                       </tr>
                     )
@@ -291,7 +291,7 @@ export default function PnL() {
           >
             {anRevenue <= 0 ? (
               <p className="py-6 text-center text-[12.5px] text-ink-muted">
-                {t('Belum ada pendapatan pada periode ini — rasio belum dapat dihitung.')}
+                {t('Belum ada pendapatan pada periode ini, rasio belum dapat dihitung.')}
               </p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -316,7 +316,7 @@ export default function PnL() {
                           {t('Target')} {m.kind === 'cost' ? '≤' : '≥'} {formatPercentInt(m.target)}
                         </div>
                       </div>
-                      {/* Auto tip — only when the metric needs attention */}
+                      {/* Auto tip - only when the metric needs attention */}
                       {v.tone !== 'green' && (
                         <div className="mt-2.5 flex gap-1.5 border-t border-app-border pt-2 text-[10.5px] leading-snug text-ink-muted">
                           <svg

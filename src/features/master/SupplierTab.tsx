@@ -69,8 +69,8 @@ export default function SupplierTab() {
                 suppliers.data.map((s) => (
                   <tr key={s.id}>
                     <td className={TD + ' font-bold text-ink'}>{titleCase(s.name)}</td>
-                    <td className={TD}>{s.category ?? '—'}</td>
-                    <td className={TD}>{s.phone ?? '—'}</td>
+                    <td className={TD}>{s.category ?? '-'}</td>
+                    <td className={TD}>{s.phone ?? '-'}</td>
                     <td className={TD + ' text-right'}>
                       <RowActions
                         onEdit={() =>

@@ -42,7 +42,7 @@ export function usePettyEntries() {
 }
 
 // ---- period mutations ------------------------------------------------------
-// Note: is_settled is intentionally NOT set here — settle status is an approval
+// Note: is_settled is intentionally NOT set here - settle status is an approval
 // action controlled separately by Finance (useSetSettle). "Mengisi" periode
 // tidak sama dengan "meng-approve settle".
 export interface PeriodInput {
@@ -63,7 +63,7 @@ export function useSavePeriod() {
   })
 }
 
-/** Approve / change settle status — Finance only (also enforced by DB trigger). */
+/** Approve / change settle status - Finance only (also enforced by DB trigger). */
 export function useSetSettle() {
   const qc = useQueryClient()
   return useMutation({

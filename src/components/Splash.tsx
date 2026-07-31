@@ -3,7 +3,7 @@ interface SplashProps {
 }
 
 /**
- * Boot splash — matches the login screen: the same futuristic background (dark
+ * Boot splash - matches the login screen: the same futuristic background (dark
  * food photo + drifting gold tech grid + sweeping gold scan line + vignette),
  * with the brand mark, wordmark (gold "1121" + shine) and a glowing progress
  * bar centered on top. Auto-dismiss + fade-out are driven by the parent (App).

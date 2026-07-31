@@ -228,10 +228,10 @@ export default function Sidebar({
             className="flex h-9 w-9 flex-none items-center justify-center rounded-full text-[12px] font-extrabold text-[#14332A]"
             style={{ background: 'linear-gradient(135deg,#E2C77E,#C9A93B)' }}
           >
-            {profile ? initials(profile.full_name) : '—'}
+            {profile ? initials(profile.full_name) : '-'}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[12.5px] font-bold">{profile?.full_name ?? '—'}</div>
+            <div className="truncate text-[12.5px] font-bold">{profile?.full_name ?? '-'}</div>
             <div className="truncate text-[10.5px] text-[#9FB3A6]">{profile?.role ?? ''}</div>
           </div>
         </div>

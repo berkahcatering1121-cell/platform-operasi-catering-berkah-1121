@@ -105,7 +105,7 @@ export default function Hutang() {
                           {r.debt_type && <div className="text-[11px] text-ink-faint">{titleCase(r.debt_type)}</div>}
                         </td>
                         <td className={TD + ' max-w-[240px] truncate'} title={r.description ?? ''}>
-                          {r.description ? titleCase(r.description) : '—'}
+                          {r.description ? titleCase(r.description) : '-'}
                         </td>
                         <td className={TD_R + ' font-extrabold text-ink'}>{formatRupiah(r.amount)}</td>
                         <td className={TD + ' whitespace-nowrap'}>{formatDate(r.due_date)}</td>

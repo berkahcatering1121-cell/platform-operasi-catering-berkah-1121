@@ -29,7 +29,7 @@ function PasswordCell({ user }: { user: UserRow }) {
   const [copied, setCopied] = useState(false)
 
   if (!user.visible_password) {
-    return <span className="text-[12px] text-ink-faint">—</span>
+    return <span className="text-[12px] text-ink-faint">-</span>
   }
 
   const copy = async () => {

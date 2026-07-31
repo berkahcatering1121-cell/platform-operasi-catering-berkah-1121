@@ -161,10 +161,10 @@ export default function PettyCash() {
                             <PhotoCell paths={r.photos} title={r.description} />
                           </td>
                           <td className={TD_R + (r.cash_in ? ' font-bold text-ok' : ' text-ink-faint')}>
-                            {r.cash_in ? formatRupiah(r.cash_in) : '—'}
+                            {r.cash_in ? formatRupiah(r.cash_in) : '-'}
                           </td>
                           <td className={TD_R + (r.cash_out ? ' font-bold text-danger' : ' text-ink-faint')}>
-                            {r.cash_out ? formatRupiah(r.cash_out) : '—'}
+                            {r.cash_out ? formatRupiah(r.cash_out) : '-'}
                           </td>
                           <td className={TD_R + ' font-bold text-ink'}>{formatRupiah(r.running_balance)}</td>
                           <td className={TD_R}>

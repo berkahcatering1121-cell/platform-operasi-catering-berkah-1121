@@ -4,7 +4,7 @@ import type { ModuleKey } from '@/lib/modules'
 
 /**
  * Route guard that redirects to the dashboard when the current user lacks the
- * module permission. This is a UX convenience — the database RLS is the real
+ * module permission. This is a UX convenience - the database RLS is the real
  * enforcement, so a bypass here still cannot read/write forbidden data.
  */
 export default function RequireModule({

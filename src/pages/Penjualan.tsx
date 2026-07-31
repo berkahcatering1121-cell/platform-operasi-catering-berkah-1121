@@ -87,7 +87,7 @@ export default function Penjualan() {
                           <td className={TD + ' whitespace-nowrap'}>{formatDate(r.sale_date)}</td>
                           <td className={TD + ' font-bold text-ink'}>{titleCase(r.customer)}</td>
                           <td className={TD}>
-                            <div>{r.menu_name ? titleCase(r.menu_name) : '—'}</div>
+                            <div>{r.menu_name ? titleCase(r.menu_name) : '-'}</div>
                             {r.menu_category && (
                               <div className="text-[11px] text-ink-faint">{r.menu_category}</div>
                             )}
@@ -97,7 +97,7 @@ export default function Penjualan() {
                           <td className={TD_R + ' font-extrabold text-ink'}>{formatRupiah(r.total)}</td>
                           <td className={TD_R}>
                             {r.status === 'Lunas' || r.sisa <= 0 ? (
-                              <span className="text-ink-faint">—</span>
+                              <span className="text-ink-faint">-</span>
                             ) : (
                               <span className="font-bold text-danger">{formatRupiah(r.sisa)}</span>
                             )}
@@ -106,7 +106,7 @@ export default function Penjualan() {
                             <StatusBadge status={r.status} />
                           </td>
                           <td className={TD}>
-                            {empName(r.pic_employee_id, r.pic_name) || <span className="text-ink-faint">—</span>}
+                            {empName(r.pic_employee_id, r.pic_name) || <span className="text-ink-faint">-</span>}
                           </td>
                           <td className={TD_R}>
                             <RowActions onEdit={() => openEdit(r)} onDelete={() => setToDelete(r)} />
@@ -118,7 +118,7 @@ export default function Penjualan() {
                           Subtotal {g.label}
                         </td>
                         <td className={SUB_R}>{formatRupiah(subtotal)}</td>
-                        <td className={SUB_R}>{subSisa > 0 ? formatRupiah(subSisa) : '—'}</td>
+                        <td className={SUB_R}>{subSisa > 0 ? formatRupiah(subSisa) : '-'}</td>
                         <td className={SUB_R} colSpan={3} />
                       </tr>
                     </tbody>

@@ -79,13 +79,13 @@ export default function KaryawanTab() {
                 employees.data.map((e) => (
                   <tr key={e.id}>
                     <td className={TD + ' font-bold text-ink'}>{titleCase(e.name)}</td>
-                    <td className={TD}>{e.position ? titleCase(e.position) : '—'}</td>
-                    <td className={TD}>{e.department ? titleCase(e.department) : '—'}</td>
+                    <td className={TD}>{e.position ? titleCase(e.position) : '-'}</td>
+                    <td className={TD}>{e.department ? titleCase(e.department) : '-'}</td>
                     <td className={TD}>
                       <StatusBadge status={e.salary_type} />
                     </td>
-                    <td className={TD_R}>{e.salary_type === 'Bulanan' ? formatRupiah(e.base_salary) : '—'}</td>
-                    <td className={TD_R}>{e.salary_type === 'Harian' ? formatRupiah(e.daily_wage) : '—'}</td>
+                    <td className={TD_R}>{e.salary_type === 'Bulanan' ? formatRupiah(e.base_salary) : '-'}</td>
+                    <td className={TD_R}>{e.salary_type === 'Harian' ? formatRupiah(e.daily_wage) : '-'}</td>
                     <td className={TD_R}>
                       <RowActions
                         onEdit={() =>

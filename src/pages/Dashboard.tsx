@@ -18,7 +18,7 @@ function Kpi({ label, value, sub, accent }: { label: string; value: string; sub:
   return (
     <div className="cb-card p-4">
       {/* Fixed-height label (reserves 2 lines) so every value starts at the
-          same vertical position — numbers stay aligned across cards. */}
+          same vertical position - numbers stay aligned across cards. */}
       <div className="flex min-h-[30px] items-start text-[11.5px] font-semibold leading-[15px] text-ink-muted">
         {label}
       </div>
@@ -121,7 +121,7 @@ export default function Dashboard() {
     {
       label: t('Total Pembelian Bahan Baku'),
       value: formatRupiahShort(totals.purch),
-      sub: totals.rev > 0 ? `${formatPercent(totals.purch / totals.rev)} ${t('dari pendapatan')}` : '—',
+      sub: totals.rev > 0 ? `${formatPercent(totals.purch / totals.rev)} ${t('dari pendapatan')}` : '-',
     },
     { label: t('Total Beban Gaji'), value: formatRupiahShort(totals.gaji), sub: t('seluruh karyawan') },
     { label: t('Laba Bersih'), value: formatRupiahShort(totals.net), sub: t('setelah semua beban'), accent: 'green' as const },

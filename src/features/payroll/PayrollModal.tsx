@@ -130,7 +130,7 @@ export default function PayrollModal({ open, onClose, editing }: Props) {
             variant="master"
             options={(employees.data ?? []).map((e) => ({
               value: e.id,
-              label: `${e.name} — ${e.salary_type}`,
+              label: `${e.name} · ${e.salary_type}`,
             }))}
             placeholder="Pilih karyawan…"
             value={form.employee_id}
@@ -157,14 +157,14 @@ export default function PayrollModal({ open, onClose, editing }: Props) {
         {emp && (
           <div className="rounded-field border border-master-border bg-master-bg px-3 py-2 text-[12px] text-master">
             {isHarian ? (
-              <>Karyawan <b>Harian</b> · Upah/Hari {formatRupiah(emp.daily_wage)} — pilih minggu & centang tanggal masuk di kalender.</>
+              <>Karyawan <b>Harian</b> · Upah/Hari {formatRupiah(emp.daily_wage)}, pilih minggu & centang tanggal masuk di kalender.</>
             ) : (
               <>Karyawan <b>Bulanan</b> · Gaji Pokok tetap {formatRupiah(emp.base_salary)} (tanpa minggu/kalender).</>
             )}
           </div>
         )}
 
-        {/* Weekly period + work-date calendar — Harian only. Buat satu entri per
+        {/* Weekly period + work-date calendar - Harian only. Buat satu entri per
             minggu (Minggu Pertama, Kedua, …), masing-masing punya status sendiri. */}
         {emp && isHarian && (
           <>

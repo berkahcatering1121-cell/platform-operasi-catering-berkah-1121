@@ -6,7 +6,7 @@ export function setFormatLang(l: 'id' | 'en') {
   LANG = l
 }
 
-/** "Rp 1.520.000" — full thousands-separated Rupiah. */
+/** "Rp 1.520.000": full thousands-separated Rupiah. */
 export function formatRupiah(n: number): string {
   return 'Rp ' + Math.round(n || 0).toLocaleString(LANG === 'en' ? 'en-US' : 'id-ID')
 }
@@ -22,12 +22,12 @@ export function formatRupiahShort(n: number): string {
   return 'Rp ' + (v / 1e6).toFixed(1).replace('.', ',') + ' jt'
 }
 
-/** "45,2%" — a ratio (0..1) as an id-ID percentage. */
+/** "45,2%": a ratio (0..1) as an id-ID percentage. */
 export function formatPercent(ratio: number, digits = 1): string {
   return (ratio * 100).toFixed(digits).replace('.', ',') + '%'
 }
 
-/** "45%" — integer percentage from a ratio. */
+/** "45%": integer percentage from a ratio. */
 export function formatPercentInt(ratio: number): string {
   return Math.round(ratio * 100) + '%'
 }
@@ -76,9 +76,9 @@ export function formatMonthLabel(iso: string): string {
 
 /** "02 Jun 2026" from an ISO date string. */
 export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   const d = new Date(iso + (iso.length <= 10 ? 'T00:00:00' : ''))
-  if (Number.isNaN(d.getTime())) return '—'
+  if (Number.isNaN(d.getTime())) return '-'
   const short = LANG === 'en' ? EN_MONTHS_SHORT : ID_MONTHS_SHORT
   const dd = String(d.getDate()).padStart(2, '0')
   return `${dd} ${short[d.getMonth()]} ${d.getFullYear()}`

@@ -43,7 +43,7 @@ export default function ChangePassword() {
       setBusy(false)
       return
     }
-    // Flag is cleared server-side — refresh the profile so the app proceeds.
+    // Flag is cleared server-side - refresh the profile so the app proceeds.
     await refreshProfile()
     setBusy(false)
   }

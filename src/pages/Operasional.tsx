@@ -83,12 +83,12 @@ export default function Operasional() {
                             <Badge tone="neutral">{r.category}</Badge>
                           </td>
                           <td className={TD_R + ' font-extrabold text-ink'}>{formatRupiah(r.amount)}</td>
-                          <td className={TD}>{r.method ?? '—'}</td>
+                          <td className={TD}>{r.method ?? '-'}</td>
                           <td className={TD}>
                             <PhotoCell paths={r.photos} title={r.description} />
                           </td>
                           <td className={TD + ' max-w-[220px] truncate'} title={r.notes ?? ''}>
-                            {r.notes ?? '—'}
+                            {r.notes ?? '-'}
                           </td>
                           <td className={TD_R}>
                             <RowActions onEdit={() => openEdit(r)} onDelete={() => setToDelete(r)} />

@@ -26,7 +26,7 @@ export default function PhotoCell({ paths, title }: Props) {
     }
   }, [paths])
 
-  if (!paths.length) return <span className="text-ink-faint">—</span>
+  if (!paths.length) return <span className="text-ink-faint">-</span>
 
   const shown = urls.slice(0, 2)
   return (

@@ -23,7 +23,7 @@ const weekRank = (label: string | null) => {
 }
 // Row label under an employee: the (title-cased) week, or a monthly-salary tag.
 const weekLabel = (r: PayrollView) =>
-  r.period_label ? titleCase(r.period_label) : r.salary_type === 'Harian' ? '—' : 'Gaji Bulanan'
+  r.period_label ? titleCase(r.period_label) : r.salary_type === 'Harian' ? '-' : 'Gaji Bulanan'
 
 export default function Gaji() {
   const { t } = useT()
@@ -123,8 +123,8 @@ export default function Gaji() {
                               return (
                                 <tr key={r.id}>
                                   <td className={TD + ' pl-6 font-semibold text-ink-body'}>{weekLabel(r)}</td>
-                                  <td className={TD_R}>{rh ? formatRupiah(r.daily_wage) : '—'}</td>
-                                  <td className={TD_R}>{rh ? r.days_worked : '—'}</td>
+                                  <td className={TD_R}>{rh ? formatRupiah(r.daily_wage) : '-'}</td>
+                                  <td className={TD_R}>{rh ? r.days_worked : '-'}</td>
                                   <td className={TD_R}>{formatRupiah(r.base_pay)}</td>
                                   <td className={TD_R}>{formatRupiah(r.allowance)}</td>
                                   <td className={TD_R}>{formatRupiah(r.bonus)}</td>
