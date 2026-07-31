@@ -31,10 +31,10 @@ function verdict(m: Metric): { label: string; tone: 'green' | 'amber' | 'red' } 
 
 const TODAY_YEAR = new Date().getFullYear()
 
-// Values are shown in thousands of Rupiah (Rp '000) to keep the 13-column
-// report compact. Negatives render in red; a true zero shows a dash.
+// Full Rupiah nominal (thousands-separated). Negatives render in red; a true
+// zero shows a dash. The table scrolls horizontally to fit the 13 columns.
 function num(n: number) {
-  const v = Math.round(n / 1000)
+  const v = Math.round(n)
   return v === 0 ? '-' : v.toLocaleString('id-ID')
 }
 

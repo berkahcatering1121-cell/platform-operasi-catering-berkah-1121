@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
-import { formatPercent, formatRupiahShort, months as monthNames, monthsShort } from '@/lib/format'
+import { formatPercent, formatRupiah, months as monthNames, monthsShort } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { usePnl } from '@/features/pnl/api'
 import { usePurchases } from '@/features/purchases/api'
@@ -23,7 +23,7 @@ function Kpi({ label, value, sub, accent }: { label: string; value: string; sub:
         {label}
       </div>
       <div
-        className={`mt-1.5 text-[21px] font-extrabold tracking-[-0.01em] ${
+        className={`mt-1.5 text-[17.5px] font-extrabold tabular-nums tracking-[-0.01em] ${
           accent === 'green' ? 'text-ok' : accent === 'dark' ? 'text-brand-dark' : 'text-ink'
         }`}
       >
@@ -117,14 +117,14 @@ export default function Dashboard() {
   )
 
   const kpis = [
-    { label: t('Total Pendapatan'), value: formatRupiahShort(totals.rev), sub: `Total ${scopeLabel}` },
+    { label: t('Total Pendapatan'), value: formatRupiah(totals.rev), sub: `Total ${scopeLabel}` },
     {
       label: t('Total Pembelian Bahan Baku'),
-      value: formatRupiahShort(totals.purch),
+      value: formatRupiah(totals.purch),
       sub: totals.rev > 0 ? `${formatPercent(totals.purch / totals.rev)} ${t('dari pendapatan')}` : '-',
     },
-    { label: t('Total Beban Gaji'), value: formatRupiahShort(totals.gaji), sub: t('seluruh karyawan') },
-    { label: t('Laba Bersih'), value: formatRupiahShort(totals.net), sub: t('setelah semua beban'), accent: 'green' as const },
+    { label: t('Total Beban Gaji'), value: formatRupiah(totals.gaji), sub: t('seluruh karyawan') },
+    { label: t('Laba Bersih'), value: formatRupiah(totals.net), sub: t('setelah semua beban'), accent: 'green' as const },
     { label: t('Margin Kotor'), value: formatPercent(totals.marginKotor), sub: t('laba kotor / pendapatan') },
     { label: t('Margin Bersih'), value: formatPercent(totals.marginBersih), sub: t('laba bersih / pendapatan'), accent: 'dark' as const },
   ]
@@ -191,9 +191,9 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Kpi label={t('Pendapatan')} value={formatRupiahShort(periodSummary.rev)} sub={`${periodSummary.nSales} ${t('penjualan')}`} />
-              <Kpi label={t('Pembelian')} value={formatRupiahShort(periodSummary.buy)} sub={`${periodSummary.nBuy} ${t('pembelian')}`} />
-              <Kpi label={t('Laba Kotor')} value={formatRupiahShort(periodSummary.gross)} sub={t('pendapatan − pembelian')} accent="green" />
+              <Kpi label={t('Pendapatan')} value={formatRupiah(periodSummary.rev)} sub={`${periodSummary.nSales} ${t('penjualan')}`} />
+              <Kpi label={t('Pembelian')} value={formatRupiah(periodSummary.buy)} sub={`${periodSummary.nBuy} ${t('pembelian')}`} />
+              <Kpi label={t('Laba Kotor')} value={formatRupiah(periodSummary.gross)} sub={t('pendapatan − pembelian')} accent="green" />
               <Kpi label={t('Margin Kotor')} value={formatPercent(periodSummary.margin)} sub={t('laba kotor / pendapatan')} accent="dark" />
             </div>
             <div className="mt-2.5 text-[11.5px] font-medium text-ink-faint">{t('Periode')}: {formatRangeLabel(range)}</div>

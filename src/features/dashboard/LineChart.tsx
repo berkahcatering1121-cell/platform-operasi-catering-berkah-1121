@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ID_MONTHS_SHORT, formatRupiahShort } from '@/lib/format'
+import { ID_MONTHS_SHORT, formatRupiah } from '@/lib/format'
 
 export interface Series {
   label: string
@@ -94,7 +94,7 @@ export default function LineChart({ series, labels }: Props) {
           </g>
         ))}
       </svg>
-      <div className="mt-1 px-2 text-[10.5px] text-ink-faint">Angka sumbu dalam juta Rupiah · nilai puncak {formatRupiahShort(hi)}</div>
+      <div className="mt-1 px-2 text-[10.5px] text-ink-faint">Angka sumbu dalam juta Rupiah · nilai puncak {formatRupiah(hi)}</div>
     </div>
   )
 }
