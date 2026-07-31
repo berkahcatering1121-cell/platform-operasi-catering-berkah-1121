@@ -8,7 +8,15 @@ import { usePnl, type PnlMonth } from '@/features/pnl/api'
 
 // F&B / catering reference targets (as % of revenue). `cost` = lower is better,
 // `margin` = higher is better. Adjust to the business as needed.
-type Metric = { label: string; hint: string; value: number; target: number; kind: 'cost' | 'margin' }
+type Metric = {
+  label: string
+  hint: string
+  value: number
+  target: number
+  kind: 'cost' | 'margin'
+  /** Short auto-tip shown when the metric is not ideal (Over / below target). */
+  note: string
+}
 
 function verdict(m: Metric): { label: string; tone: 'green' | 'amber' | 'red' } {
   if (m.kind === 'cost') {
@@ -88,12 +96,30 @@ export default function PnL() {
     const gaji = sum((m) => m.beban_gaji)
     const opex = sum((m) => m.total_beban_operasional)
     return [
-      { label: 'Food Cost (COGS)', hint: 'HPP ÷ Pendapatan', value: p(hpp), target: 0.35, kind: 'cost' },
-      { label: 'Labor Cost', hint: 'Beban Gaji ÷ Pendapatan', value: p(gaji), target: 0.3, kind: 'cost' },
-      { label: 'Prime Cost', hint: '(HPP + Gaji) ÷ Pendapatan', value: p(hpp + gaji), target: 0.6, kind: 'cost' },
-      { label: 'Overhead (Opex non-Gaji)', hint: '(Opex − Gaji) ÷ Pendapatan', value: p(opex - gaji), target: 0.25, kind: 'cost' },
-      { label: 'Margin Kotor', hint: 'Laba Kotor ÷ Pendapatan', value: p(sum((m) => m.laba_kotor)), target: 0.65, kind: 'margin' },
-      { label: 'Margin Bersih', hint: 'Laba Bersih ÷ Pendapatan', value: p(sum((m) => m.laba_bersih)), target: 0.1, kind: 'margin' },
+      {
+        label: 'Food Cost (COGS)', hint: 'HPP ÷ Pendapatan', value: p(hpp), target: 0.35, kind: 'cost',
+        note: 'Biaya bahan baku terlalu tinggi. Cek harga jual, standar porsi/HPP, dan stok pembelian yang berlebih.',
+      },
+      {
+        label: 'Labor Cost', hint: 'Beban Gaji ÷ Pendapatan', value: p(gaji), target: 0.3, kind: 'cost',
+        note: 'Beban gaji tinggi terhadap pendapatan. Tinjau jumlah staf & lembur, atau dorong penjualan.',
+      },
+      {
+        label: 'Prime Cost', hint: '(HPP + Gaji) ÷ Pendapatan', value: p(hpp + gaji), target: 0.6, kind: 'cost',
+        note: 'Bahan baku + gaji melebihi ideal — umumnya dipicu Food Cost. Tekan HPP lebih dulu.',
+      },
+      {
+        label: 'Overhead (Opex non-Gaji)', hint: '(Opex − Gaji) ÷ Pendapatan', value: p(opex - gaji), target: 0.25, kind: 'cost',
+        note: 'Biaya operasional non-gaji tinggi (sewa, listrik, transport, marketing). Tinjau pos terbesar.',
+      },
+      {
+        label: 'Margin Kotor', hint: 'Laba Kotor ÷ Pendapatan', value: p(sum((m) => m.laba_kotor)), target: 0.65, kind: 'margin',
+        note: 'Margin kotor di bawah ideal, biasanya akibat Food Cost tinggi. Naikkan harga jual atau tekan HPP.',
+      },
+      {
+        label: 'Margin Bersih', hint: 'Laba Bersih ÷ Pendapatan', value: p(sum((m) => m.laba_bersih)), target: 0.1, kind: 'margin',
+        note: 'Laba bersih tipis. Tinjau biaya terbesar (bahan baku, gaji, atau operasional).',
+      },
     ]
   }, [months, anMonth])
   const anRevenue = useMemo(() => {
@@ -290,6 +316,26 @@ export default function PnL() {
                           {t('Target')} {m.kind === 'cost' ? '≤' : '≥'} {formatPercentInt(m.target)}
                         </div>
                       </div>
+                      {/* Auto tip — only when the metric needs attention */}
+                      {v.tone !== 'green' && (
+                        <div className="mt-2.5 flex gap-1.5 border-t border-app-border pt-2 text-[10.5px] leading-snug text-ink-muted">
+                          <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className={`mt-[1px] flex-none ${v.tone === 'red' ? 'text-danger' : 'text-warn'}`}
+                          >
+                            <path d="M12 9v4M12 17h.01" />
+                            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                          </svg>
+                          <span>{t(m.note)}</span>
+                        </div>
+                      )}
                     </div>
                   )
                 })}

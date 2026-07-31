@@ -455,6 +455,18 @@ export const EN: Record<string, string> = {
   'Kurang': 'Below',
   'Belum ada pendapatan pada periode ini — rasio belum dapat dihitung.':
     'No revenue in this period yet — ratios cannot be computed.',
+  'Biaya bahan baku terlalu tinggi. Cek harga jual, standar porsi/HPP, dan stok pembelian yang berlebih.':
+    'Raw-material cost is too high. Review selling prices, portion/COGS standards, and excess purchases.',
+  'Beban gaji tinggi terhadap pendapatan. Tinjau jumlah staf & lembur, atau dorong penjualan.':
+    'Payroll is high relative to revenue. Review headcount & overtime, or grow sales.',
+  'Bahan baku + gaji melebihi ideal — umumnya dipicu Food Cost. Tekan HPP lebih dulu.':
+    'Food + labor exceed the ideal — usually driven by Food Cost. Cut COGS first.',
+  'Biaya operasional non-gaji tinggi (sewa, listrik, transport, marketing). Tinjau pos terbesar.':
+    'Non-payroll operating costs are high (rent, utilities, transport, marketing). Review the largest items.',
+  'Margin kotor di bawah ideal, biasanya akibat Food Cost tinggi. Naikkan harga jual atau tekan HPP.':
+    'Gross margin is below ideal, usually due to high Food Cost. Raise prices or cut COGS.',
+  'Laba bersih tipis. Tinjau biaya terbesar (bahan baku, gaji, atau operasional).':
+    'Net profit is thin. Review your largest costs (materials, payroll, or overhead).',
 
   // ── Months (long) ─────────────────────────────────────────────────────
   'Januari': 'January', 'Februari': 'February', 'Maret': 'March', 'April': 'April',
