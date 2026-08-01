@@ -7,10 +7,16 @@ import { useT } from '@/lib/i18n'
 import { usePnl } from '@/features/pnl/api'
 import { usePurchases } from '@/features/purchases/api'
 import { useSales } from '@/features/sales/api'
+import { useDebts } from '@/features/debts/api'
+import { useAssets } from '@/features/assets/api'
+import { usePayroll } from '@/features/payroll/api'
+import { useCashFlow } from '@/features/cashflow/api'
 import LineChart from '@/features/dashboard/LineChart'
 import Donut, { paletteColor, type Segment } from '@/features/dashboard/Donut'
 import LiveClock from '@/features/dashboard/LiveClock'
 import PeriodPicker from '@/features/dashboard/PeriodPicker'
+import SmartAlerts from '@/features/dashboard/SmartAlerts'
+import { computeAlerts, computeAnalytics } from '@/features/dashboard/insights'
 import { periodRange, formatRangeLabel, isoDate, type PeriodKey } from '@/features/dashboard/period'
 
 const TODAY_YEAR = new Date().getFullYear()
@@ -56,6 +62,10 @@ export default function Dashboard() {
   const pnl = usePnl(year)
   const purchases = usePurchases()
   const sales = useSales()
+  const debts = useDebts()
+  const assets = useAssets()
+  const payroll = usePayroll()
+  const cash = useCashFlow()
 
   // Period summary (Hari ini / Minggu / Bulan / pilih tanggal) computed from the
   // already-loaded sales & purchases lists.
@@ -92,6 +102,39 @@ export default function Dashboard() {
 
   const scopeLabel = month ? `${monthNames()[month - 1]} ${year}` : `${t('tahun')} ${year}`
   const monthPrefix = month ? `${String(month).padStart(2, '0')}` : null
+
+  // ── Financial analytics + smart alerts (auto-derived from every module) ──
+  const inScopeDate = (d: string) => d.startsWith(String(year)) && (!monthPrefix || d.slice(5, 7) === monthPrefix)
+  const cashBalance = useMemo(() => cash.rows.reduce((s, r) => s + r.cashIn - r.cashOut, 0), [cash.rows])
+  const scopeNetCash = useMemo(
+    () => cash.rows.filter((r) => inScopeDate(r.date)).reduce((s, r) => s + r.cashIn - r.cashOut, 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cash.rows, year, monthPrefix],
+  )
+  const analytics = useMemo(() => {
+    const exp = scopedMonths.reduce((s, m) => s + m.hpp + m.total_beban_operasional, 0)
+    const dep = scopedMonths.reduce((s, m) => s + m.beban_depresiasi, 0)
+    const days = month ? new Date(year, month, 0).getDate() : 365
+    const prevRev = month && month > 1 ? months.find((m) => m.month_no === month - 1)?.pendapatan ?? null : null
+    const ar = (sales.data ?? []).reduce((s, x) => s + x.sisa, 0)
+    const debtSisa = (debts.data ?? []).reduce((s, x) => s + x.sisa, 0)
+    const assetBook = (assets.data ?? []).reduce((s, x) => s + x.book_value, 0)
+    return computeAnalytics({ rev: totals.rev, exp, net: totals.net, dep, days, prevRev, cashBalance, scopeNetCash, ar, debtSisa, assetBook })
+  }, [scopedMonths, months, month, year, sales.data, debts.data, assets.data, totals, cashBalance, scopeNetCash])
+
+  const alerts = useMemo(() => {
+    const today = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    const todayS = iso(today)
+    const in7S = iso(new Date(today.getTime() + 7 * 864e5))
+    const dueSoon = (debts.data ?? [])
+      .filter((d) => d.due_date && d.status !== 'Lunas' && d.due_date >= todayS && d.due_date <= in7S)
+      .map((d) => ({ creditor: d.creditor, due: d.due_date as string }))
+    const inScopeKey = (k: string) => k.startsWith(String(year)) && (!monthPrefix || k.slice(5, 7) === monthPrefix)
+    const unpaidPayroll = (payroll.data ?? []).filter((g) => g.status === 'Belum Dibayar' && inScopeKey(g.month_key)).length
+    return computeAlerts({ t, rev: totals.rev, hpp: totals.purch, gaji: totals.gaji, scopeNetCash, cashBalance, dueSoon, unpaidPayroll })
+  }, [debts.data, payroll.data, totals, scopeNetCash, cashBalance, year, monthPrefix, t])
 
   // Donuts follow the same year (+ optional month) scope as the KPIs.
   const inScope = (d: string) =>
@@ -200,12 +243,42 @@ export default function Dashboard() {
             <div className="mt-2.5 text-[11.5px] font-medium text-ink-faint">{t('Periode')}: {formatRangeLabel(range)}</div>
           </div>
 
+          {/* Smart alerts */}
+          <SmartAlerts alerts={alerts} />
+
           {/* Yearly KPI cards */}
           <div className="cb-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {kpis.map((k) => (
               <Kpi key={k.label} label={k.label} value={k.value} sub={k.sub} accent={k.accent} />
             ))}
           </div>
+
+          {/* Financial analytics */}
+          <Card title={t('Analitik Keuangan')} subtitle={scopeLabel}>
+            <div className="cb-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Kpi label={t('Saldo Kas Saat Ini')} value={<CountUp to={analytics.cashBalance} format={formatRupiah} />} sub={t('dari buku besar Arus Kas')} />
+              <Kpi label={t('Rata-rata Pendapatan / Hari')} value={<CountUp to={analytics.avgDailyRev} format={formatRupiah} />} sub={scopeLabel} accent="green" />
+              <Kpi label={t('Rata-rata Pengeluaran / Hari')} value={<CountUp to={analytics.avgDailyExp} format={formatRupiah} />} sub={scopeLabel} />
+              <Kpi label="EBITDA" value={<CountUp to={analytics.ebitda} format={formatRupiah} />} sub={t('laba + depresiasi')} accent="green" />
+              <Kpi label={t('Cash Burn (periode)')} value={<CountUp to={analytics.cashBurn} format={formatRupiah} />} sub={t('arus kas keluar bersih')} />
+              <Kpi
+                label={t('Pertumbuhan Pendapatan')}
+                value={analytics.revGrowth == null ? '-' : `${analytics.revGrowth >= 0 ? '+' : ''}${formatPercent(analytics.revGrowth)}`}
+                sub={t('vs bulan lalu')}
+                accent="dark"
+              />
+              <Kpi
+                label="Current Ratio"
+                value={analytics.currentRatio == null ? '-' : `${analytics.currentRatio.toFixed(2).replace('.', ',')}x`}
+                sub={t('≈ (kas + piutang) / hutang')}
+              />
+              <Kpi
+                label="Debt Ratio"
+                value={analytics.debtRatio == null ? '-' : formatPercent(analytics.debtRatio)}
+                sub={t('≈ hutang / total aset')}
+              />
+            </div>
+          </Card>
 
           {/* Monthly line chart */}
           <Card title="Tren Bulanan" subtitle="Pendapatan · Pembelian · Laba Bersih">
