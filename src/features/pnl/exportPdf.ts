@@ -76,10 +76,6 @@ export async function exportPnlPdf({ months, year, scope, t, generatedAt }: Opts
   doc.setTextColor(203, 216, 207)
   doc.text(`${t('Dibuat')}: ${generatedAt.toLocaleDateString('id-ID')}`, pageW - M, 17, { align: 'right' })
 
-  doc.setTextColor(150, 140, 120)
-  doc.setFontSize(7.5)
-  doc.text(t('Semua nilai dalam Rupiah (Rp)'), M, 29)
-
   // ── P&L table ──
   const cols = isYear ? months : months.filter((m) => m.month_no === scope)
   const colCount = 1 + cols.length + (isYear ? 1 : 0) // Keterangan + months + Total
@@ -126,7 +122,7 @@ export async function exportPnlPdf({ months, year, scope, t, generatedAt }: Opts
   })
 
   autoTable(doc, {
-    startY: 32,
+    startY: 30,
     head,
     body,
     theme: 'grid',
@@ -143,15 +139,12 @@ export async function exportPnlPdf({ months, year, scope, t, generatedAt }: Opts
   doc.setFontSize(11)
   doc.setTextColor(...INK)
   doc.text(t('Catatan Analisis Internal'), M, y)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(140, 130, 110)
-  doc.text(t('Rasio biaya & margin terhadap pendapatan · acuan umum industri F&B, sesuaikan dengan bisnis Anda.'), M, y + 5)
 
   if (scopeRevenue(months, scope) <= 0) {
+    doc.setFont('helvetica', 'normal')
     doc.setTextColor(120, 110, 90)
     doc.setFontSize(9)
-    doc.text(t('Belum ada pendapatan pada periode ini, rasio belum dapat dihitung.'), M, y + 13)
+    doc.text(t('Belum ada pendapatan pada periode ini, rasio belum dapat dihitung.'), M, y + 8)
   } else {
     const aHead: RowInput[] = [[t('Metrik'), t('Nilai'), t('Target'), t('Status'), t('Catatan')]]
     const aBody: RowInput[] = computeMetrics(months, scope).map((m) => {
@@ -166,7 +159,7 @@ export async function exportPnlPdf({ months, year, scope, t, generatedAt }: Opts
       ]
     })
     autoTable(doc, {
-      startY: y + 9,
+      startY: y + 4,
       head: aHead,
       body: aBody,
       theme: 'grid',
