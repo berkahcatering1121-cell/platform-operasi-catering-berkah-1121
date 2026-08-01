@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
+import ExportMenu from '@/components/ExportMenu'
 import { Card, EmptyState, ErrorState, LoadingRows } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { SelectField } from '@/components/ui/Field'
@@ -9,6 +10,7 @@ import { titleCase } from '@/lib/text'
 import { MODULE_BY_KEY, type ModuleKey } from '@/lib/modules'
 import { useT } from '@/lib/i18n'
 import { useCashFlow, type CashSource, type CashRow } from '@/features/cashflow/api'
+import type { CashExportRow } from '@/features/cashflow/exportSheet'
 
 // Each ledger source maps to an existing module (for its translated label + tone).
 const SOURCE_MODULE: Record<CashSource, ModuleKey> = {
@@ -91,11 +93,66 @@ export default function CashFlow() {
   // Newest first for display (balance column already carries the true cumulative).
   const display = useMemo(() => [...filtered].reverse(), [filtered])
 
+  // ── Export (PDF / Excel / CSV) of the currently filtered ledger ──
+  const [dlBusy, setDlBusy] = useState(false)
+  const filterLabel = () =>
+    [
+      source === 'all' ? t('Semua Sumber') : sourceLabel(source),
+      month === 'all' ? t('Semua Bulan') : formatMonthLabel(`${month}-01`),
+    ].join(' · ')
+  const buildRows = (): CashExportRow[] =>
+    filtered.map((r) => ({
+      date: r.date,
+      sourceLabel: sourceLabel(r.source),
+      description: titleCase(r.description),
+      category: r.category ? titleCase(r.category) : '-',
+      method: r.method ? titleCase(r.method) : '-',
+      cashIn: r.cashIn,
+      cashOut: r.cashOut,
+      balance: r.balance,
+    }))
+  const doExport = async (fmt: 'pdf' | 'xlsx' | 'csv') => {
+    setDlBusy(true)
+    try {
+      const rows = buildRows()
+      const base = `Arus Kas - Catering Berkah - ${filterLabel()}`
+      if (fmt === 'pdf') {
+        const { exportCashFlowPdf } = await import('@/features/cashflow/exportPdf')
+        await exportCashFlowPdf({ rows, totals, filterLabel: filterLabel(), t, generatedAt: new Date() })
+      } else if (fmt === 'xlsx') {
+        const [{ downloadXlsx }, { cashXlsxSheets }] = await Promise.all([
+          import('@/lib/export'),
+          import('@/features/cashflow/exportSheet'),
+        ])
+        downloadXlsx(cashXlsxSheets({ rows, totals, t }), base + '.xlsx')
+      } else {
+        const [{ downloadCsv }, { cashCsvRows }] = await Promise.all([
+          import('@/lib/export'),
+          import('@/features/cashflow/exportSheet'),
+        ])
+        downloadCsv(cashCsvRows({ rows, totals, t }), base + '.csv')
+      }
+    } finally {
+      setDlBusy(false)
+    }
+  }
+
   return (
     <>
       <PageHeader
         title="Arus Kas"
         subtitle="Buku besar seluruh transaksi keuangan, terhubung otomatis dari semua modul."
+        actions={
+          <ExportMenu
+            busy={dlBusy}
+            disabled={filtered.length === 0}
+            items={[
+              { label: t('PDF'), sub: t('Dokumen siap cetak'), onSelect: () => doExport('pdf') },
+              { label: t('Excel (.xlsx)'), sub: t('Buku kerja spreadsheet'), onSelect: () => doExport('xlsx') },
+              { label: t('CSV'), sub: t('Teks nilai dipisah koma'), onSelect: () => doExport('csv') },
+            ]}
+          />
+        }
       />
 
       {isLoading ? (

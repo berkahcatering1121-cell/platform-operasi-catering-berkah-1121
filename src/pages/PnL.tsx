@@ -38,16 +38,33 @@ export default function PnL() {
   const metrics = useMemo(() => computeMetrics(months, anMonth), [months, anMonth])
   const anRevenue = useMemo(() => scopeRevenue(months, anMonth), [months, anMonth])
 
-  // PDF download.
+  // Download (PDF / Excel / CSV), per month or full year.
   const [dlOpen, setDlOpen] = useState(false)
   const [dlBusy, setDlBusy] = useState(false)
+  const [dlFmt, setDlFmt] = useState<'pdf' | 'xlsx' | 'csv'>('pdf')
   const download = async (scope: number) => {
     setDlOpen(false)
     setDlBusy(true)
     try {
-      // Lazy-load jsPDF only when the user actually downloads.
-      const { exportPnlPdf } = await import('@/features/pnl/exportPdf')
-      await exportPnlPdf({ months, year, scope, t, generatedAt: new Date() })
+      const period = scope === 0 ? `${t('Tahun')} ${year}` : `${monthNames()[scope - 1]} ${year}`
+      const base = `Laporan P&L - Catering Berkah - ${period}`
+      if (dlFmt === 'pdf') {
+        // Lazy-load jsPDF only when the user actually downloads.
+        const { exportPnlPdf } = await import('@/features/pnl/exportPdf')
+        await exportPnlPdf({ months, year, scope, t, generatedAt: new Date() })
+      } else if (dlFmt === 'xlsx') {
+        const [{ downloadXlsx }, { pnlXlsxSheets }] = await Promise.all([
+          import('@/lib/export'),
+          import('@/features/pnl/exportSheet'),
+        ])
+        downloadXlsx(pnlXlsxSheets({ months, year, scope, t }), base + '.xlsx')
+      } else {
+        const [{ downloadCsv }, { pnlCsvRows }] = await Promise.all([
+          import('@/lib/export'),
+          import('@/features/pnl/exportSheet'),
+        ])
+        downloadCsv(pnlCsvRows({ months, year, scope, t }), base + '.csv')
+      }
     } finally {
       setDlBusy(false)
     }
@@ -73,12 +90,29 @@ export default function PnL() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
                 </svg>
-                {dlBusy ? t('Menyiapkan…') : t('Unduh PDF')}
+                {dlBusy ? t('Menyiapkan…') : t('Unduh')}
               </button>
               {dlOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setDlOpen(false)} />
-                  <div className="absolute right-0 z-50 mt-1.5 w-52 overflow-hidden rounded-field border border-app-border bg-app-card py-1 shadow-card">
+                  <div className="absolute right-0 z-50 mt-1.5 w-56 overflow-hidden rounded-field border border-app-border bg-app-card py-1 shadow-card">
+                    {/* Format selector */}
+                    <div className="flex gap-1 px-2 pb-1.5 pt-1">
+                      {(['pdf', 'xlsx', 'csv'] as const).map((f) => (
+                        <button
+                          key={f}
+                          onClick={() => setDlFmt(f)}
+                          className={`flex-1 rounded-btn px-2 py-1 text-[11px] font-extrabold uppercase tracking-[0.03em] transition ${
+                            dlFmt === f
+                              ? 'bg-brand text-white'
+                              : 'bg-app-panel text-ink-secondary hover:bg-app-border/60'
+                          }`}
+                        >
+                          {f === 'xlsx' ? 'Excel' : f.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="my-1 border-t border-app-border" />
                     <button
                       onClick={() => download(0)}
                       className="flex w-full items-center justify-between px-3 py-2 text-left text-[13px] font-bold text-ink hover:bg-app-panel"
