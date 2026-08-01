@@ -207,6 +207,59 @@
   }
 }
 
+/* =========================================================================
+   Post-login motion: classy, GPU-cheap, respects reduced-motion.
+   - .page-enter  : content fades in on every route change.
+   - .cb-stagger  : direct children rise + cascade in.
+   - .cb-card      : subtle interactive lift on hover.
+   ========================================================================= */
+@keyframes cbPageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-enter {
+  animation: cbPageIn 0.42s ease both;
+}
+
+@keyframes cbRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cb-stagger > * {
+  animation: cbRise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.cb-stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.cb-stagger > *:nth-child(2) { animation-delay: 0.1s; }
+.cb-stagger > *:nth-child(3) { animation-delay: 0.16s; }
+.cb-stagger > *:nth-child(4) { animation-delay: 0.22s; }
+.cb-stagger > *:nth-child(5) { animation-delay: 0.28s; }
+.cb-stagger > *:nth-child(6) { animation-delay: 0.34s; }
+.cb-stagger > *:nth-child(7) { animation-delay: 0.4s; }
+.cb-stagger > *:nth-child(8) { animation-delay: 0.46s; }
+.cb-stagger > *:nth-child(n + 9) { animation-delay: 0.52s; }
+
+/* Subtle interactive lift on cards (desktop hover). */
+.cb-card {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+}
+.cb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(30, 20, 10, 0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .cb-stagger > * {
+    animation: none;
+  }
+  .cb-card {
+    transition: none;
+  }
+  .cb-card:hover {
+    transform: none;
+  }
+}
+
 /* Thin, unobtrusive scrollbars inside scroll areas. */
 .cb-scroll::-webkit-scrollbar {
   height: 8px;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import PanduanDrawer from './PanduanDrawer'
 import BottomNav from './BottomNav'
@@ -13,6 +13,7 @@ import { useT } from '@/lib/i18n'
  */
 export default function AppShell() {
   const { t } = useT()
+  const location = useLocation()
   const [isMobile, setIsMobile] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [immersive, setImmersive] = useState(false)
@@ -135,7 +136,10 @@ export default function AppShell() {
           className="mx-auto w-full max-w-content flex-1 px-[clamp(14px,2.5vw,28px)] py-[clamp(14px,2.5vw,28px)]"
           style={isMobile ? { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)' } : undefined}
         >
-          <Outlet />
+          {/* Keyed by route so the entrance animation replays on each navigation */}
+          <div key={location.pathname} className="page-enter">
+            <Outlet />
+          </div>
         </main>
       </div>
 

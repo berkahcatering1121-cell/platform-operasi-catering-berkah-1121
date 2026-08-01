@@ -65,7 +65,7 @@ export default function Gaji() {
           <EmptyState message="Belum ada data gaji. Tambah lewat tombol + Gaji." />
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="cb-stagger space-y-4">
           {groups.map((g) => {
             const subBeban = g.rows.reduce((t, r) => t + r.total_beban, 0)
             const subThp = g.rows.reduce((t, r) => t + r.take_home, 0)

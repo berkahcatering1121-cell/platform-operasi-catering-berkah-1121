@@ -62,7 +62,7 @@ export default function Pembelian() {
           <EmptyState message="Belum ada transaksi pembelian. Tambah lewat tombol + Pembelian." />
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="cb-stagger space-y-4">
           {groups.map((g) => {
             const subtotal = g.rows.reduce((t, r) => t + r.total, 0)
             return (

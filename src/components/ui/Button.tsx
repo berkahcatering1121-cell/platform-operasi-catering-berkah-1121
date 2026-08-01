@@ -19,7 +19,7 @@ export default function Button({ variant = 'primary', className = '', children, 
   const { t } = useT()
   return (
     <button
-      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-btn px-4 text-[13px] font-bold transition disabled:opacity-60 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-btn px-4 text-[13px] font-bold transition active:scale-[0.97] disabled:opacity-60 ${VARIANTS[variant]} ${className}`}
       {...rest}
     >
       {typeof children === 'string' ? t(children) : children}

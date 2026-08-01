@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
+import CountUp from '@/components/ui/CountUp'
 import { formatPercent, formatRupiah, months as monthNames, monthsShort } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { usePnl } from '@/features/pnl/api'
@@ -14,7 +15,7 @@ import { periodRange, formatRangeLabel, isoDate, type PeriodKey } from '@/featur
 
 const TODAY_YEAR = new Date().getFullYear()
 
-function Kpi({ label, value, sub, accent }: { label: string; value: string; sub: string; accent?: 'green' | 'dark' }) {
+function Kpi({ label, value, sub, accent }: { label: string; value: ReactNode; sub: string; accent?: 'green' | 'dark' }) {
   return (
     <div className="cb-card p-4">
       {/* Fixed-height label (reserves 2 lines) so every value starts at the
@@ -117,16 +118,16 @@ export default function Dashboard() {
   )
 
   const kpis = [
-    { label: t('Total Pendapatan'), value: formatRupiah(totals.rev), sub: `Total ${scopeLabel}` },
+    { label: t('Total Pendapatan'), value: <CountUp to={totals.rev} format={formatRupiah} />, sub: `Total ${scopeLabel}` },
     {
       label: t('Total Pembelian Bahan Baku'),
-      value: formatRupiah(totals.purch),
+      value: <CountUp to={totals.purch} format={formatRupiah} />,
       sub: totals.rev > 0 ? `${formatPercent(totals.purch / totals.rev)} ${t('dari pendapatan')}` : '-',
     },
-    { label: t('Total Beban Gaji'), value: formatRupiah(totals.gaji), sub: t('seluruh karyawan') },
-    { label: t('Laba Bersih'), value: formatRupiah(totals.net), sub: t('setelah semua beban'), accent: 'green' as const },
-    { label: t('Margin Kotor'), value: formatPercent(totals.marginKotor), sub: t('laba kotor / pendapatan') },
-    { label: t('Margin Bersih'), value: formatPercent(totals.marginBersih), sub: t('laba bersih / pendapatan'), accent: 'dark' as const },
+    { label: t('Total Beban Gaji'), value: <CountUp to={totals.gaji} format={formatRupiah} />, sub: t('seluruh karyawan') },
+    { label: t('Laba Bersih'), value: <CountUp to={totals.net} format={formatRupiah} />, sub: t('setelah semua beban'), accent: 'green' as const },
+    { label: t('Margin Kotor'), value: <CountUp to={totals.marginKotor} format={formatPercent} />, sub: t('laba kotor / pendapatan') },
+    { label: t('Margin Bersih'), value: <CountUp to={totals.marginBersih} format={formatPercent} />, sub: t('laba bersih / pendapatan'), accent: 'dark' as const },
   ]
 
   return (
@@ -190,17 +191,17 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Kpi label={t('Pendapatan')} value={formatRupiah(periodSummary.rev)} sub={`${periodSummary.nSales} ${t('penjualan')}`} />
-              <Kpi label={t('Pembelian')} value={formatRupiah(periodSummary.buy)} sub={`${periodSummary.nBuy} ${t('pembelian')}`} />
-              <Kpi label={t('Laba Kotor')} value={formatRupiah(periodSummary.gross)} sub={t('pendapatan − pembelian')} accent="green" />
-              <Kpi label={t('Margin Kotor')} value={formatPercent(periodSummary.margin)} sub={t('laba kotor / pendapatan')} accent="dark" />
+            <div className="cb-stagger mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Kpi label={t('Pendapatan')} value={<CountUp to={periodSummary.rev} format={formatRupiah} />} sub={`${periodSummary.nSales} ${t('penjualan')}`} />
+              <Kpi label={t('Pembelian')} value={<CountUp to={periodSummary.buy} format={formatRupiah} />} sub={`${periodSummary.nBuy} ${t('pembelian')}`} />
+              <Kpi label={t('Laba Kotor')} value={<CountUp to={periodSummary.gross} format={formatRupiah} />} sub={t('pendapatan − pembelian')} accent="green" />
+              <Kpi label={t('Margin Kotor')} value={<CountUp to={periodSummary.margin} format={formatPercent} />} sub={t('laba kotor / pendapatan')} accent="dark" />
             </div>
             <div className="mt-2.5 text-[11.5px] font-medium text-ink-faint">{t('Periode')}: {formatRangeLabel(range)}</div>
           </div>
 
           {/* Yearly KPI cards */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="cb-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {kpis.map((k) => (
               <Kpi key={k.label} label={k.label} value={k.value} sub={k.sub} accent={k.accent} />
             ))}

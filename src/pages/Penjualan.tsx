@@ -59,7 +59,7 @@ export default function Penjualan() {
           <EmptyState message="Belum ada transaksi penjualan. Tambah lewat tombol + Penjualan." />
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="cb-stagger space-y-4">
           {groups.map((g) => {
             const subtotal = g.rows.reduce((t, r) => t + r.total, 0)
             const subSisa = g.rows.reduce((t, r) => t + r.sisa, 0)

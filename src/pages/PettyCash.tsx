@@ -74,7 +74,7 @@ export default function PettyCash() {
           <EmptyState message="Belum ada periode kas kecil. Buat lewat tombol + Periode." />
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="cb-stagger space-y-4">
           {(periods.data ?? []).map((p) => {
             const rows = entriesByPeriod.get(p.id) ?? []
             const totalIn = rows.reduce((t, r) => t + r.cash_in, 0)

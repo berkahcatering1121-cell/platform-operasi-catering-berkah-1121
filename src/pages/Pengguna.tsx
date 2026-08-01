@@ -224,7 +224,7 @@ export default function Pengguna() {
       ) : users.error ? (
         <ErrorState message={(users.error as Error).message} />
       ) : (
-        <div className="space-y-4">
+        <div className="cb-stagger space-y-4">
           <Card bodyClassName="">
             <div className="cb-scroll overflow-x-auto">
               <table className="w-full border-collapse">

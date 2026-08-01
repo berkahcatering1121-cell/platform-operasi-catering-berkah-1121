@@ -55,7 +55,7 @@ export default function Operasional() {
           <EmptyState message="Belum ada biaya operasional. Tambah lewat tombol + Biaya." />
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="cb-stagger space-y-4">
           {groups.map((g) => {
             const subtotal = g.rows.reduce((t, r) => t + r.amount, 0)
             return (
