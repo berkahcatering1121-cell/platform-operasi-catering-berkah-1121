@@ -1,5 +1,10 @@
 import type { PnlMonth } from './api'
 
+// Which underlying transactions a P&L line drills down to.
+export type DrillSpec =
+  | { source: 'sales' | 'purchases' | 'payroll' | 'assets' }
+  | { source: 'opex'; category: string }
+
 // ── P&L row definitions (shared by the on-screen table and the PDF export) ──
 export type RowDef =
   | { kind: 'header'; label: string }
@@ -11,22 +16,24 @@ export type RowDef =
       tint?: string
       indent?: boolean
       accent?: 'green'
+      /** If set, the line is clickable and shows its source transactions. */
+      drill?: DrillSpec
     }
   | { kind: 'pct'; label: string; numr: (m: PnlMonth) => number; den: (m: PnlMonth) => number }
 
 export const ROWS: RowDef[] = [
-  { kind: 'money', label: 'Pendapatan', get: (m) => m.pendapatan, strong: true },
-  { kind: 'money', label: 'HPP (Pembelian Bahan Baku)', get: (m) => m.hpp },
+  { kind: 'money', label: 'Pendapatan', get: (m) => m.pendapatan, strong: true, drill: { source: 'sales' } },
+  { kind: 'money', label: 'HPP (Pembelian Bahan Baku)', get: (m) => m.hpp, drill: { source: 'purchases' } },
   { kind: 'money', label: 'Laba Kotor', get: (m) => m.laba_kotor, strong: true, tint: 'bg-app-panel' },
   { kind: 'pct', label: 'Margin Kotor (%)', numr: (m) => m.laba_kotor, den: (m) => m.pendapatan },
   { kind: 'header', label: 'Beban Operasional' },
-  { kind: 'money', label: 'Gaji Karyawan', get: (m) => m.beban_gaji, indent: true },
-  { kind: 'money', label: 'Sewa Tempat & Dapur', get: (m) => m.beban_sewa, indent: true },
-  { kind: 'money', label: 'Listrik, Air & Gas', get: (m) => m.beban_listrik, indent: true },
-  { kind: 'money', label: 'Transportasi & Pengiriman', get: (m) => m.beban_transport, indent: true },
-  { kind: 'money', label: 'Marketing & Promosi', get: (m) => m.beban_marketing, indent: true },
-  { kind: 'money', label: 'Biaya Lain-lain', get: (m) => m.beban_lain, indent: true },
-  { kind: 'money', label: 'Depresiasi Aset', get: (m) => m.beban_depresiasi, indent: true },
+  { kind: 'money', label: 'Gaji Karyawan', get: (m) => m.beban_gaji, indent: true, drill: { source: 'payroll' } },
+  { kind: 'money', label: 'Sewa Tempat & Dapur', get: (m) => m.beban_sewa, indent: true, drill: { source: 'opex', category: 'Sewa Tempat & Dapur' } },
+  { kind: 'money', label: 'Listrik, Air & Gas', get: (m) => m.beban_listrik, indent: true, drill: { source: 'opex', category: 'Listrik, Air & Gas' } },
+  { kind: 'money', label: 'Transportasi & Pengiriman', get: (m) => m.beban_transport, indent: true, drill: { source: 'opex', category: 'Transportasi & Pengiriman' } },
+  { kind: 'money', label: 'Marketing & Promosi', get: (m) => m.beban_marketing, indent: true, drill: { source: 'opex', category: 'Marketing & Promosi' } },
+  { kind: 'money', label: 'Biaya Lain-lain', get: (m) => m.beban_lain, indent: true, drill: { source: 'opex', category: 'Biaya Lain-lain' } },
+  { kind: 'money', label: 'Depresiasi Aset', get: (m) => m.beban_depresiasi, indent: true, drill: { source: 'assets' } },
   { kind: 'money', label: 'Total Beban Operasional', get: (m) => m.total_beban_operasional, strong: true, tint: 'bg-app-panel' },
   { kind: 'money', label: 'EBITDA', get: (m) => m.laba_bersih + m.beban_depresiasi, strong: true, tint: 'bg-[#EDF5EF]', accent: 'green' },
   { kind: 'pct', label: '% EBITDA', numr: (m) => m.laba_bersih + m.beban_depresiasi, den: (m) => m.pendapatan },

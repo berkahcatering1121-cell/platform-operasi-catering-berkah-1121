@@ -6,6 +6,7 @@ import { formatPercent, formatPercentInt, months as monthNames, monthsShort } fr
 import { useT } from '@/lib/i18n'
 import { usePnl, type PnlMonth } from '@/features/pnl/api'
 import { ROWS, computeMetrics, scopeRevenue, verdict } from '@/features/pnl/model'
+import PnlDrillModal, { type DrillTarget } from '@/features/pnl/PnlDrillModal'
 
 const TODAY_YEAR = new Date().getFullYear()
 
@@ -28,6 +29,9 @@ export default function PnL() {
     const sum = (f: (m: PnlMonth) => number) => months.reduce((t, m) => t + f(m), 0)
     return { sum }
   }, [months])
+
+  // Drill-down: click any P&L line to see its source transactions.
+  const [drill, setDrill] = useState<DrillTarget | null>(null)
 
   // Internal analysis scope: 0 = whole year, 1-12 = a single month.
   const [anMonth, setAnMonth] = useState(0)
@@ -208,18 +212,41 @@ export default function PnL() {
                             : 'text-ink-body'
                     }`
                   const annualVal = annual.sum(row.get)
+                  const drillSpec = row.kind === 'money' ? row.drill : undefined
+                  const openDrill = (monthNo: number) =>
+                    drillSpec && setDrill({ drill: drillSpec, label: row.label, monthNo })
                   return (
                     <tr key={ri}>
-                      <td className={labelCls}>{t(row.label)}</td>
+                      <td className={labelCls}>
+                        {drillSpec ? (
+                          <button
+                            type="button"
+                            onClick={() => openDrill(0)}
+                            className="text-left underline decoration-dotted decoration-ink-faint/60 underline-offset-2 hover:text-brand"
+                            title={t('Klik untuk rincian')}
+                          >
+                            {t(row.label)}
+                          </button>
+                        ) : (
+                          t(row.label)
+                        )}
+                      </td>
                       {months.map((m) => (
-                        <td key={m.month_no} className={valueCls(row.get(m))}>
+                        <td
+                          key={m.month_no}
+                          className={valueCls(row.get(m)) + (drillSpec ? ' cursor-pointer hover:bg-app-panel' : '')}
+                          onClick={drillSpec ? () => openDrill(m.month_no) : undefined}
+                          title={drillSpec ? t('Klik untuk rincian') : undefined}
+                        >
                           {num(row.get(m))}
                         </td>
                       ))}
                       <td
                         className={`${cellBase} bg-gold-tint font-extrabold ${
                           annualVal < 0 ? 'text-danger' : accentGreen ? 'text-ok' : 'text-brand-dark'
-                        }`}
+                        }${drillSpec ? ' cursor-pointer hover:brightness-95' : ''}`}
+                        onClick={drillSpec ? () => openDrill(0) : undefined}
+                        title={drillSpec ? t('Klik untuk rincian') : undefined}
                       >
                         {num(annualVal)}
                       </td>
@@ -308,6 +335,8 @@ export default function PnL() {
         </div>
         </>
       )}
+
+      <PnlDrillModal open={!!drill} onClose={() => setDrill(null)} target={drill} year={year} />
     </>
   )
 }
