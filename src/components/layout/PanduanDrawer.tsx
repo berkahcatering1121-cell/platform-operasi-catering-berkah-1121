@@ -112,6 +112,17 @@ const GUIDE: Record<ModuleKey, Guide> = {
     terhubung:
       'Beban depresiasi otomatis mengalir ke P&L (baris “Depresiasi Aset”) mulai bulan perolehan.',
   },
+  cashflow: {
+    key: 'cashflow',
+    fungsi:
+      'Buku besar arus kas: menggabungkan otomatis semua pergerakan uang dari seluruh modul menjadi satu daftar dengan saldo berjalan.',
+    cara: [
+      'Tidak perlu input di sini. Baris muncul otomatis dari Penjualan, Pembelian, Gaji, Biaya Operasional, Petty Cash, Hutang, dan Aset.',
+      'Saring berdasarkan sumber modul, bulan, atau kata kunci; saldo berjalan dihitung otomatis.',
+    ],
+    terhubung:
+      'Menarik data dari semua modul transaksi; menjadi sumber tunggal untuk kondisi kas bisnis.',
+  },
   pnl: {
     key: 'pnl',
     fungsi:

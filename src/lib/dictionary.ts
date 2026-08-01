@@ -17,6 +17,7 @@ export const EN: Record<string, string> = {
   'Hutang': 'Debts',
   'Petty Cash': 'Petty Cash',
   'Aset & Depresiasi': 'Assets & Depreciation',
+  'Arus Kas': 'Cash Flow',
   'P&L (Laba Rugi)': 'P&L (Profit & Loss)',
   'Manajemen Pengguna': 'User Management',
   'Operasional': 'Operations',
@@ -448,6 +449,15 @@ export const EN: Record<string, string> = {
   'Semua nilai dalam Rupiah (Rp)': 'All values in Rupiah (Rp)',
   'Metrik': 'Metric',
   'Nilai': 'Value',
+  // Cash Flow ledger
+  'Total Uang Masuk': 'Total Money In',
+  'Total Uang Keluar': 'Total Money Out',
+  'Arus Kas Bersih': 'Net Cash Flow',
+  'Sumber Modul': 'Source Module',
+  'Uang Masuk': 'Money In',
+  'Uang Keluar': 'Money Out',
+  'Saldo Berjalan': 'Running Balance',
+  'Cari keterangan / kategori…': 'Search description / category…',
   'maks': 'max',
   'min': 'min',
   'Rasio biaya & margin terhadap pendapatan · acuan umum industri F&B, sesuaikan dengan bisnis Anda.':
