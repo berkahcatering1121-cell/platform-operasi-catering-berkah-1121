@@ -1,9 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
 import CountUp from '@/components/ui/CountUp'
 import { formatPercent, formatRupiah, months as monthNames, monthsShort } from '@/lib/format'
 import { useT } from '@/lib/i18n'
+import { useAuth } from '@/auth/AuthProvider'
 import { usePnl } from '@/features/pnl/api'
 import { usePurchases } from '@/features/purchases/api'
 import { useSales } from '@/features/sales/api'
@@ -21,24 +23,57 @@ import { periodRange, formatRangeLabel, isoDate, type PeriodKey } from '@/featur
 
 const TODAY_YEAR = new Date().getFullYear()
 
-function Kpi({ label, value, sub, accent }: { label: string; value: ReactNode; sub: string; accent?: 'green' | 'dark' }) {
-  return (
-    <div className="cb-card p-4">
+function Kpi({
+  label,
+  value,
+  sub,
+  accent,
+  to,
+}: {
+  label: string
+  value: ReactNode
+  sub: string
+  accent?: 'green' | 'dark'
+  /** When set, the whole card links to that module route. */
+  to?: string
+}) {
+  const valueCls = `mt-1.5 text-[17.5px] font-extrabold tabular-nums tracking-[-0.01em] ${
+    accent === 'green' ? 'text-ok' : accent === 'dark' ? 'text-brand-dark' : 'text-ink'
+  }`
+  const body = (
+    <>
       {/* Fixed-height label (reserves 2 lines) so every value starts at the
           same vertical position - numbers stay aligned across cards. */}
-      <div className="flex min-h-[30px] items-start text-[11.5px] font-semibold leading-[15px] text-ink-muted">
-        {label}
+      <div className="flex min-h-[30px] items-start justify-between gap-2 text-[11.5px] font-semibold leading-[15px] text-ink-muted">
+        <span>{label}</span>
+        {to && (
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mt-[1px] flex-none text-ink-faint/70 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-brand"
+          >
+            <path d="M7 17 17 7M7 7h10v10" />
+          </svg>
+        )}
       </div>
-      <div
-        className={`mt-1.5 text-[17.5px] font-extrabold tabular-nums tracking-[-0.01em] ${
-          accent === 'green' ? 'text-ok' : accent === 'dark' ? 'text-brand-dark' : 'text-ink'
-        }`}
-      >
-        {value}
-      </div>
+      <div className={valueCls}>{value}</div>
       <div className="mt-0.5 text-[11.5px] text-ink-faint">{sub}</div>
-    </div>
+    </>
   )
+  if (to) {
+    return (
+      <Link to={to} aria-label={`Buka ${label}`} className="cb-card group block p-4 hover:border-brand/50">
+        {body}
+      </Link>
+    )
+  }
+  return <div className="cb-card p-4">{body}</div>
 }
 
 function composition(rows: { key: string | null; total: number }[]): Segment[] {
@@ -54,6 +89,11 @@ function composition(rows: { key: string | null; total: number }[]): Segment[] {
 
 export default function Dashboard() {
   const { t } = useT()
+  const { canAccess } = useAuth()
+  // Deep links: revenue cards jump to Penjualan, purchase cards to Pembelian
+  // (only when the user actually has access to that module).
+  const salesTo = canAccess('penjualan') ? '/penjualan' : undefined
+  const buyTo = canAccess('pembelian') ? '/pembelian' : undefined
   const [year, setYear] = useState(TODAY_YEAR)
   // Default to the running month so login/refresh lands on the current month.
   const [month, setMonth] = useState(new Date().getMonth() + 1) // 0 = whole year; 1-12 = month
@@ -160,12 +200,13 @@ export default function Dashboard() {
     [sales.data, year, monthPrefix],
   )
 
-  const kpis = [
-    { label: t('Total Pendapatan'), value: <CountUp to={totals.rev} format={formatRupiah} />, sub: `Total ${scopeLabel}` },
+  const kpis: { label: string; value: ReactNode; sub: string; accent?: 'green' | 'dark'; to?: string }[] = [
+    { label: t('Total Pendapatan'), value: <CountUp to={totals.rev} format={formatRupiah} />, sub: `Total ${scopeLabel}`, to: salesTo },
     {
       label: t('Total Pembelian Bahan Baku'),
       value: <CountUp to={totals.purch} format={formatRupiah} />,
       sub: totals.rev > 0 ? `${formatPercent(totals.purch / totals.rev)} ${t('dari pendapatan')}` : '-',
+      to: buyTo,
     },
     { label: t('Total Beban Gaji'), value: <CountUp to={totals.gaji} format={formatRupiah} />, sub: t('seluruh karyawan') },
     { label: t('Laba Bersih'), value: <CountUp to={totals.net} format={formatRupiah} />, sub: t('setelah semua beban'), accent: 'green' as const },
@@ -235,8 +276,8 @@ export default function Dashboard() {
             </div>
 
             <div className="cb-stagger mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Kpi label={t('Pendapatan')} value={<CountUp to={periodSummary.rev} format={formatRupiah} />} sub={`${periodSummary.nSales} ${t('penjualan')}`} />
-              <Kpi label={t('Pembelian')} value={<CountUp to={periodSummary.buy} format={formatRupiah} />} sub={`${periodSummary.nBuy} ${t('pembelian')}`} />
+              <Kpi label={t('Pendapatan')} value={<CountUp to={periodSummary.rev} format={formatRupiah} />} sub={`${periodSummary.nSales} ${t('penjualan')}`} to={salesTo} />
+              <Kpi label={t('Pembelian')} value={<CountUp to={periodSummary.buy} format={formatRupiah} />} sub={`${periodSummary.nBuy} ${t('pembelian')}`} to={buyTo} />
               <Kpi label={t('Laba Kotor')} value={<CountUp to={periodSummary.gross} format={formatRupiah} />} sub={t('pendapatan − pembelian')} accent="green" />
               <Kpi label={t('Margin Kotor')} value={<CountUp to={periodSummary.margin} format={formatPercent} />} sub={t('laba kotor / pendapatan')} accent="dark" />
             </div>
@@ -249,7 +290,7 @@ export default function Dashboard() {
           {/* Yearly KPI cards */}
           <div className="cb-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {kpis.map((k) => (
-              <Kpi key={k.label} label={k.label} value={k.value} sub={k.sub} accent={k.accent} />
+              <Kpi key={k.label} label={k.label} value={k.value} sub={k.sub} accent={k.accent} to={k.to} />
             ))}
           </div>
 
