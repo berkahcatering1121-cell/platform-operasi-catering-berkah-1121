@@ -4,6 +4,7 @@ import PageHeader from '@/components/PageHeader'
 import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
 import CountUp from '@/components/ui/CountUp'
 import { formatPercent, formatRupiah, months as monthNames, monthsShort } from '@/lib/format'
+import { titleCase } from '@/lib/text'
 import { useT } from '@/lib/i18n'
 import { useAuth } from '@/auth/AuthProvider'
 import { usePnl } from '@/features/pnl/api'
@@ -200,6 +201,25 @@ export default function Dashboard() {
     [sales.data, year, monthPrefix],
   )
 
+  // How many portions of each menu were sold (and the revenue it brought),
+  // within the current year (+ optional month) scope, ranked best-seller first.
+  const menuSales = useMemo(() => {
+    const map = new Map<string, { name: string; category: string; qty: number; revenue: number }>()
+    for (const s of sales.data ?? []) {
+      if (!inScope(s.sale_date)) continue
+      const name = s.menu_name || 'Lainnya'
+      const key = name.toLowerCase()
+      const cur = map.get(key) ?? { name, category: s.menu_category || 'Lainnya', qty: 0, revenue: 0 }
+      cur.qty += s.portions || 0
+      cur.revenue += s.total || 0
+      map.set(key, cur)
+    }
+    return [...map.values()].sort((a, b) => b.qty - a.qty || b.revenue - a.revenue)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sales.data, year, monthPrefix])
+  const menuTotalQty = useMemo(() => menuSales.reduce((s, m) => s + m.qty, 0), [menuSales])
+  const menuMaxQty = menuSales.length ? menuSales[0].qty : 0
+
   const kpis: { label: string; value: ReactNode; sub: string; accent?: 'green' | 'dark'; to?: string }[] = [
     { label: t('Total Pendapatan'), value: <CountUp to={totals.rev} format={formatRupiah} />, sub: `Total ${scopeLabel}`, to: salesTo },
     {
@@ -354,6 +374,55 @@ export default function Dashboard() {
               {sales.isLoading ? <LoadingRows /> : <Donut segments={salesSeg} />}
             </Card>
           </div>
+
+          {/* Portions sold per menu (best-seller ranking) */}
+          <Card
+            title={t('Penjualan per Menu')}
+            subtitle={`${t('Jumlah porsi terjual per menu')} · ${scopeLabel}`}
+            action={
+              menuSales.length > 0 ? (
+                <span className="flex-none whitespace-nowrap rounded-pill border border-app-border bg-app-panel px-3 py-1 text-[12px] font-extrabold text-ink-secondary">
+                  {menuTotalQty.toLocaleString('id-ID')} {t('porsi')}
+                </span>
+              ) : undefined
+            }
+          >
+            {sales.isLoading ? (
+              <LoadingRows />
+            ) : menuSales.length === 0 ? (
+              <p className="py-6 text-center text-[12.5px] text-ink-muted">{t('Belum ada penjualan pada periode ini.')}</p>
+            ) : (
+              <div className="cb-scroll max-h-[380px] space-y-2.5 overflow-y-auto pr-1">
+                {menuSales.map((m, i) => (
+                  <div key={m.name} className="flex items-center gap-3">
+                    <div className="w-5 flex-none text-center text-[12px] font-extrabold tabular-nums text-ink-faint">
+                      {i + 1}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <div className="truncate text-[13px] font-bold text-ink">{titleCase(m.name)}</div>
+                        <div className="flex-none text-[13px] font-extrabold tabular-nums text-brand-dark">
+                          {m.qty.toLocaleString('id-ID')}{' '}
+                          <span className="text-[11px] font-semibold text-ink-faint">{t('porsi')}</span>
+                        </div>
+                      </div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-app-panel">
+                          <div
+                            className="h-full rounded-full bg-gold"
+                            style={{ width: `${menuMaxQty ? Math.max((m.qty / menuMaxQty) * 100, 2) : 0}%` }}
+                          />
+                        </div>
+                        <div className="flex-none text-[11px] text-ink-faint">
+                          {titleCase(m.category)} · {formatRupiah(m.revenue)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       )}
     </>
