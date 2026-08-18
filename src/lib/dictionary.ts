@@ -451,6 +451,36 @@ export const EN: Record<string, string> = {
   'Jumlah porsi terjual per menu': 'Portions sold per menu',
   'porsi': 'portions',
   'Belum ada penjualan pada periode ini.': 'No sales in this period.',
+  'Lihat perhitungan': 'View calculation',
+  'Rumus': 'Formula',
+  'Angka nyata': 'Real figures',
+  'Hasil': 'Result',
+  'Langkah nyata di lapangan': 'Real-world action',
+  'HPP (pembelian bahan baku)': 'COGS (raw material purchases)',
+  'Beban Gaji': 'Payroll Expense',
+  'Saldo Kas': 'Cash Balance',
+  'semua waktu': 'all time',
+  'Jatuh tempo': 'Due date',
+  'Sisa hutang': 'Remaining debt',
+  'Siapkan dana': 'Prepare funds',
+  'slip': 'slips',
+  'Jumlah slip belum dibayar': 'Number of unpaid slips',
+  'Cek di lapangan: harga jual per porsi, standar porsi & resep (HPP), serta pembelian bahan yang berlebih atau terbuang. Naikkan harga jual atau tekan biaya bahan.':
+    'Check in the field: selling price per portion, portion/recipe standard (COGS), and raw materials over-bought or wasted. Raise the price or cut material cost.',
+  'Cek di lapangan: jumlah karyawan, jam kerja & lembur pada periode ini. Sesuaikan jadwal shift atau dorong penjualan agar gaji sebanding dengan omzet.':
+    'Check in the field: headcount, work hours & overtime this period. Adjust shift scheduling or drive sales so payroll matches turnover.',
+  'Prime Cost menggabungkan bahan baku dan gaji, dua biaya terbesar. Biasanya dipicu Food Cost, jadi tekan HPP dulu, lalu tinjau efisiensi tenaga kerja.':
+    'Prime Cost combines materials and payroll, the two biggest costs. Usually driven by Food Cost, so cut COGS first, then review labor efficiency.',
+  'Buka modul Arus Kas, urutkan pengeluaran terbesar pada periode ini. Tunda pengeluaran yang bisa ditunda dan percepat penagihan piutang.':
+    'Open the Cash Flow module, sort the largest expenses this period. Defer what can wait and speed up receivables collection.',
+  'Saldo kas menurut catatan sudah minus. Segera setor modal/kas atau tahan pengeluaran. Pastikan semua pemasukan tunai sudah dicatat agar saldo akurat.':
+    'The recorded cash balance is negative. Inject capital/cash or hold spending immediately. Make sure all cash income is recorded so the balance is accurate.',
+  'Hutang dengan jatuh tempo dalam 7 hari ke depan': 'Debts due within the next 7 days',
+  'Siapkan dana sebesar sisa hutang sebelum tanggal jatuh tempo, atau hubungi kreditur untuk perpanjangan. Catat pembayaran di modul Hutang setelah dibayar.':
+    'Prepare funds for the remaining debt before the due date, or contact the creditor for an extension. Record the payment in the Debts module once paid.',
+  'Slip gaji periode ini yang masih berstatus Belum Dibayar': 'Payslips this period still marked Unpaid',
+  'Buka modul Gaji, proses pembayaran slip yang tertunda, lalu ubah statusnya menjadi Dibayar agar arus kas tercatat benar.':
+    'Open the Payroll module, process the pending slips, then set their status to Paid so cash flow is recorded correctly.',
   'Unduh': 'Download',
   'Analisis': 'Analysis',
   'Dokumen siap cetak': 'Print-ready document',

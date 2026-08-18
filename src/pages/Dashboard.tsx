@@ -147,11 +147,14 @@ export default function Dashboard() {
   // ── Financial analytics + smart alerts (auto-derived from every module) ──
   const inScopeDate = (d: string) => d.startsWith(String(year)) && (!monthPrefix || d.slice(5, 7) === monthPrefix)
   const cashBalance = useMemo(() => cash.rows.reduce((s, r) => s + r.cashIn - r.cashOut, 0), [cash.rows])
-  const scopeNetCash = useMemo(
-    () => cash.rows.filter((r) => inScopeDate(r.date)).reduce((s, r) => s + r.cashIn - r.cashOut, 0),
+  const scopeCash = useMemo(() => {
+    const rows = cash.rows.filter((r) => inScopeDate(r.date))
+    const cashIn = rows.reduce((s, r) => s + r.cashIn, 0)
+    const cashOut = rows.reduce((s, r) => s + r.cashOut, 0)
+    return { cashIn, cashOut, net: cashIn - cashOut }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cash.rows, year, monthPrefix],
-  )
+  }, [cash.rows, year, monthPrefix])
+  const scopeNetCash = scopeCash.net
   const analytics = useMemo(() => {
     const exp = scopedMonths.reduce((s, m) => s + m.hpp + m.total_beban_operasional, 0)
     const dep = scopedMonths.reduce((s, m) => s + m.beban_depresiasi, 0)
@@ -171,11 +174,22 @@ export default function Dashboard() {
     const in7S = iso(new Date(today.getTime() + 7 * 864e5))
     const dueSoon = (debts.data ?? [])
       .filter((d) => d.due_date && d.status !== 'Lunas' && d.due_date >= todayS && d.due_date <= in7S)
-      .map((d) => ({ creditor: d.creditor, due: d.due_date as string }))
+      .map((d) => ({ creditor: d.creditor, due: d.due_date as string, sisa: d.sisa }))
     const inScopeKey = (k: string) => k.startsWith(String(year)) && (!monthPrefix || k.slice(5, 7) === monthPrefix)
     const unpaidPayroll = (payroll.data ?? []).filter((g) => g.status === 'Belum Dibayar' && inScopeKey(g.month_key)).length
-    return computeAlerts({ t, rev: totals.rev, hpp: totals.purch, gaji: totals.gaji, scopeNetCash, cashBalance, dueSoon, unpaidPayroll })
-  }, [debts.data, payroll.data, totals, scopeNetCash, cashBalance, year, monthPrefix, t])
+    return computeAlerts({
+      t,
+      rev: totals.rev,
+      hpp: totals.purch,
+      gaji: totals.gaji,
+      scopeNetCash,
+      scopeCashIn: scopeCash.cashIn,
+      scopeCashOut: scopeCash.cashOut,
+      cashBalance,
+      dueSoon,
+      unpaidPayroll,
+    })
+  }, [debts.data, payroll.data, totals, scopeNetCash, scopeCash, cashBalance, year, monthPrefix, t])
 
   // Donuts follow the same year (+ optional month) scope as the KPIs.
   const inScope = (d: string) =>
