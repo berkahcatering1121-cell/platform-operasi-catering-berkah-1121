@@ -30,11 +30,13 @@ function ChipRow({ items }: { items: { name: string; tone?: 'green' | 'amber' | 
 // A category chip with inline rename + delete affordances.
 function EditableChip({
   item,
+  index,
   isDuplicate,
   onEdit,
   onDelete,
 }: {
   item: RefRow
+  index: number
   isDuplicate: (name: string, exceptId: string) => boolean
   onEdit: (id: string, name: string) => void
   onDelete: (item: RefRow) => void
@@ -107,7 +109,10 @@ function EditableChip({
   }
 
   return (
-    <span className="group inline-flex items-center gap-1.5 rounded-pill border border-master-border bg-master-bg py-1 pl-3 pr-1.5 text-[12.5px] font-bold text-master">
+    <span className="group inline-flex items-center gap-1.5 rounded-pill border border-master-border bg-master-bg py-1 pl-1.5 pr-1.5 text-[12.5px] font-bold text-master">
+      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/70 px-1 text-[11px] font-extrabold tabular-nums text-master/80">
+        {index}
+      </span>
       {item.name}
       <span className="flex items-center gap-0.5">
         <button
@@ -193,10 +198,11 @@ function AddableCategoryCard({
       <div className="mb-3">
         {list.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {list.map((c) => (
+            {list.map((c, i) => (
               <EditableChip
                 key={c.id}
                 item={c}
+                index={i + 1}
                 isDuplicate={isDuplicate}
                 onEdit={(id, name) => update.mutate({ id, name })}
                 onDelete={(item) => setToDelete(item)}

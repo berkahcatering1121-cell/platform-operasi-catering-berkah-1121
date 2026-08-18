@@ -54,9 +54,19 @@ export default function MenuTab() {
   return (
     <>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[12.5px] text-ink-muted">
-          Satu tabel per kategori menu. Tekan “+ Menu” pada kategori untuk menambah sub-menu di dalamnya.
-        </p>
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-pill border border-master-border bg-master-bg px-3 py-1 text-[12px] font-extrabold text-master">
+              {categories.length} {t('kategori')}
+            </span>
+            <span className="rounded-pill border border-app-border bg-app-panel px-3 py-1 text-[12px] font-extrabold text-ink-secondary">
+              {items.data?.length ?? 0} {t('menu')}
+            </span>
+          </div>
+          <p className="mt-2 text-[12.5px] text-ink-muted">
+            Satu tabel per kategori menu. Tekan “+ Menu” pada kategori untuk menambah sub-menu di dalamnya.
+          </p>
+        </div>
         <div className="relative w-full sm:w-[320px]">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -92,10 +102,11 @@ export default function MenuTab() {
 
       <div className="space-y-4">
         {visible.map(({ cat, list }) => {
+          const catNo = categories.indexOf(cat) + 1
           return (
             <Card
               key={cat.id}
-              title={cat.name}
+              title={`${catNo}. ${cat.name}`}
               subtitle={`${list.length} menu`}
               action={
                 <Button variant="secondary" onClick={() => setEditor({ item: null, categoryId: cat.id })}>
@@ -108,6 +119,7 @@ export default function MenuTab() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr>
+                      <th className={TH + ' w-10 text-center'}>No</th>
                       <th className={TH}>Menu</th>
                       <th className={TH_R}>HPP / Porsi</th>
                       <th className={TH_R}>Harga Jual / Porsi</th>
@@ -117,8 +129,9 @@ export default function MenuTab() {
                   </thead>
                   <tbody>
                     {list.length > 0 ? (
-                      list.map((m) => (
+                      list.map((m, mi) => (
                         <tr key={m.id}>
+                          <td className={TD + ' text-center font-bold tabular-nums text-ink-faint'}>{mi + 1}</td>
                           <td className={TD} style={{ whiteSpace: 'normal', maxWidth: 520 }}>
                             <div className="font-bold text-ink">{titleCase(m.name)}</div>
                             {m.description && (
@@ -154,7 +167,7 @@ export default function MenuTab() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5}>
+                        <td colSpan={6}>
                           <EmptyState message="Belum ada menu di kategori ini." />
                         </td>
                       </tr>
