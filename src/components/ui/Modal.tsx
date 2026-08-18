@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useT } from '@/lib/i18n'
 
 interface ModalProps {
@@ -34,7 +35,9 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
 
   if (!open) return null
 
-  return (
+  // Portal to <body> so the fixed overlay is always viewport-relative and can
+  // never be trapped by an ancestor's transform (e.g. a hovered .cb-card).
+  return createPortal(
     <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/45 animate-fadeIn" onClick={onClose} />
       <div
@@ -69,6 +72,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
