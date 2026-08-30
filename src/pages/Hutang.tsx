@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/ui/Button'
+import ExportMenu from '@/components/ExportMenu'
 import { Card, EmptyState, ErrorState, LoadingRows } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
 import RowActions from '@/components/ui/RowActions'
@@ -11,6 +12,7 @@ import { titleCase } from '@/lib/text'
 import { useDebts, useDeleteDebt } from '@/features/debts/api'
 import DebtModal from '@/features/debts/DebtModal'
 import DebtImportModal from '@/features/debts/DebtImportModal'
+import { debtsCsvRows, debtsXlsxSheets } from '@/features/debts/exportDebts'
 import type { DebtView } from '@/lib/db'
 import { useT } from '@/lib/i18n'
 
@@ -63,6 +65,15 @@ export default function Hutang() {
     }
   }, [rowsInScope])
 
+  // Export the debts currently in scope (respects the month filter).
+  const monthLabel = month === 'all' ? t('Semua Bulan') : formatMonthLabel(`${month}-01`)
+  const doExport = async (fmt: 'xlsx' | 'csv') => {
+    const base = `Hutang - Catering Berkah - ${monthLabel}`
+    const { downloadXlsx, downloadCsv } = await import('@/lib/export')
+    if (fmt === 'xlsx') downloadXlsx(debtsXlsxSheets(rowsInScope, t), base + '.xlsx')
+    else downloadCsv(debtsCsvRows(rowsInScope, t), base + '.csv')
+  }
+
   const openAdd = () => {
     setEditing(null)
     setModalOpen(true)
@@ -92,6 +103,13 @@ export default function Hutang() {
                 </option>
               ))}
             </select>
+            <ExportMenu
+              disabled={rowsInScope.length === 0}
+              items={[
+                { label: t('Excel (.xlsx)'), sub: t('Buku kerja spreadsheet'), onSelect: () => doExport('xlsx') },
+                { label: t('CSV'), sub: t('Teks nilai dipisah koma'), onSelect: () => doExport('csv') },
+              ]}
+            />
             <Button variant="secondary" onClick={() => setImportOpen(true)}>
               {t('Impor Excel')}
             </Button>

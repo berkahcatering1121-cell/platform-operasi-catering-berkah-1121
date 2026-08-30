@@ -2,6 +2,11 @@
 // with per-row validation so the user can review before importing.
 import type { DebtInput } from './api'
 
+// Identity of a debt for duplicate detection: same date + creditor + amount.
+export function debtKey(d: { debt_date: string; creditor: string; amount: number }): string {
+  return `${d.debt_date}|${d.creditor.trim().toLowerCase()}|${Math.round(d.amount)}`
+}
+
 export interface ParsedDebtRow {
   input: DebtInput | null
   raw: string[]

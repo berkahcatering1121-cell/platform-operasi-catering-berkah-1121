@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Modal from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
@@ -7,23 +7,58 @@ import { titleCase } from '@/lib/text'
 import { useT } from '@/lib/i18n'
 import { downloadCsv } from '@/lib/export'
 import { readXlsxFirstSheet } from '@/lib/xlsxRead'
-import { useImportDebts } from './api'
-import { mapDebtsGrid, parseDelimited, DEBT_TEMPLATE } from './importDebts'
+import { useDebts, useImportDebts } from './api'
+import { mapDebtsGrid, parseDelimited, debtKey, DEBT_TEMPLATE } from './importDebts'
 
 const YEAR = new Date().getFullYear()
 
 export default function DebtImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useT()
   const importer = useImportDebts()
+  const debts = useDebts()
   const fileRef = useRef<HTMLInputElement>(null)
+  const headerCb = useRef<HTMLInputElement>(null)
   const [grid, setGrid] = useState<string[][] | null>(null)
   const [markPaid, setMarkPaid] = useState(false)
   const [source, setSource] = useState('')
   const [paste, setPaste] = useState('')
   const [err, setErr] = useState('')
   const [done, setDone] = useState(0)
+  const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const result = useMemo(() => (grid ? mapDebtsGrid(grid, YEAR, { markPaid }) : null), [grid, markPaid])
+
+  // Keys of debts already in the system, for duplicate detection.
+  const existingKeys = useMemo(() => {
+    const s = new Set<string>()
+    for (const d of debts.data ?? []) s.add(debtKey({ debt_date: d.debt_date, creditor: d.creditor, amount: d.amount }))
+    return s
+  }, [debts.data])
+
+  // Annotate each parsed row with duplicate + selectability status.
+  const annotated = useMemo(() => {
+    return (result?.rows ?? []).map((row) => {
+      const dup = !!row.input && existingKeys.has(debtKey(row.input))
+      return { row, dup, selectable: !!row.input && !dup }
+    })
+  }, [result, existingKeys])
+
+  const selectableNos = useMemo(() => annotated.filter((a) => a.selectable).map((a) => a.row.rowNo), [annotated])
+  const dupCount = annotated.filter((a) => a.dup).length
+  const invalidCount = annotated.filter((a) => !a.row.input).length
+
+  // Default: select every importable (valid + non-duplicate) row.
+  useEffect(() => {
+    setSelected(new Set(selectableNos))
+  }, [selectableNos])
+
+  const allSelected = selectableNos.length > 0 && selectableNos.every((n) => selected.has(n))
+  const someSelected = selectableNos.some((n) => selected.has(n))
+  useEffect(() => {
+    if (headerCb.current) headerCb.current.indeterminate = someSelected && !allSelected
+  }, [someSelected, allSelected])
+
+  const chosen = annotated.filter((a) => a.selectable && selected.has(a.row.rowNo)).map((a) => a.row.input!)
 
   const reset = () => {
     setGrid(null)
@@ -32,6 +67,7 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
     setPaste('')
     setErr('')
     setDone(0)
+    setSelected(new Set())
     importer.reset()
   }
   const close = () => {
@@ -61,10 +97,18 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
     }
   }
 
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(selectableNos))
+  const toggleOne = (no: number) =>
+    setSelected((prev) => {
+      const s = new Set(prev)
+      if (s.has(no)) s.delete(no)
+      else s.add(no)
+      return s
+    })
+
   const doImport = () => {
-    const inputs = (result?.rows ?? []).map((r) => r.input).filter((x): x is NonNullable<typeof x> => !!x)
-    if (inputs.length === 0) return
-    importer.mutate(inputs, { onSuccess: () => setDone(inputs.length) })
+    if (chosen.length === 0) return
+    importer.mutate(chosen, { onSuccess: () => setDone(chosen.length) })
   }
 
   return (
@@ -72,7 +116,7 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
       open={open}
       onClose={close}
       title="Impor Hutang dari Excel"
-      subtitle="Unggah .xlsx atau .csv, atau tempel dari Excel. Baris ditinjau dulu sebelum diimpor."
+      subtitle="Unggah .xlsx atau .csv, atau tempel dari Excel. Pilih baris yang mau diimpor; duplikat dilewati."
       wide
       footer={
         <>
@@ -81,10 +125,10 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
           </button>
           <button
             onClick={doImport}
-            disabled={!result || result.valid === 0 || importer.isPending || done > 0}
+            disabled={chosen.length === 0 || importer.isPending || done > 0 || debts.isLoading}
             className="rounded-btn bg-brand px-4 py-2 text-[13px] font-bold text-white transition hover:bg-brand-dark disabled:opacity-60"
           >
-            {importer.isPending ? t('Mengimpor…') : `${t('Impor')} ${result?.valid ?? 0} ${t('hutang')}`}
+            {importer.isPending ? t('Mengimpor…') : `${t('Impor')} ${chosen.length} ${t('hutang')}`}
           </button>
         </>
       }
@@ -166,14 +210,30 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
             {/* Preview */}
             {result && (
               <div>
-                <div className="mb-2 flex items-center gap-2 text-[12.5px]">
-                  <Badge tone="green">{result.valid} {t('siap diimpor')}</Badge>
-                  {result.invalid > 0 && <Badge tone="red">{result.invalid} {t('bermasalah')}</Badge>}
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-[12.5px]">
+                  <Badge tone="green">{selectableNos.length} {t('bisa diimpor')}</Badge>
+                  {dupCount > 0 && <Badge tone="amber">{dupCount} {t('duplikat')}</Badge>}
+                  {invalidCount > 0 && <Badge tone="red">{invalidCount} {t('bermasalah')}</Badge>}
+                  <span className="ml-auto text-[11.5px] font-semibold text-ink-muted">{chosen.length} {t('dipilih')}</span>
                 </div>
+                {dupCount > 0 && (
+                  <p className="mb-2 text-[11px] text-ink-muted">{t('Baris duplikat (sudah ada di sistem) tidak dapat dipilih.')}</p>
+                )}
                 <div className="cb-scroll max-h-[300px] overflow-auto rounded-field border border-app-border">
                   <table className="w-full border-collapse">
                     <thead className="sticky top-0 bg-app-panel">
                       <tr>
+                        <th className={TH + ' w-10 text-center'}>
+                          <input
+                            ref={headerCb}
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={toggleAll}
+                            disabled={selectableNos.length === 0}
+                            aria-label={t('Pilih semua')}
+                            className="h-4 w-4 accent-brand align-middle"
+                          />
+                        </th>
                         <th className={TH + ' w-8'}>#</th>
                         <th className={TH}>{t('Tanggal')}</th>
                         <th className={TH}>{t('Kreditur')}</th>
@@ -182,8 +242,21 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
                       </tr>
                     </thead>
                     <tbody>
-                      {result.rows.map((r) => (
-                        <tr key={r.rowNo} className={r.input ? '' : 'bg-danger-bg/40'}>
+                      {annotated.map(({ row: r, dup, selectable }) => (
+                        <tr
+                          key={r.rowNo}
+                          className={!r.input ? 'bg-danger-bg/40' : dup ? 'bg-warn-bg/40' : ''}
+                        >
+                          <td className={TD + ' text-center'}>
+                            <input
+                              type="checkbox"
+                              checked={selectable && selected.has(r.rowNo)}
+                              onChange={() => toggleOne(r.rowNo)}
+                              disabled={!selectable}
+                              aria-label={`${t('Pilih baris')} ${r.rowNo}`}
+                              className="h-4 w-4 accent-brand align-middle disabled:opacity-40"
+                            />
+                          </td>
                           <td className={TD + ' text-ink-faint tabular-nums'}>{r.rowNo}</td>
                           <td className={TD + ' whitespace-nowrap'}>
                             {r.input ? formatDate(r.input.debt_date) : r.raw[0] || '-'}
@@ -191,10 +264,12 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
                           <td className={TD + ' font-semibold text-ink'}>{r.input ? titleCase(r.input.creditor) : r.raw[1] || '-'}</td>
                           <td className={TD_R + ' tabular-nums'}>{r.input ? formatRupiah(r.input.amount) : '-'}</td>
                           <td className={TD}>
-                            {r.input ? (
-                              <span className="text-[11.5px] font-semibold text-ok">{t('Valid')}</span>
-                            ) : (
+                            {!r.input ? (
                               <span className="text-[11.5px] font-semibold text-danger">{r.errors.map((e) => t(e)).join(', ')}</span>
+                            ) : dup ? (
+                              <span className="text-[11.5px] font-semibold text-warn">{t('Duplikat (sudah ada)')}</span>
+                            ) : (
+                              <span className="text-[11.5px] font-semibold text-ok">{t('Valid')}</span>
                             )}
                           </td>
                         </tr>

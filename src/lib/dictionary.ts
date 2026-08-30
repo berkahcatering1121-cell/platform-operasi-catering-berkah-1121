@@ -474,6 +474,13 @@ export const EN: Record<string, string> = {
   'Jatuh Tempo tidak valid': 'Invalid Due Date',
   'Belum ada data hutang. Tambah lewat tombol + Hutang.': 'No debts yet. Add one with the + Hutang button.',
   'Tidak ada hutang pada bulan ini.': 'No debts in this month.',
+  'bisa diimpor': 'importable',
+  'duplikat': 'duplicates',
+  'dipilih': 'selected',
+  'Baris duplikat (sudah ada di sistem) tidak dapat dipilih.': 'Duplicate rows (already in the system) cannot be selected.',
+  'Pilih semua': 'Select all',
+  'Pilih baris': 'Select row',
+  'Duplikat (sudah ada)': 'Duplicate (already exists)',
   'Tandai semua sebagai Lunas': 'Mark all as Paid',
   '(Sudah Dibayar = Jumlah, status Lunas). Berlaku bila file tidak punya kolom Sudah Dibayar.':
     '(Paid = Amount, status Paid). Applies when the file has no Paid column.',
