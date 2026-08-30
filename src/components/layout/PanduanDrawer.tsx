@@ -123,6 +123,18 @@ const GUIDE: Record<ModuleKey, Guide> = {
     terhubung:
       'Menarik data dari semua modul transaksi; menjadi sumber tunggal untuk kondisi kas bisnis.',
   },
+  rekonsiliasi: {
+    key: 'rekonsiliasi',
+    fungsi:
+      'Mencocokkan mutasi rekening bank (BCA) dengan catatan sistem. Menampilkan Saldo Awal & Saldo Akhir bulan agar terlihat apakah uang bertambah, serta selisih antara bank dan sistem.',
+    cara: [
+      'Pilih bulan & tahun. Saldo Awal/Akhir dan mutasi menurut sistem terisi otomatis dari Arus Kas.',
+      'Unggah file CSV mutasi BCA (atau tempel teksnya). Saldo & transaksi bank akan terbaca otomatis.',
+      'Lihat selisih saldo dan daftar transaksi bank yang belum tercatat. Tekan “Catat” untuk memasukkannya ke Biaya Operasional.',
+    ],
+    terhubung:
+      'Menarik saldo & transaksi dari Arus Kas (semua modul). Transaksi bank yang dicatat masuk ke Biaya Operasional lalu mengalir ke Arus Kas dan P&L.',
+  },
   pnl: {
     key: 'pnl',
     fungsi:

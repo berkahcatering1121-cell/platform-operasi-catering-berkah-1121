@@ -13,6 +13,7 @@ export type ModuleKey =
   | 'petty'
   | 'aset'
   | 'cashflow'
+  | 'rekonsiliasi'
   | 'pnl'
   | 'pengguna'
 
@@ -60,6 +61,8 @@ export const MODULES: ModuleDef[] = [
     icon: svg(<><path d="m12 2 8 4.5v9L12 20l-8-4.5v-9L12 2Z" /><path d="m4 6.5 8 4.5 8-4.5M12 11v9" /></>) },
   { key: 'cashflow', label: 'Arus Kas', code: 'CF', path: '/cashflow',
     icon: svg(<><path d="M17 3l4 4-4 4" /><path d="M21 7H8a4 4 0 0 0-4 4v1" /><path d="M7 21l-4-4 4-4" /><path d="M3 17h13a4 4 0 0 0 4-4v-1" /></>) },
+  { key: 'rekonsiliasi', label: 'Rekonsiliasi Bank', code: 'RB', path: '/rekonsiliasi',
+    icon: svg(<><path d="M3 6h18M3 6l2-3h14l2 3M4 6v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V6" /><path d="m9 13 2 2 4-4" /></>) },
   { key: 'pnl', label: 'P&L (Laba Rugi)', code: 'PL', path: '/pnl',
     icon: svg(<><path d="M4 20h16" /><rect x="6" y="11" width="3" height="6" /><rect x="11" y="7" width="3" height="10" /><rect x="16" y="13" width="3" height="4" /></>) },
   { key: 'pengguna', label: 'Manajemen Pengguna', code: 'US', path: '/pengguna',
@@ -92,7 +95,7 @@ export const NAV: NavEntry[] = [
     id: 'finance',
     title: 'Finance',
     icon: svg(<><path d="M3 10 12 4l9 6" /><path d="M5 10v9M19 10v9M9.5 10v9M14.5 10v9" /><path d="M3 20h18" /></>),
-    keys: ['gaji', 'hutang', 'aset', 'cashflow', 'pnl'],
+    keys: ['gaji', 'hutang', 'aset', 'cashflow', 'rekonsiliasi', 'pnl'],
   },
   { type: 'link', key: 'pengguna' },
 ]

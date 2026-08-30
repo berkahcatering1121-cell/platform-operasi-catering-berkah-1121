@@ -17,6 +17,7 @@ import Hutang from '@/pages/Hutang'
 import PettyCash from '@/pages/PettyCash'
 import Aset from '@/pages/Aset'
 import CashFlow from '@/pages/CashFlow'
+import BankReconciliation from '@/pages/BankReconciliation'
 import PnL from '@/pages/PnL'
 import Pengguna from '@/pages/Pengguna'
 
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="/petty" element={<RequireModule module="petty"><PettyCash /></RequireModule>} />
         <Route path="/aset" element={<RequireModule module="aset"><Aset /></RequireModule>} />
         <Route path="/cashflow" element={<RequireModule module="cashflow"><CashFlow /></RequireModule>} />
+        <Route path="/rekonsiliasi" element={<RequireModule module="rekonsiliasi"><BankReconciliation /></RequireModule>} />
         <Route path="/pnl" element={<RequireModule module="pnl"><PnL /></RequireModule>} />
         <Route path="/pengguna" element={<RequireModule module="pengguna"><Pengguna /></RequireModule>} />
         <Route path="*" element={<Navigate to={landingPath} replace />} />
