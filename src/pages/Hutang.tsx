@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/ui/Badge'
 import RowActions from '@/components/ui/RowActions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
-import { formatDate, formatRupiah } from '@/lib/format'
+import { formatDate, formatRupiah, formatMonthLabel } from '@/lib/format'
 import { titleCase } from '@/lib/text'
 import { useDebts, useDeleteDebt } from '@/features/debts/api'
 import DebtModal from '@/features/debts/DebtModal'
@@ -38,19 +38,30 @@ export default function Hutang() {
   const [importOpen, setImportOpen] = useState(false)
   const [editing, setEditing] = useState<DebtView | null>(null)
   const [toDelete, setToDelete] = useState<DebtView | null>(null)
+  const [month, setMonth] = useState('all') // 'all' or 'YYYY-MM' (by debt date)
+
+  // Months present in the data, newest first, for the filter dropdown.
+  const monthOptions = useMemo(() => {
+    const set = new Set((debts.data ?? []).map((r) => (r.debt_date ?? '').slice(0, 7)).filter(Boolean))
+    return [...set].sort((a, b) => (a > b ? -1 : 1))
+  }, [debts.data])
+
+  const rowsInScope = useMemo(() => {
+    const rows = debts.data ?? []
+    return month === 'all' ? rows : rows.filter((r) => (r.debt_date ?? '').startsWith(month))
+  }, [debts.data, month])
 
   const totals = useMemo(() => {
-    const rows = debts.data ?? []
     // "Sudah Dibayar" is capped at each debt's amount: paying more than the debt
     // (an over-entered row) must not inflate the paid total beyond Total Hutang.
     // This keeps the three cards consistent: Total Hutang = Sudah Dibayar + Sisa,
-    // because min(paid, amount) + max(0, amount − paid) === amount for every row.
+    // because min(paid, amount) + max(0, amount - paid) === amount for every row.
     return {
-      total: rows.reduce((t, r) => t + r.amount, 0),
-      paid: rows.reduce((t, r) => t + Math.min(r.paid_amount, r.amount), 0),
-      sisa: rows.reduce((t, r) => t + r.sisa, 0),
+      total: rowsInScope.reduce((t, r) => t + r.amount, 0),
+      paid: rowsInScope.reduce((t, r) => t + Math.min(r.paid_amount, r.amount), 0),
+      sisa: rowsInScope.reduce((t, r) => t + r.sisa, 0),
     }
-  }, [debts.data])
+  }, [rowsInScope])
 
   const openAdd = () => {
     setEditing(null)
@@ -68,6 +79,19 @@ export default function Hutang() {
         subtitle="Sisa & status hutang dihitung otomatis (Lunas / Belum Lunas / Jatuh Tempo)."
         actions={
           <div className="flex items-center gap-2">
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="cb-select h-[38px] rounded-btn border border-app-border bg-app-card pl-3 pr-8 text-[13px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
+              aria-label={t('Pilih bulan')}
+            >
+              <option value="all">{t('Semua Bulan')}</option>
+              {monthOptions.map((m) => (
+                <option key={m} value={m}>
+                  {formatMonthLabel(`${m}-01`)}
+                </option>
+              ))}
+            </select>
             <Button variant="secondary" onClick={() => setImportOpen(true)}>
               {t('Impor Excel')}
             </Button>
@@ -105,8 +129,8 @@ export default function Hutang() {
                   </tr>
                 </thead>
                 <tbody>
-                  {debts.data && debts.data.length > 0 ? (
-                    debts.data.map((r) => (
+                  {rowsInScope.length > 0 ? (
+                    rowsInScope.map((r) => (
                       <tr key={r.id}>
                         <td className={TD + ' whitespace-nowrap'}>{formatDate(r.debt_date)}</td>
                         <td className={TD}>
@@ -133,7 +157,13 @@ export default function Hutang() {
                   ) : (
                     <tr>
                       <td colSpan={9}>
-                        <EmptyState message="Belum ada data hutang. Tambah lewat tombol + Hutang." />
+                        <EmptyState
+                          message={
+                            month === 'all'
+                              ? t('Belum ada data hutang. Tambah lewat tombol + Hutang.')
+                              : t('Tidak ada hutang pada bulan ini.')
+                          }
+                        />
                       </td>
                     </tr>
                   )}

@@ -472,6 +472,8 @@ export const EN: Record<string, string> = {
   'Jumlah harus lebih dari 0': 'Amount must be greater than 0',
   'Sudah Dibayar tidak valid': 'Invalid Paid amount',
   'Jatuh Tempo tidak valid': 'Invalid Due Date',
+  'Belum ada data hutang. Tambah lewat tombol + Hutang.': 'No debts yet. Add one with the + Hutang button.',
+  'Tidak ada hutang pada bulan ini.': 'No debts in this month.',
   'Tandai semua sebagai Lunas': 'Mark all as Paid',
   '(Sudah Dibayar = Jumlah, status Lunas). Berlaku bila file tidak punya kolom Sudah Dibayar.':
     '(Paid = Amount, status Paid). Applies when the file has no Paid column.',
