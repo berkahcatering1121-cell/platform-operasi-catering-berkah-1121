@@ -63,10 +63,15 @@ export function parseDelimited(text: string): string[][] {
 }
 
 // Indonesian or plain number: "1.500.000,50", "12.500.000", "1500000.5",
-// "1,500,000" all parse correctly.
+// "1,500,000", and Excel's raw "2.0762955E7" all parse correctly.
 function parseAmount(raw: string): number | null {
   const s = raw.trim()
   if (!s) return 0
+  // Plain or scientific-notation number exactly as Excel writes numeric cells.
+  if (/^-?\d+(\.\d+)?(e[+-]?\d+)?$/i.test(s)) {
+    const n = Number(s)
+    return Number.isFinite(n) ? n : null
+  }
   let t = s.replace(/[^\d.,-]/g, '')
   if (t === '' || t === '-') return null
   const neg = t.startsWith('-')
@@ -105,6 +110,17 @@ function parseDate(raw: string, fallbackYear: number): string | null {
     if (+mm < 1 || +mm > 12 || +dd < 1 || +dd > 31) return null
     return `${yyyy}-${mm}-${dd}`
   }
+  // Excel serial date (days since 1899-12-30) as read straight from an .xlsx.
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    const serial = Number(s)
+    if (serial >= 10000 && serial <= 80000) {
+      const d = new Date(Math.round(serial) * 86400000 + Date.UTC(1899, 11, 30))
+      const yyyy = d.getUTCFullYear()
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+      const dd = String(d.getUTCDate()).padStart(2, '0')
+      return `${yyyy}-${mm}-${dd}`
+    }
+  }
   return null
 }
 
@@ -126,7 +142,22 @@ function looksLikeHeader(row: string[]): boolean {
   return cells.filter((c) => all.includes(c)).length >= 2
 }
 
-export function mapDebtsGrid(grid: string[][], fallbackYear: number): DebtImportResult {
+// When there is no Kreditur column, derive it from the description text. A
+// "TF KE <nama>" transfer note yields the recipient as creditor while the full
+// note stays in the description; otherwise the text itself becomes the creditor.
+function deriveCreditor(text: string): { creditor: string; description: string | null } {
+  const s = text.trim()
+  const m = s.match(/^TF\s+KE\s+(.+)$/i)
+  if (m && m[1].trim()) return { creditor: m[1].trim(), description: s }
+  return { creditor: s, description: null }
+}
+
+export interface MapOptions {
+  /** Treat every row as already paid (Sudah Dibayar = Jumlah) when there is no paid column. */
+  markPaid?: boolean
+}
+
+export function mapDebtsGrid(grid: string[][], fallbackYear: number, opts: MapOptions = {}): DebtImportResult {
   const nonEmpty = grid.filter((r) => r.some((c) => c && c.trim()))
   if (nonEmpty.length === 0) return { rows: [], valid: 0, invalid: 0 }
 
@@ -137,19 +168,37 @@ export function mapDebtsGrid(grid: string[][], fallbackYear: number): DebtImport
     : { debt_date: 0, creditor: 1, debt_type: 2, description: 3, amount: 4, due_date: 5, paid_amount: 6 }
   const dataRows = hasHeader ? nonEmpty.slice(1) : nonEmpty
 
+  const colsRec = cols as Record<string, number | undefined>
+  const hasCreditorCol = colsRec.creditor != null
+  const hasPaidCol = colsRec.paid_amount != null
   const at = (row: string[], key: string) => {
-    const i = (cols as Record<string, number | undefined>)[key]
+    const i = colsRec[key]
     return i == null ? '' : (row[i] ?? '').trim()
   }
 
   const rows: ParsedDebtRow[] = dataRows.map((raw, i) => {
     const errors: string[] = []
-    const creditor = at(raw, 'creditor')
     const debtDate = parseDate(at(raw, 'debt_date'), fallbackYear)
     const amount = parseAmount(at(raw, 'amount'))
-    const paidRaw = at(raw, 'paid_amount')
-    const paid = paidRaw ? parseAmount(paidRaw) : 0
     const due = at(raw, 'due_date') ? parseDate(at(raw, 'due_date'), fallbackYear) : null
+
+    // Creditor + description: use the columns if present, else derive from the
+    // description/keterangan text.
+    let creditor: string
+    let description: string | null
+    if (hasCreditorCol) {
+      creditor = at(raw, 'creditor')
+      description = at(raw, 'description') || null
+    } else {
+      const d = deriveCreditor(at(raw, 'description'))
+      creditor = d.creditor
+      description = d.description
+    }
+
+    // Paid: from the column, else full amount when "mark paid" is on, else 0.
+    let paid: number | null
+    if (hasPaidCol) paid = at(raw, 'paid_amount') ? parseAmount(at(raw, 'paid_amount')) : 0
+    else paid = opts.markPaid && amount != null ? amount : 0
 
     if (!creditor) errors.push('Kreditur kosong')
     if (!debtDate) errors.push('Tanggal tidak valid')
@@ -164,7 +213,7 @@ export function mapDebtsGrid(grid: string[][], fallbackYear: number): DebtImport
             debt_date: debtDate,
             creditor,
             debt_type: at(raw, 'debt_type') || null,
-            description: at(raw, 'description') || null,
+            description,
             amount,
             due_date: due,
             paid_amount: Math.min(paid ?? 0, amount),

@@ -472,6 +472,11 @@ export const EN: Record<string, string> = {
   'Jumlah harus lebih dari 0': 'Amount must be greater than 0',
   'Sudah Dibayar tidak valid': 'Invalid Paid amount',
   'Jatuh Tempo tidak valid': 'Invalid Due Date',
+  'Tandai semua sebagai Lunas': 'Mark all as Paid',
+  '(Sudah Dibayar = Jumlah, status Lunas). Berlaku bila file tidak punya kolom Sudah Dibayar.':
+    '(Paid = Amount, status Paid). Applies when the file has no Paid column.',
+  'Jika tidak ada kolom Kreditur, nama diambil otomatis dari Keterangan (mis. "TF KE ...").':
+    'If there is no Creditor column, the name is taken automatically from the Description (e.g. "TF KE ...").',
   'Rekonsiliasi Bank': 'Bank Reconciliation',
   'Saldo Akhir': 'Closing Balance',
   'menurut sistem': 'per system',

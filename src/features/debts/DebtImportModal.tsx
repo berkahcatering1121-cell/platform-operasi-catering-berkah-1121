@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Modal from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
@@ -8,7 +8,7 @@ import { useT } from '@/lib/i18n'
 import { downloadCsv } from '@/lib/export'
 import { readXlsxFirstSheet } from '@/lib/xlsxRead'
 import { useImportDebts } from './api'
-import { mapDebtsGrid, parseDelimited, DEBT_TEMPLATE, type DebtImportResult } from './importDebts'
+import { mapDebtsGrid, parseDelimited, DEBT_TEMPLATE } from './importDebts'
 
 const YEAR = new Date().getFullYear()
 
@@ -16,14 +16,18 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
   const { t } = useT()
   const importer = useImportDebts()
   const fileRef = useRef<HTMLInputElement>(null)
-  const [result, setResult] = useState<DebtImportResult | null>(null)
+  const [grid, setGrid] = useState<string[][] | null>(null)
+  const [markPaid, setMarkPaid] = useState(false)
   const [source, setSource] = useState('')
   const [paste, setPaste] = useState('')
   const [err, setErr] = useState('')
   const [done, setDone] = useState(0)
 
+  const result = useMemo(() => (grid ? mapDebtsGrid(grid, YEAR, { markPaid }) : null), [grid, markPaid])
+
   const reset = () => {
-    setResult(null)
+    setGrid(null)
+    setMarkPaid(false)
     setSource('')
     setPaste('')
     setErr('')
@@ -35,10 +39,10 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
     onClose()
   }
 
-  const loadGrid = (grid: string[][], src: string) => {
+  const loadGrid = (g: string[][], src: string) => {
     setErr('')
     setDone(0)
-    setResult(mapDebtsGrid(grid, YEAR))
+    setGrid(g)
     setSource(src)
   }
 
@@ -52,7 +56,7 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
         loadGrid(parseDelimited(await f.text()), f.name)
       }
     } catch (e) {
-      setResult(null)
+      setGrid(null)
       setErr((e as Error).message)
     }
   }
@@ -139,10 +143,25 @@ export default function DebtImportModal({ open, onClose }: { open: boolean; onCl
             </div>
 
             <p className="text-[11px] leading-relaxed text-ink-faint">
-              {t('Kolom: Tanggal, Kreditur, Jenis, Keterangan, Jumlah, Jatuh Tempo, Sudah Dibayar. Wajib diisi: Tanggal, Kreditur, Jumlah.')}
+              {t('Kolom: Tanggal, Kreditur, Jenis, Keterangan, Jumlah, Jatuh Tempo, Sudah Dibayar. Wajib diisi: Tanggal, Kreditur, Jumlah.')}{' '}
+              {t('Jika tidak ada kolom Kreditur, nama diambil otomatis dari Keterangan (mis. "TF KE ...").')}
             </p>
 
             {err && <p className="rounded-field bg-danger-bg px-3 py-2 text-[12px] font-semibold text-danger">{err}</p>}
+
+            {/* Options */}
+            <label className="flex items-start gap-2.5 rounded-field border border-app-border bg-app-panel px-3 py-2.5">
+              <input
+                type="checkbox"
+                checked={markPaid}
+                onChange={(e) => setMarkPaid(e.target.checked)}
+                className="mt-0.5 h-4 w-4 flex-none accent-brand"
+              />
+              <span className="text-[12px] leading-snug text-ink-body">
+                <span className="font-bold text-ink">{t('Tandai semua sebagai Lunas')}</span>{' '}
+                {t('(Sudah Dibayar = Jumlah, status Lunas). Berlaku bila file tidak punya kolom Sudah Dibayar.')}
+              </span>
+            </label>
 
             {/* Preview */}
             {result && (
