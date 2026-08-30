@@ -45,6 +45,18 @@ export function useSaveDebt() {
   })
 }
 
+// Bulk insert (used by the Excel/CSV importer).
+export function useImportDebts() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (inputs: DebtInput[]) => {
+      const payload = inputs.map(({ id: _id, ...rest }) => rest)
+      unwrap(await supabase.from('debts').insert(payload).select('id'))
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: debtKeys.all }),
+  })
+}
+
 export function useDeleteDebt() {
   const qc = useQueryClient()
   return useMutation({

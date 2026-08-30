@@ -10,6 +10,7 @@ import { formatDate, formatRupiah } from '@/lib/format'
 import { titleCase } from '@/lib/text'
 import { useDebts, useDeleteDebt } from '@/features/debts/api'
 import DebtModal from '@/features/debts/DebtModal'
+import DebtImportModal from '@/features/debts/DebtImportModal'
 import type { DebtView } from '@/lib/db'
 import { useT } from '@/lib/i18n'
 
@@ -34,6 +35,7 @@ export default function Hutang() {
   const del = useDeleteDebt()
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [editing, setEditing] = useState<DebtView | null>(null)
   const [toDelete, setToDelete] = useState<DebtView | null>(null)
 
@@ -64,7 +66,14 @@ export default function Hutang() {
       <PageHeader
         title="Hutang"
         subtitle="Sisa & status hutang dihitung otomatis (Lunas / Belum Lunas / Jatuh Tempo)."
-        actions={<Button onClick={openAdd}>{t('+ Hutang')}</Button>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={() => setImportOpen(true)}>
+              {t('Impor Excel')}
+            </Button>
+            <Button onClick={openAdd}>{t('+ Hutang')}</Button>
+          </div>
+        }
       />
 
       {debts.isLoading ? (
@@ -136,6 +145,7 @@ export default function Hutang() {
       )}
 
       <DebtModal open={modalOpen} onClose={() => setModalOpen(false)} editing={editing} />
+      <DebtImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
       <ConfirmDialog
         open={!!toDelete}
