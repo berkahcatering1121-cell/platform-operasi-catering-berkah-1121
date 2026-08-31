@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { Field, InputLegend, SelectField } from '@/components/ui/Field'
@@ -74,6 +74,7 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
   const employees = useEmployees()
   const save = useSavePurchase()
   const [form, setForm] = useState<FormState>(toForm())
+  const errRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) setForm(toForm(editing))
@@ -98,7 +99,10 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
       notes: form.notes.trim() || null,
       photos: form.photos,
     }
-    save.mutate(payload, { onSuccess: onClose })
+    save.mutate(payload, {
+      onSuccess: onClose,
+      onError: () => setTimeout(() => errRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60),
+    })
   }
 
   return (
@@ -121,18 +125,6 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
     >
       <div className="space-y-3.5">
         <InputLegend />
-
-        {save.isError && (
-          <div className="rounded-field border border-danger-border bg-danger-bg px-3.5 py-3">
-            <div className="text-[12.5px] font-extrabold text-danger">Gagal menyimpan</div>
-            {errorHint((save.error as Error).message) && (
-              <div className="mt-1 text-[12px] font-semibold text-ink-body">{errorHint((save.error as Error).message)}</div>
-            )}
-            <div className="mt-1 break-words text-[11px] text-ink-muted">
-              Pesan sistem: {(save.error as Error).message}
-            </div>
-          </div>
-        )}
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field
@@ -218,6 +210,16 @@ export default function PurchaseModal({ open, onClose, editing }: Props) {
         />
 
         <PhotoUploader prefix="purchases" value={form.photos} onChange={(photos) => set({ photos })} />
+
+        {save.isError && (
+          <div ref={errRef} className="rounded-field border border-danger-border bg-danger-bg px-3.5 py-3">
+            <div className="text-[12.5px] font-extrabold text-danger">Gagal menyimpan</div>
+            {errorHint((save.error as Error).message) && (
+              <div className="mt-1 text-[12px] font-semibold text-ink-body">{errorHint((save.error as Error).message)}</div>
+            )}
+            <div className="mt-1 break-words text-[11px] text-ink-muted">Pesan sistem: {(save.error as Error).message}</div>
+          </div>
+        )}
       </div>
     </Modal>
   )
