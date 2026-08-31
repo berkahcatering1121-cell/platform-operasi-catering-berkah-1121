@@ -474,6 +474,7 @@ export const EN: Record<string, string> = {
   'Jatuh Tempo tidak valid': 'Invalid Due Date',
   'Belum ada data hutang. Tambah lewat tombol + Hutang.': 'No debts yet. Add one with the + Hutang button.',
   'Tidak ada hutang pada bulan ini.': 'No debts in this month.',
+  'Tidak ada pembelian pada bulan ini.': 'No purchases in this month.',
   'bisa diimpor': 'importable',
   'duplikat': 'duplicates',
   'dipilih': 'selected',

@@ -25,6 +25,7 @@ export default function Pembelian() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<PurchaseView | null>(null)
   const [toDelete, setToDelete] = useState<PurchaseView | null>(null)
+  const [month, setMonth] = useState('all') // 'all' or a month_key (YYYY-MM)
 
   const empName = useMemo(() => {
     const m = new Map((employees.data ?? []).map((e) => [e.id, e.name]))
@@ -34,6 +35,10 @@ export default function Pembelian() {
   const groups = useMemo(
     () => groupByMonth(purchases.data ?? [], (r) => r.month_key),
     [purchases.data],
+  )
+  const visibleGroups = useMemo(
+    () => (month === 'all' ? groups : groups.filter((g) => g.key === month)),
+    [groups, month],
   )
 
   const openAdd = () => {
@@ -50,7 +55,24 @@ export default function Pembelian() {
       <PageHeader
         title="Pembelian Bahan Baku"
         subtitle="Transaksi dikelompokkan per bulan dengan subtotal otomatis."
-        actions={<Button onClick={openAdd}>{t('+ Pembelian')}</Button>}
+        actions={
+          <div className="flex items-center gap-2">
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="cb-select h-[38px] rounded-btn border border-app-border bg-app-card pl-3 pr-8 text-[13px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
+              aria-label={t('Pilih bulan')}
+            >
+              <option value="all">{t('Semua Bulan')}</option>
+              {groups.map((g) => (
+                <option key={g.key} value={g.key}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+            <Button onClick={openAdd}>{t('+ Pembelian')}</Button>
+          </div>
+        }
       />
 
       {purchases.isLoading ? (
@@ -61,9 +83,13 @@ export default function Pembelian() {
         <Card>
           <EmptyState message="Belum ada transaksi pembelian. Tambah lewat tombol + Pembelian." />
         </Card>
+      ) : visibleGroups.length === 0 ? (
+        <Card>
+          <EmptyState message={t('Tidak ada pembelian pada bulan ini.')} />
+        </Card>
       ) : (
         <div className="cb-stagger space-y-4">
-          {groups.map((g) => {
+          {visibleGroups.map((g) => {
             const subtotal = g.rows.reduce((t, r) => t + r.total, 0)
             return (
               <Card key={g.key} title={g.label} subtitle={`${g.rows.length} transaksi`} bodyClassName="">
