@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { fetchAllRows } from '@/lib/supabaseFetch'
 import type { PayrollView } from '@/lib/db'
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
@@ -12,9 +13,9 @@ export const payrollKeys = { all: ['payroll'] as const }
 export function usePayroll() {
   return useQuery({
     queryKey: payrollKeys.all,
-    queryFn: async () =>
-      unwrap<PayrollView[]>(
-        await supabase
+    queryFn: () =>
+      fetchAllRows<PayrollView>(() =>
+        supabase
           .from('v_payroll')
           .select(
             'id, employee_id, employee_name, employee_position, employee_department, salary_type, daily_wage, base_salary, period_month, period_label, pay_date, days_worked, allowance, bonus, deduction, status, base_pay, total_beban, take_home, month_key',

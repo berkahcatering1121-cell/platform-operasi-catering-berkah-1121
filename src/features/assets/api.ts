@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { fetchAllRows } from '@/lib/supabaseFetch'
 import type { AssetView } from '@/lib/db'
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
@@ -12,9 +13,9 @@ export const assetKeys = { all: ['assets'] as const }
 export function useAssets() {
   return useQuery({
     queryKey: assetKeys.all,
-    queryFn: async () =>
-      unwrap<AssetView[]>(
-        await supabase
+    queryFn: () =>
+      fetchAllRows<AssetView>(() =>
+        supabase
           .from('v_assets')
           .select(
             'id, acquisition_date, name, category, acquisition_cost, economic_life_months, residual_value, dep_per_month, months_elapsed, accumulated_depreciation, book_value',

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { fetchAllRows } from '@/lib/supabaseFetch'
 import type { DebtView } from '@/lib/db'
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
@@ -12,9 +13,9 @@ export const debtKeys = { all: ['debts'] as const }
 export function useDebts() {
   return useQuery({
     queryKey: debtKeys.all,
-    queryFn: async () =>
-      unwrap<DebtView[]>(
-        await supabase
+    queryFn: () =>
+      fetchAllRows<DebtView>(() =>
+        supabase
           .from('v_debts')
           .select('id, debt_date, creditor, debt_type, description, amount, due_date, paid_amount, sisa, status')
           .order('debt_date', { ascending: true }),

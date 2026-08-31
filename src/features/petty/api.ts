@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { fetchAllRows } from '@/lib/supabaseFetch'
 import type { PettyEntryView, PettyPeriod } from '@/lib/db'
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
@@ -28,9 +29,9 @@ export function usePettyPeriods() {
 export function usePettyEntries() {
   return useQuery({
     queryKey: pettyKeys.entries,
-    queryFn: async () =>
-      unwrap<PettyEntryView[]>(
-        await supabase
+    queryFn: () =>
+      fetchAllRows<PettyEntryView>(() =>
+        supabase
           .from('v_petty_cash_entries')
           .select(
             'id, period_id, entry_date, description, cash_in, cash_out, photos, sort, period_month, opening_balance, is_settled, running_balance',

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { fetchAllRows } from '@/lib/supabaseFetch'
 import type { OperationalCost } from '@/lib/db'
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
@@ -12,9 +13,9 @@ export const opexKeys = { all: ['operational_costs'] as const }
 export function useOperationalCosts() {
   return useQuery({
     queryKey: opexKeys.all,
-    queryFn: async () =>
-      unwrap<OperationalCost[]>(
-        await supabase
+    queryFn: () =>
+      fetchAllRows<OperationalCost>(() =>
+        supabase
           .from('operational_costs')
           .select('id, cost_date, description, category, amount, method, notes, photos')
           .order('cost_date', { ascending: true }),

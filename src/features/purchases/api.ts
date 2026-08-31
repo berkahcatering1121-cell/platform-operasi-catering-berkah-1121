@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { fetchAllRows } from '@/lib/supabaseFetch'
 import type { PurchaseView } from '@/lib/db'
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
@@ -12,9 +13,9 @@ export const purchaseKeys = { all: ['purchases'] as const }
 export function usePurchases() {
   return useQuery({
     queryKey: purchaseKeys.all,
-    queryFn: async () =>
-      unwrap<PurchaseView[]>(
-        await supabase
+    queryFn: () =>
+      fetchAllRows<PurchaseView>(() =>
+        supabase
           .from('v_purchases')
           .select(
             'id, purchase_date, material_name, category, supplier_id, supplier_name, qty, unit, unit_price, total, status, pic_employee_id, notes, photos, month_key',
