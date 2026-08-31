@@ -7,17 +7,19 @@ import RowActions from '@/components/ui/RowActions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import PhotoCell from '@/components/ui/PhotoCell'
 import { SUB_L, SUB_R, TD, TD_R, TH, TH_R } from '@/components/ui/table'
-import { formatDate, formatRupiah } from '@/lib/format'
+import { formatDate, formatRupiah, formatMonthLabel } from '@/lib/format'
 import { titleCase } from '@/lib/text'
-import { groupByMonth } from '@/lib/grouping'
+import { groupByMonthWeek } from '@/lib/grouping'
 import { useEmployees } from '@/features/master/api'
 import { usePurchases, useDeletePurchase } from '@/features/purchases/api'
 import PurchaseModal from '@/features/purchases/PurchaseModal'
 import type { PurchaseView } from '@/lib/db'
 import { useT } from '@/lib/i18n'
 
+const ID_ORDINAL = ['', 'Pertama', 'Kedua', 'Ketiga', 'Keempat', 'Kelima']
+
 export default function Pembelian() {
-  const { t } = useT()
+  const { t, lang } = useT()
   const purchases = usePurchases()
   const employees = useEmployees()
   const del = useDeletePurchase()
@@ -32,14 +34,26 @@ export default function Pembelian() {
     return (id: string | null) => (id ? (m.get(id) ?? '') : '')
   }, [employees.data])
 
-  const groups = useMemo(
-    () => groupByMonth(purchases.data ?? [], (r) => r.month_key),
+  // Group by month, then split each month into weeks (Minggu Pertama, dst).
+  const weekGroups = useMemo(
+    () => groupByMonthWeek(purchases.data ?? [], (r) => r.month_key, (r) => r.purchase_date),
     [purchases.data],
   )
+  // Months present, newest first, for the filter dropdown.
+  const monthOptions = useMemo(() => {
+    const seen = new Map<string, string>()
+    for (const g of weekGroups) if (!seen.has(g.monthKey)) seen.set(g.monthKey, formatMonthLabel(g.monthKey + '-01'))
+    return [...seen.entries()]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekGroups, lang])
   const visibleGroups = useMemo(
-    () => (month === 'all' ? groups : groups.filter((g) => g.key === month)),
-    [groups, month],
+    () => (month === 'all' ? weekGroups : weekGroups.filter((g) => g.monthKey === month)),
+    [weekGroups, month],
   )
+  const weekTitle = (monthKey: string, weekNo: number) => {
+    const monthLabel = formatMonthLabel(monthKey + '-01')
+    return lang === 'en' ? `Week ${weekNo} of ${monthLabel}` : `Minggu ${ID_ORDINAL[weekNo]} ${monthLabel}`
+  }
 
   const openAdd = () => {
     setEditing(null)
@@ -64,9 +78,9 @@ export default function Pembelian() {
               aria-label={t('Pilih bulan')}
             >
               <option value="all">{t('Semua Bulan')}</option>
-              {groups.map((g) => (
-                <option key={g.key} value={g.key}>
-                  {g.label}
+              {monthOptions.map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
                 </option>
               ))}
             </select>
@@ -79,7 +93,7 @@ export default function Pembelian() {
         <LoadingRows />
       ) : purchases.error ? (
         <ErrorState message={(purchases.error as Error).message} />
-      ) : groups.length === 0 ? (
+      ) : weekGroups.length === 0 ? (
         <Card>
           <EmptyState message="Belum ada transaksi pembelian. Tambah lewat tombol + Pembelian." />
         </Card>
@@ -90,9 +104,10 @@ export default function Pembelian() {
       ) : (
         <div className="cb-stagger space-y-4">
           {visibleGroups.map((g) => {
+            const title = weekTitle(g.monthKey, g.weekNo)
             const subtotal = g.rows.reduce((t, r) => t + r.total, 0)
             return (
-              <Card key={g.key} title={g.label} subtitle={`${g.rows.length} transaksi`} bodyClassName="">
+              <Card key={`${g.monthKey}-w${g.weekNo}`} title={title} subtitle={`${g.rows.length} transaksi`} bodyClassName="">
                 <div className="cb-scroll overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
@@ -140,7 +155,7 @@ export default function Pembelian() {
                       ))}
                       <tr>
                         <td className={SUB_L} colSpan={5}>
-                          Subtotal {g.label}
+                          Subtotal {title}
                         </td>
                         <td className={SUB_R}>{formatRupiah(subtotal)}</td>
                         <td className={SUB_R} colSpan={4} />
