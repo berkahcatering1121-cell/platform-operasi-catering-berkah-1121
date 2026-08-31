@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/ui/Button'
 import { Card, EmptyState, ErrorState, LoadingRows } from '@/components/ui/Card'
@@ -50,6 +50,17 @@ export default function Pembelian() {
     () => (month === 'all' ? weekGroups : weekGroups.filter((g) => g.monthKey === month)),
     [weekGroups, month],
   )
+  // Month totals (sum of all weeks) shown below the last week of each month.
+  const monthTotals = useMemo(() => {
+    const m = new Map<string, { total: number; count: number }>()
+    for (const g of weekGroups) {
+      const cur = m.get(g.monthKey) ?? { total: 0, count: 0 }
+      for (const r of g.rows) cur.total += r.total
+      cur.count += g.rows.length
+      m.set(g.monthKey, cur)
+    }
+    return m
+  }, [weekGroups])
   const weekTitle = (monthKey: string, weekNo: number) => {
     const monthLabel = formatMonthLabel(monthKey + '-01')
     return lang === 'en' ? `Week ${weekNo} of ${monthLabel}` : `Minggu ${ID_ORDINAL[weekNo]} ${monthLabel}`
@@ -103,11 +114,14 @@ export default function Pembelian() {
         </Card>
       ) : (
         <div className="cb-stagger space-y-4">
-          {visibleGroups.map((g) => {
+          {visibleGroups.map((g, i) => {
             const title = weekTitle(g.monthKey, g.weekNo)
             const subtotal = g.rows.reduce((t, r) => t + r.total, 0)
+            const isLastOfMonth = i === visibleGroups.length - 1 || visibleGroups[i + 1].monthKey !== g.monthKey
+            const mt = monthTotals.get(g.monthKey)
             return (
-              <Card key={`${g.monthKey}-w${g.weekNo}`} title={title} subtitle={`${g.rows.length} transaksi`} bodyClassName="">
+              <Fragment key={`${g.monthKey}-w${g.weekNo}`}>
+              <Card title={title} subtitle={`${g.rows.length} transaksi`} bodyClassName="">
                 <div className="cb-scroll overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
@@ -164,6 +178,18 @@ export default function Pembelian() {
                   </table>
                 </div>
               </Card>
+              {isLastOfMonth && mt && (
+                <div className="flex items-center justify-between gap-3 rounded-card border border-gold-border bg-gold-tint px-5 py-3.5">
+                  <div className="text-[13.5px] font-extrabold text-brand-dark">
+                    {t('Total')} {formatMonthLabel(g.monthKey + '-01')}
+                  </div>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-[11.5px] font-semibold text-ink-muted">{mt.count} transaksi</span>
+                    <span className="text-[16px] font-extrabold tabular-nums text-brand-dark">{formatRupiah(mt.total)}</span>
+                  </div>
+                </div>
+              )}
+              </Fragment>
             )
           })}
         </div>
