@@ -22,7 +22,7 @@ import PnL from '@/pages/PnL'
 import Pengguna from '@/pages/Pengguna'
 
 export default function App() {
-  const { loading, session, profile, landingPath } = useAuth()
+  const { loading, session, profile, landingPath, profileFailed, signOut } = useAuth()
 
   // Branded splash: show for ~2.2s, then fade out (matches prototype timing).
   const [booting, setBooting] = useState(true)
@@ -47,7 +47,36 @@ export default function App() {
   if (!session) return <Login />
   // Logged in but the profile is still loading - hold on the splash so we never
   // flash the "no module" screen before we actually know the user's permissions.
-  if (!profile) return <Splash leaving={false} />
+  // If it genuinely failed (e.g. the phone's network can't reach the server),
+  // show a retry screen instead of hanging on the splash forever.
+  if (!profile) {
+    if (profileFailed) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-app-bg px-6 text-center">
+          <div className="text-[15px] font-extrabold text-ink">Gagal memuat data</div>
+          <p className="max-w-sm text-[13px] text-ink-muted">
+            Tidak dapat terhubung ke server. Periksa koneksi internet Anda (coba matikan VPN / penghemat data / pemblokir),
+            lalu muat ulang.
+          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-btn bg-brand px-4 py-2 text-[13px] font-bold text-white transition hover:bg-brand-dark"
+            >
+              Muat ulang
+            </button>
+            <button
+              onClick={() => signOut().then(() => window.location.reload())}
+              className="rounded-btn border border-app-border bg-app-card px-4 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
+            >
+              Keluar
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return <Splash leaving={false} />
+  }
   // First-login: force the user to replace their temporary password.
   if (profile.must_change_password) return <ChangePassword />
 

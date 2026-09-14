@@ -35,6 +35,8 @@ interface AuthContextValue {
   canAccess: (key: ModuleKey) => boolean
   /** First accessible route (sidebar order); null when the user has no modules. */
   landingPath: string | null
+  /** True when the signed-in user's profile could not be loaded (e.g. network). */
+  profileFailed: boolean
   signIn: (username: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   /** Re-fetch the current user's profile (e.g. after a forced password change). */
@@ -43,6 +45,24 @@ interface AuthContextValue {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextValue | null>(null)
+
+// Reject if a promise does not settle within `ms` so the boot flow never hangs
+// forever on a stalled network (a common cause of "can't open" on some phones).
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const to = setTimeout(() => reject(new Error('timeout')), ms)
+    p.then(
+      (v) => {
+        clearTimeout(to)
+        resolve(v)
+      },
+      (e) => {
+        clearTimeout(to)
+        reject(e)
+      },
+    )
+  })
+}
 
 async function loadProfile(userId: string): Promise<Profile | null> {
   // Core fields only - these always exist, so the profile never fails to load.
@@ -89,28 +109,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [profileFailed, setProfileFailed] = useState(false)
+
+  // Load the profile with a timeout. On failure, flag it so the UI can offer a
+  // retry instead of holding on the splash forever.
+  const loadProfileSafe = useCallback(async (userId: string) => {
+    setProfileFailed(false)
+    try {
+      const p = await withTimeout(loadProfile(userId), 12000)
+      setProfile(p)
+      setProfileFailed(p === null)
+    } catch {
+      setProfile(null)
+      setProfileFailed(true)
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
+    // Always release the splash, even if the auth/network call fails or stalls.
+    const releaseSplash = () => {
+      if (active) setLoading(false)
+    }
+    const failSafe = setTimeout(releaseSplash, 8000)
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return
-      setSession(data.session)
-      if (data.session) setProfile(await loadProfile(data.session.user.id))
-      setLoading(false)
-    })
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) return
+        setSession(data.session)
+        if (data.session) void loadProfileSafe(data.session.user.id)
+      })
+      .catch(() => {
+        /* network/auth error: fall through to the login screen */
+      })
+      .finally(releaseSplash)
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
       if (!active) return
       setSession(next)
-      setProfile(next ? await loadProfile(next.user.id) : null)
+      if (next) void loadProfileSafe(next.user.id)
+      else {
+        setProfile(null)
+        setProfileFailed(false)
+      }
     })
 
     return () => {
       active = false
+      clearTimeout(failSafe)
       sub.subscription.unsubscribe()
     }
-  }, [])
+  }, [loadProfileSafe])
 
   const signIn = useCallback(async (username: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -160,11 +210,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canSettle,
       canAccess,
       landingPath,
+      profileFailed,
       signIn,
       signOut,
       refreshProfile,
     }),
-    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canSettle, canAccess, landingPath, signIn, signOut, refreshProfile],
+    [loading, session, profile, isSuperAdmin, isAdminOrSuper, canSettle, canAccess, landingPath, profileFailed, signIn, signOut, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
