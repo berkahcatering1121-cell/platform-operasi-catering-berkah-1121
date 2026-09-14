@@ -163,12 +163,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfileSafe])
 
   const signIn = useCallback(async (username: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: usernameToEmail(username),
-      password,
-    })
-    if (error) return { error: 'ID Pengguna atau password salah.' }
-    return { error: null }
+    let res
+    try {
+      res = await supabase.auth.signInWithPassword({
+        email: usernameToEmail(username),
+        password,
+      })
+    } catch {
+      return { error: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.' }
+    }
+    const error = res.error
+    if (!error) return { error: null }
+
+    const msg = (error.message ?? '').toLowerCase()
+    const status = (error as { status?: number }).status
+    // Distinguish the real reason instead of always blaming the password.
+    if (status === 429 || msg.includes('rate') || msg.includes('too many') || msg.includes('security purposes'))
+      return { error: 'Terlalu banyak percobaan masuk. Tunggu sekitar 1 menit, lalu coba lagi.' }
+    if (msg.includes('email not confirmed') || msg.includes('not confirmed'))
+      return { error: 'Akun belum diaktifkan. Hubungi Super Admin.' }
+    if (msg.includes('failed to fetch') || msg.includes('network') || msg.includes('load failed') || status === 0)
+      return { error: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.' }
+    if (msg.includes('invalid login credentials') || status === 400)
+      return { error: 'ID Pengguna atau password salah.' }
+    // Unknown reason: surface it so the true cause is visible.
+    return { error: `Gagal masuk: ${error.message}` }
   }, [])
 
   const signOut = useCallback(async () => {
