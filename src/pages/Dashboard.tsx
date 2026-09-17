@@ -20,6 +20,7 @@ import LiveClock from '@/features/dashboard/LiveClock'
 import PeriodPicker from '@/features/dashboard/PeriodPicker'
 import SmartAlerts from '@/features/dashboard/SmartAlerts'
 import { computeAlerts, computeAnalytics } from '@/features/dashboard/insights'
+import { getBankSummary, getAllBankSummaries } from '@/features/reconciliation/bankSummary'
 import { periodRange, formatRangeLabel, isoDate, type PeriodKey } from '@/features/dashboard/period'
 
 const TODAY_YEAR = new Date().getFullYear()
@@ -234,6 +235,19 @@ export default function Dashboard() {
   const menuTotalQty = useMemo(() => menuSales.reduce((s, m) => s + m.qty, 0), [menuSales])
   const menuMaxQty = menuSales.length ? menuSales[0].qty : 0
 
+  // Bank balance growth for the scope, from bank statements saved in this
+  // browser (via the Rekonsiliasi Bank module).
+  const bankGrowth = useMemo(() => {
+    if (month) {
+      const s = getBankSummary(`${year}-${String(month).padStart(2, '0')}`)
+      return s ? { value: s.closing - s.opening, has: true } : { value: 0, has: false }
+    }
+    const all = getAllBankSummaries().filter((s) => s.monthKey.startsWith(String(year)))
+    if (all.length === 0) return { value: 0, has: false }
+    return { value: all.reduce((a, s) => a + (s.closing - s.opening), 0), has: true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year, month])
+
   const kpis: { label: string; value: ReactNode; sub: string; accent?: 'green' | 'dark'; to?: string }[] = [
     { label: t('Total Pendapatan'), value: <CountUp to={totals.rev} format={formatRupiah} />, sub: `Total ${scopeLabel}`, to: salesTo },
     {
@@ -332,6 +346,12 @@ export default function Dashboard() {
           <Card title={t('Analitik Keuangan')} subtitle={scopeLabel}>
             <div className="cb-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Kpi label={t('Saldo Kas Saat Ini')} value={<CountUp to={analytics.cashBalance} format={formatRupiah} />} sub={t('dari buku besar Arus Kas')} />
+              <Kpi
+                label={t('Kenaikan Saldo Bank')}
+                value={bankGrowth.has ? <CountUp to={bankGrowth.value} format={formatRupiah} /> : '-'}
+                sub={bankGrowth.has ? t('dari mutasi rekening bank') : t('unggah statement di Rekonsiliasi Bank')}
+                accent={bankGrowth.has && bankGrowth.value >= 0 ? 'green' : undefined}
+              />
               <Kpi label={t('Rata-rata Pendapatan / Hari')} value={<CountUp to={analytics.avgDailyRev} format={formatRupiah} />} sub={scopeLabel} accent="green" />
               <Kpi label={t('Rata-rata Pengeluaran / Hari')} value={<CountUp to={analytics.avgDailyExp} format={formatRupiah} />} sub={scopeLabel} />
               <Kpi label="EBITDA" value={<CountUp to={analytics.ebitda} format={formatRupiah} />} sub={t('laba + depresiasi')} accent="green" />

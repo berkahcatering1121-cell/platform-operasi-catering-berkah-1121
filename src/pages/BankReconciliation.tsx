@@ -10,6 +10,13 @@ import { useCashFlow } from '@/features/cashflow/api'
 import { useSaveOpex } from '@/features/opex/api'
 import { OPEX_CATEGORIES } from '@/lib/db'
 import { parseBcaStatement, type BankTxn, type BcaParseResult } from '@/features/reconciliation/parseBca'
+import {
+  extractBankSummaryFromText,
+  getBankSummary,
+  saveBankSummary,
+  type BankMonthSummary,
+} from '@/features/reconciliation/bankSummary'
+import { extractPdfText } from '@/lib/pdfText'
 
 const TODAY = new Date()
 
@@ -51,12 +58,23 @@ export default function BankReconciliation() {
   const [fileName, setFileName] = useState('')
   const [catFor, setCatFor] = useState<Record<string, string>>({}) // txn.id -> chosen category
   const [recorded, setRecorded] = useState<Set<string>>(new Set())
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfError, setPdfError] = useState('')
+  const [savedTick, setSavedTick] = useState(0)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const mm = String(month).padStart(2, '0')
+  const monthKey = `${year}-${mm}`
   const monthStart = `${year}-${mm}-01`
   const monthEnd = `${year}-${mm}-31`
   const inMonth = (d: string) => d >= monthStart && d <= monthEnd
+
+  // Saved bank-statement summary for the selected month (from this browser).
+  const bankSummary = useMemo<BankMonthSummary | null>(
+    () => getBankSummary(monthKey),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [monthKey, savedTick],
+  )
 
   // ── System side (from the Cash Flow ledger) ──
   const sys = useMemo(() => {
@@ -112,12 +130,58 @@ export default function BankReconciliation() {
   const monthLabel = `${monthNames()[month - 1]} ${year}`
 
   const doParse = (text: string, name: string) => {
-    setParsed(parseBcaStatement(text, year))
+    const res = parseBcaStatement(text, year)
+    setParsed(res)
     setFileName(name)
     setRecorded(new Set())
+    // If the pasted/CSV text carries opening & closing balances, remember them
+    // for this month so the Dashboard can show the bank balance growth too.
+    if (res.openingBalance != null && res.closingBalance != null) {
+      saveBankSummary({
+        monthKey,
+        opening: res.openingBalance,
+        closing: res.closingBalance,
+        totalIn: res.totalIn,
+        totalOut: res.totalOut,
+        savedAt: new Date().toISOString(),
+      })
+      setSavedTick((t) => t + 1)
+    }
   }
   const onFile = async (f: File | undefined) => {
     if (!f) return
+    setPdfError('')
+    if (/\.pdf$/i.test(f.name)) {
+      setPdfBusy(true)
+      try {
+        const text = await extractPdfText(await f.arrayBuffer())
+        const summary = extractBankSummaryFromText(text)
+        if (!summary) {
+          setPdfError('Ringkasan saldo tidak ditemukan di PDF ini. Pastikan ini file mutasi rekening BCA.')
+          return
+        }
+        // Adopt the statement's own period + save its summary for the Dashboard.
+        if (summary.monthKey) {
+          const [yy, mmn] = summary.monthKey.split('-')
+          setYear(Number(yy))
+          setMonth(Number(mmn))
+          saveBankSummary(summary)
+        } else {
+          saveBankSummary({ ...summary, monthKey })
+        }
+        setSavedTick((t) => t + 1)
+        setFileName(f.name)
+        // Best-effort transaction list (BCA PDF layout differs; the summary is
+        // the authoritative figure either way).
+        setParsed(parseBcaStatement(text, Number((summary.monthKey || monthKey).slice(0, 4))))
+        setRecorded(new Set())
+      } catch (e) {
+        setPdfError((e as Error).message || 'Gagal membaca PDF.')
+      } finally {
+        setPdfBusy(false)
+      }
+      return
+    }
     doParse(await f.text(), f.name)
   }
 
@@ -221,28 +285,65 @@ export default function BankReconciliation() {
             </div>
           </div>
 
+          {/* Bank statement summary (from an uploaded PDF/CSV; kept in this browser) */}
+          {bankSummary && (
+            <Card
+              title={`${t('Ringkasan Bank (dari statement)')} · ${monthLabel}`}
+              subtitle={
+                bankSummary.accountLast4
+                  ? `${t('Rekening BCA')} •••• ${bankSummary.accountLast4}`
+                  : t('Angka resmi dari mutasi rekening bank')
+              }
+            >
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <StatCard label={t('Saldo Awal Bank')} value={formatRupiah(bankSummary.opening)} />
+                <StatCard label={t('Total Uang Masuk')} value={formatRupiah(bankSummary.totalIn)} tone="green" hint={bankSummary.inCount ? `${bankSummary.inCount} transaksi` : undefined} />
+                <StatCard label={t('Total Uang Keluar')} value={formatRupiah(bankSummary.totalOut)} tone="red" hint={bankSummary.outCount ? `${bankSummary.outCount} transaksi` : undefined} />
+                <StatCard label={t('Saldo Akhir Bank')} value={formatRupiah(bankSummary.closing)} tone="gold" />
+              </div>
+              <div
+                className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-field border p-3.5"
+                style={
+                  bankSummary.closing - bankSummary.opening >= 0
+                    ? { background: '#E9F6EE', borderColor: '#BFE3CE' }
+                    : { background: '#FBECEB', borderColor: '#F5C6BD' }
+                }
+              >
+                <div className={`text-[13.5px] font-extrabold ${bankSummary.closing - bankSummary.opening >= 0 ? 'text-ok' : 'text-danger'}`}>
+                  {bankSummary.closing - bankSummary.opening >= 0 ? t('Saldo bank naik') : t('Saldo bank turun')}{' '}
+                  {formatRupiah(Math.abs(bankSummary.closing - bankSummary.opening))}
+                </div>
+                <div className="text-[11.5px] font-semibold text-ink-muted">
+                  {t('Selisih dengan sistem')}: {formatRupiah(bankSummary.closing - sys.saldoAkhir)}
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* Upload BCA statement */}
-          <Card title={t('Unggah Mutasi Bank BCA')} subtitle={t('Format CSV (unduh dari KlikBCA) atau tempel teks mutasi. Excel: simpan dulu sebagai CSV.')}>
+          <Card title={t('Unggah Mutasi Bank BCA')} subtitle={t('Unggah PDF mutasi rekening BCA (otomatis terbaca), file CSV, atau tempel teks mutasi.')}>
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   ref={fileRef}
                   type="file"
-                  accept=".csv,.txt"
+                  accept=".pdf,.csv,.txt"
                   className="hidden"
                   onChange={(e) => onFile(e.target.files?.[0] ?? undefined)}
                 />
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 rounded-btn bg-brand px-3.5 py-2 text-[13px] font-bold text-white transition hover:bg-brand-dark"
+                  disabled={pdfBusy}
+                  className="inline-flex items-center gap-1.5 rounded-btn bg-brand px-3.5 py-2 text-[13px] font-bold text-white transition hover:bg-brand-dark disabled:opacity-60"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
                   </svg>
-                  {t('Pilih file CSV')}
+                  {pdfBusy ? t('Membaca PDF…') : t('Pilih file PDF / CSV')}
                 </button>
                 {fileName && <span className="text-[12px] font-semibold text-ink-body">{fileName}</span>}
               </div>
+              {pdfError && <p className="text-[11.5px] font-semibold text-danger">{t(pdfError)}</p>}
 
               <div className="text-[11.5px] font-semibold text-ink-muted">{t('atau tempel teks mutasi di sini')}</div>
               <textarea
