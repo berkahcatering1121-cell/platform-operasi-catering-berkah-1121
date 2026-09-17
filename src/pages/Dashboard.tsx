@@ -161,7 +161,12 @@ export default function Dashboard() {
 
   // ── Financial analytics + smart alerts (auto-derived from every module) ──
   const inScopeDate = (d: string) => d.startsWith(String(year)) && (!monthPrefix || d.slice(5, 7) === monthPrefix)
-  const cashBalance = useMemo(() => cash.rows.reduce((s, r) => s + r.cashIn - r.cashOut, 0), [cash.rows])
+  // Cash position as of the END of the selected period (cumulative over the
+  // full ledger), so it changes when the month/period changes.
+  const cashBalance = useMemo(
+    () => cash.rows.filter((r) => r.date <= range.end).reduce((s, r) => s + r.cashIn - r.cashOut, 0),
+    [cash.rows, range.end],
+  )
   const scopeCash = useMemo(() => {
     const rows = cash.rows.filter((r) => inScopeDate(r.date))
     const cashIn = rows.reduce((s, r) => s + r.cashIn, 0)
@@ -327,7 +332,7 @@ export default function Dashboard() {
           {/* Financial analytics */}
           <Card title={t('Analitik Keuangan')} subtitle={scopeLabel}>
             <div className="cb-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Kpi label={t('Saldo Kas Saat Ini')} value={<CountUp to={analytics.cashBalance} format={formatRupiah} />} sub={t('dari buku besar Arus Kas')} />
+              <Kpi label={t('Saldo Kas Akhir Periode')} value={<CountUp to={analytics.cashBalance} format={formatRupiah} />} sub={`${t('posisi s.d. akhir')} ${scopeLabel}`} />
               <Kpi
                 label={t('Kenaikan Saldo Bank')}
                 value={bankGrowth.has ? <CountUp to={bankGrowth.value} format={formatRupiah} /> : '-'}

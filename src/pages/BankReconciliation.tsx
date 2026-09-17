@@ -10,8 +10,8 @@ import { useCashFlow } from '@/features/cashflow/api'
 import { useSaveOpex } from '@/features/opex/api'
 import { OPEX_CATEGORIES } from '@/lib/db'
 import { parseBcaStatement, type BankTxn, type BcaParseResult } from '@/features/reconciliation/parseBca'
+import { parseBcaPdf } from '@/features/reconciliation/parseBcaPdf'
 import {
-  extractBankSummaryFromText,
   getBankSummary,
   saveBankSummary,
   type BankMonthSummary,
@@ -155,25 +155,23 @@ export default function BankReconciliation() {
       setPdfBusy(true)
       try {
         const text = await extractPdfText(await f.arrayBuffer())
-        const summary = extractBankSummaryFromText(text)
-        if (!summary) {
+        const { result, summary } = parseBcaPdf(text, year)
+        if (!summary && result.txns.length === 0) {
           setPdfError('Ringkasan saldo tidak ditemukan di PDF ini. Pastikan ini file mutasi rekening BCA.')
           return
         }
         // Adopt the statement's own period + save its summary for the Dashboard.
-        if (summary.monthKey) {
+        if (summary?.monthKey) {
           const [yy, mmn] = summary.monthKey.split('-')
           setYear(Number(yy))
           setMonth(Number(mmn))
           saveBankSummary(summary)
-        } else {
+        } else if (summary) {
           saveBankSummary({ ...summary, monthKey })
         }
         setSavedTick((t) => t + 1)
         setFileName(f.name)
-        // Best-effort transaction list (BCA PDF layout differs; the summary is
-        // the authoritative figure either way).
-        setParsed(parseBcaStatement(text, Number((summary.monthKey || monthKey).slice(0, 4))))
+        setParsed(result) // full transaction list -> the unmatched table works
         setRecorded(new Set())
       } catch (e) {
         setPdfError((e as Error).message || 'Gagal membaca PDF.')

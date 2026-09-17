@@ -489,6 +489,8 @@ export const EN: Record<string, string> = {
   'Unggah PDF mutasi rekening BCA (otomatis terbaca), file CSV, atau tempel teks mutasi.':
     'Upload a BCA account statement PDF (read automatically), a CSV file, or paste the statement text.',
   'Kenaikan Saldo Bank': 'Bank Balance Growth',
+  'Saldo Kas Akhir Periode': 'Cash Balance (period end)',
+  'posisi s.d. akhir': 'position through end of',
   'dari mutasi rekening bank': 'from the bank statement',
   'unggah statement di Rekonsiliasi Bank': 'upload a statement in Bank Reconciliation',
   'bisa diimpor': 'importable',
