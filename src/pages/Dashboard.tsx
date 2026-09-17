@@ -96,11 +96,26 @@ export default function Dashboard() {
   // (only when the user actually has access to that module).
   const salesTo = canAccess('penjualan') ? '/penjualan' : undefined
   const buyTo = canAccess('pembelian') ? '/pembelian' : undefined
-  const [year, setYear] = useState(TODAY_YEAR)
-  // Default to the running month so login/refresh lands on the current month.
-  const [month, setMonth] = useState(new Date().getMonth() + 1) // 0 = whole year; 1-12 = month
+  // The period picker in the summary card is the single control for the whole
+  // dashboard. `pickerYear` is the year the picker's month grid / whole-year
+  // option navigate; the active scope (year + month) is derived from the choice.
+  const [pickerYear, setPickerYear] = useState(TODAY_YEAR)
   const [period, setPeriod] = useState<PeriodKey>('thisMonth')
   const [customDay, setCustomDay] = useState(isoDate(new Date()))
+
+  const range = useMemo(
+    () => periodRange(period, new Date(), customDay, pickerYear),
+    [period, customDay, pickerYear],
+  )
+  const scope = useMemo(() => {
+    if (period === 'year') return { year: Number(customDay.slice(0, 4)) || pickerYear, month: 0 }
+    if (period === 'month')
+      return { year: Number(customDay.slice(0, 4)) || pickerYear, month: Number(customDay.slice(5, 7)) || 0 }
+    return { year: Number(range.end.slice(0, 4)), month: Number(range.end.slice(5, 7)) }
+  }, [period, customDay, pickerYear, range])
+  const year = scope.year // active scope year (drives all data below)
+  const month = scope.month // 0 = whole year, 1-12 = a month
+
   const pnl = usePnl(year)
   const purchases = usePurchases()
   const sales = useSales()
@@ -109,9 +124,8 @@ export default function Dashboard() {
   const payroll = usePayroll()
   const cash = useCashFlow()
 
-  // Period summary (Hari ini / Minggu / Bulan / pilih tanggal) computed from the
-  // already-loaded sales & purchases lists.
-  const range = useMemo(() => periodRange(period, new Date(), customDay), [period, customDay])
+  // Period summary (from the picker) computed from the already-loaded sales &
+  // purchases lists.
   const periodSummary = useMemo(() => {
     const inRange = (d: string) => d >= range.start && d <= range.end
     const s = (sales.data ?? []).filter((x) => inRange(x.sale_date))
@@ -267,40 +281,6 @@ export default function Dashboard() {
       <PageHeader
         title="Dashboard"
         subtitle={`Ringkasan keuangan Catering Berkah · Tahun ${year}`}
-        actions={
-          <div className="flex items-center gap-2">
-            <select
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-              className="cb-select h-[38px] rounded-btn border border-app-border bg-app-card pl-3 pr-8 text-[13px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
-              aria-label={t('Pilih bulan')}
-            >
-              <option value={0}>{t('Semua bulan')}</option>
-              {monthNames().map((m, i) => (
-                <option key={m} value={i + 1}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setYear((y) => y - 1)}
-                className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-                aria-label={t('Tahun sebelumnya')}
-              >
-                ‹
-              </button>
-              <span className="min-w-[52px] text-center text-[14px] font-extrabold text-ink">{year}</span>
-              <button
-                onClick={() => setYear((y) => y + 1)}
-                className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
-                aria-label={t('Tahun berikutnya')}
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        }
       />
 
       {pnl.isLoading ? (
@@ -316,7 +296,8 @@ export default function Dashboard() {
               <PeriodPicker
                 period={period}
                 customDay={customDay}
-                year={year}
+                year={pickerYear}
+                onYearChange={setPickerYear}
                 onSelect={(p, day) => {
                   setPeriod(p)
                   if (day) setCustomDay(day)

@@ -8,6 +8,7 @@ export type PeriodKey =
   | 'thisMonth'
   | 'lastMonth'
   | 'month'
+  | 'year'
   | 'custom'
 
 export interface Range {
@@ -38,7 +39,7 @@ export const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
   { key: 'lastMonth', label: 'Bulan lalu' },
 ]
 
-export function periodRange(key: PeriodKey, ref: Date, customDay?: string): Range {
+export function periodRange(key: PeriodKey, ref: Date, customDay?: string, pickerYear?: number): Range {
   const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate())
   switch (key) {
     case 'yesterday': {
@@ -73,6 +74,10 @@ export function periodRange(key: PeriodKey, ref: Date, customDay?: string): Rang
       const y = Number(d.slice(0, 4))
       const m = Number(d.slice(5, 7)) || 1
       return { start: isoDate(new Date(y, m - 1, 1)), end: isoDate(new Date(y, m, 0)) }
+    }
+    case 'year': {
+      const y = Number((customDay || '').slice(0, 4)) || pickerYear || today.getFullYear()
+      return { start: isoDate(new Date(y, 0, 1)), end: isoDate(new Date(y, 11, 31)) }
     }
     case 'today':
     default:

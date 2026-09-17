@@ -621,6 +621,7 @@ export const EN: Record<string, string> = {
   'Rasio biaya & margin terhadap pendapatan · acuan umum industri F&B, sesuaikan dengan bisnis Anda.':
     'Cost & margin ratios vs. revenue · general F&B industry benchmarks, adjust to your business.',
   'Setahun (Total)': 'Full Year (Total)',
+  'Setahun': 'Full year',
   'Food Cost (COGS)': 'Food Cost (COGS)',
   'Labor Cost': 'Labor Cost',
   'Prime Cost': 'Prime Cost',
