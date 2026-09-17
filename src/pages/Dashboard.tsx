@@ -316,6 +316,7 @@ export default function Dashboard() {
               <PeriodPicker
                 period={period}
                 customDay={customDay}
+                year={year}
                 onSelect={(p, day) => {
                   setPeriod(p)
                   if (day) setCustomDay(day)

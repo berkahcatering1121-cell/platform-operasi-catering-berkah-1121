@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { PERIOD_OPTIONS, type PeriodKey } from './period'
 import { useT } from '@/lib/i18n'
-import { monthsShort } from '@/lib/format'
+import { months, monthsShort } from '@/lib/format'
 
 interface Props {
   period: PeriodKey
   customDay: string
+  /** Year used when picking a specific month. */
+  year: number
   onSelect: (period: PeriodKey, customDay?: string) => void
 }
 
-/** Single dropdown box to pick the summary period (incl. a specific day). */
-export default function PeriodPicker({ period, customDay, onSelect }: Props) {
+/** Single dropdown box to pick the summary period (incl. a specific month/day). */
+export default function PeriodPicker({ period, customDay, year, onSelect }: Props) {
   const { t } = useT()
   const [open, setOpen] = useState(false)
 
@@ -20,10 +22,18 @@ export default function PeriodPicker({ period, customDay, onSelect }: Props) {
     return `${d} ${monthsShort()[m - 1]} ${y}`
   }
 
+  const monthLabel = (day: string): string => {
+    const y = Number(day.slice(0, 4))
+    const m = Number(day.slice(5, 7)) || 1
+    return `${months()[m - 1]} ${y}`
+  }
+
   const label =
     period === 'custom'
       ? customLabel(customDay)
-      : t(PERIOD_OPTIONS.find((p) => p.key === period)?.label ?? 'Periode')
+      : period === 'month'
+        ? monthLabel(customDay)
+        : t(PERIOD_OPTIONS.find((p) => p.key === period)?.label ?? 'Periode')
 
   return (
     <div className="relative">
@@ -64,6 +74,33 @@ export default function PeriodPicker({ period, customDay, onSelect }: Props) {
                 )}
               </button>
             ))}
+
+            {/* Pick a specific month of the selected year */}
+            <div className="mt-1 border-t border-app-border px-1.5 pt-2">
+              <div className="px-1.5 pb-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] text-ink-muted">
+                {t('Bulan tertentu')} {year}
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                {monthsShort().map((m, i) => {
+                  const key = `${year}-${String(i + 1).padStart(2, '0')}-01`
+                  const active = period === 'month' && customDay.slice(0, 7) === key.slice(0, 7)
+                  return (
+                    <button
+                      key={m}
+                      onClick={() => {
+                        onSelect('month', key)
+                        setOpen(false)
+                      }}
+                      className={`rounded-md px-2 py-1.5 text-[12px] font-bold ${
+                        active ? 'bg-brand text-white' : 'text-ink-body hover:bg-app-panel'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
             {/* Pick a specific day */}
             <label

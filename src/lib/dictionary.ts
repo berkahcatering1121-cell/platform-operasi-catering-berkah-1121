@@ -475,6 +475,7 @@ export const EN: Record<string, string> = {
   'Belum ada data hutang. Tambah lewat tombol + Hutang.': 'No debts yet. Add one with the + Hutang button.',
   'Tidak ada hutang pada bulan ini.': 'No debts in this month.',
   'Tidak ada pembelian pada bulan ini.': 'No purchases in this month.',
+  'Bulan tertentu': 'Specific month',
   'Membaca PDF…': 'Reading PDF…',
   'Pilih file PDF / CSV': 'Choose PDF / CSV file',
   'Ringkasan saldo tidak ditemukan di PDF ini. Pastikan ini file mutasi rekening BCA.':

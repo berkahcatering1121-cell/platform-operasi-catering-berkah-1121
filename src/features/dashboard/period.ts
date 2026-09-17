@@ -7,6 +7,7 @@ export type PeriodKey =
   | 'lastWeek'
   | 'thisMonth'
   | 'lastMonth'
+  | 'month'
   | 'custom'
 
 export interface Range {
@@ -65,6 +66,13 @@ export function periodRange(key: PeriodKey, ref: Date, customDay?: string): Rang
     case 'custom': {
       const d = customDay || isoDate(today)
       return { start: d, end: d }
+    }
+    case 'month': {
+      // customDay carries the chosen month as "YYYY-MM-01".
+      const d = customDay || isoDate(today)
+      const y = Number(d.slice(0, 4))
+      const m = Number(d.slice(5, 7)) || 1
+      return { start: isoDate(new Date(y, m - 1, 1)), end: isoDate(new Date(y, m, 0)) }
     }
     case 'today':
     default:
