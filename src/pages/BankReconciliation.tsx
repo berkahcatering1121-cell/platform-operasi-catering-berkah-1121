@@ -246,11 +246,19 @@ export default function BankReconciliation() {
       ) : (
         <div className="cb-stagger space-y-4">
           {/* Saldo awal / akhir + growth (from the system ledger) */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label={`${t('Saldo Awal')} · ${monthLabel}`} value={formatRupiah(sys.saldoAwal)} hint={t('menurut sistem')} />
-            <StatCard label={t('Total Uang Masuk')} value={formatRupiah(sys.masuk)} tone="green" />
-            <StatCard label={t('Total Uang Keluar')} value={formatRupiah(sys.keluar)} tone="red" />
-            <StatCard label={`${t('Saldo Akhir')} · ${monthLabel}`} value={formatRupiah(sys.saldoAkhir)} tone="gold" hint={t('menurut sistem')} />
+          <div>
+            <div className="mb-2">
+              <div className="text-[14px] font-extrabold text-ink">
+                {t('Menurut Sistem')} <span className="text-[12.5px] font-semibold text-ink-muted">· {monthLabel}</span>
+              </div>
+              <div className="text-[11.5px] text-ink-muted">{t('Dihitung dari catatan transaksi di aplikasi (semua modul).')}</div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard label={`${t('Saldo Awal')} · ${monthLabel}`} value={formatRupiah(sys.saldoAwal)} hint={t('menurut sistem')} />
+              <StatCard label={t('Total Uang Masuk')} value={formatRupiah(sys.masuk)} tone="green" />
+              <StatCard label={t('Total Uang Keluar')} value={formatRupiah(sys.keluar)} tone="red" />
+              <StatCard label={`${t('Saldo Akhir')} · ${monthLabel}`} value={formatRupiah(sys.saldoAkhir)} tone="gold" hint={t('menurut sistem')} />
+            </div>
           </div>
 
           {/* Growth banner */}

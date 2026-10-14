@@ -508,6 +508,8 @@ export const EN: Record<string, string> = {
   'Rekonsiliasi Bank': 'Bank Reconciliation',
   'Saldo Akhir': 'Closing Balance',
   'menurut sistem': 'per system',
+  'Menurut Sistem': 'Per System',
+  'Dihitung dari catatan transaksi di aplikasi (semua modul).': 'Computed from the transactions recorded in the app (all modules).',
   'Uang bertambah': 'Money increased',
   'Uang berkurang': 'Money decreased',
   'Selisih Saldo Akhir dengan Saldo Awal': 'Difference between closing and opening balance',
