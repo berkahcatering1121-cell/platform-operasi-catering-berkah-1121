@@ -20,6 +20,8 @@ export const EN: Record<string, string> = {
   'Harga Jual': 'Selling Price',
   'HPP / Porsi': 'COGS / Portion',
   'menu terbaca': 'menus read',
+  'bahan': 'ingredients',
+  'resep ringkas': 'summary recipe',
   'Pilih file HPP (.xlsx)': 'Choose HPP file (.xlsx)',
   'Tidak ada menu HPP yang terbaca di file ini.': 'No HPP menu could be read from this file.',
   'menu berhasil diimpor ke kategori': 'menus imported into category',

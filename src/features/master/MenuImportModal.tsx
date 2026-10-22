@@ -220,7 +220,10 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
                             </td>
                             <td className={TD}>
                               <div className="font-bold text-ink">{titleCase(m.name)}</div>
-                              <div className="text-[11px] text-ink-faint">{m.porsiLabel || `${m.porsiTotal} porsi`}</div>
+                              <div className="text-[11px] text-ink-faint">
+                                {m.porsiLabel || `${m.porsiTotal} porsi`}
+                                {m.valid && ` · ${m.ingredientCount > 0 ? `${m.ingredientCount} ${t('bahan')}` : t('resep ringkas')}`}
+                              </div>
                             </td>
                             <td className={TD_R + ' tabular-nums'}>{m.valid ? formatRupiah(m.totalHpp) : '-'}</td>
                             <td className={TD_R + ' font-bold tabular-nums text-ink'}>{m.valid ? formatRupiah(m.sellPrice) : '-'}</td>

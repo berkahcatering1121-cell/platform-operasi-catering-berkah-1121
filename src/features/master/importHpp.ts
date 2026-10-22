@@ -26,6 +26,7 @@ export interface HppMenu {
   computedPrice: number // harga jual dari formula
   sellPrice: number // harga jual dibulatkan (yang dipakai)
   recipe: IngredientDraft[]
+  ingredientCount: number // jumlah baris bahan (tanpa baris biaya tambahan)
   valid: boolean
   issues: string[]
 }
@@ -36,6 +37,22 @@ function num(s: string | undefined): number {
   if (s == null) return 0
   const v = parseFloat(String(s).replace(/[^0-9.-]/g, ''))
   return Number.isFinite(v) ? v : 0
+}
+
+// Round to at most 2 decimals so summed per-porsi costs stay (near) exact.
+const r2 = (n: number) => Math.round(n * 100) / 100
+
+// Indonesian number for the per-porsi amount shown in the ingredient name.
+function fmtQty(n: number): string {
+  return n.toLocaleString('id-ID', { maximumFractionDigits: 4 })
+}
+
+// "Osek - Daging (0,05 kg/porsi)" - component gives context + disambiguates
+// repeated spice rows; the parenthetical keeps the real measure visible.
+function ingredientName(component: string, bahan: string, perPorsiQty: number, unit: string): string {
+  const base = component && up(component) !== up(bahan) ? `${component} - ${bahan}` : bahan
+  if (perPorsiQty > 0) return `${base} (${fmtQty(perPorsiQty)}${unit ? ' ' + unit : ''}/porsi)`
+  return base
 }
 
 function rowStarting(grid: string[][], prefix: string): string[] | undefined {
@@ -76,19 +93,63 @@ export function parseHppSheet(sheet: XlsxSheet): HppMenu | null {
   let sellPrice = num(priceRow?.[6])
   if (!sellPrice) sellPrice = Math.ceil(computedPrice / 500) * 500
 
-  // Recipe reproduces HPP/porsi exactly: bahan + (sisa sebagai biaya tambahan).
-  const matR = Math.round(materialHpp)
-  const totR = Math.round(totalHpp)
-  const biayaR = Math.max(0, totR - matR)
-  const recipe: IngredientDraft[] = [
-    { name: 'Bahan baku / porsi', qty: '1', unit: 'porsi', price: String(matR) },
-  ]
-  if (biayaR > 0) {
+  // ── Detailed recipe: one line per ingredient (bahan) row ──
+  // Each line is expressed per porsi (qty 1 x 'porsi' x biaya-per-porsi) so the
+  // summed HPP matches the sheet, while the real amount + unit live in the name.
+  const itemized: IngredientDraft[] = []
+  const headerIdx = grid.findIndex((r) => up(r[0]) === 'KOMPONEN')
+  let component = ''
+  if (headerIdx >= 0) {
+    for (let i = headerIdx + 1; i < grid.length; i++) {
+      const row = grid[i]
+      if (up(row[0]).startsWith('TOTAL HPP')) break
+      const c0 = (row[0] ?? '').trim()
+      const bahan = (row[1] ?? '').trim()
+      const perPorsi = num(row[7])
+      const porsiRow = num(row[6]) || porsiTotal
+      const perPorsiQty = porsiRow > 0 ? num(row[2]) / porsiRow : 0
+      const unit = (row[3] ?? '').trim()
+      if (bahan) {
+        // Komponen label (col0) introduces the group for this and later rows.
+        if (c0) component = c0
+        if (perPorsi > 0)
+          itemized.push({ name: ingredientName(component, bahan, perPorsiQty, unit), qty: '1', unit: 'porsi', price: String(r2(perPorsi)) })
+      } else if (c0) {
+        if (perPorsi > 0) {
+          // Standalone line named in col0 (e.g. packaging: Thinwall, Sendok).
+          itemized.push({ name: ingredientName('', c0, perPorsiQty, unit), qty: '1', unit: 'porsi', price: String(r2(perPorsi)) })
+        } else {
+          component = c0 // group header without its own cost
+        }
+      }
+    }
+  }
+
+  // Keep the itemized recipe only when its bahan total reconciles with the
+  // sheet's "TOTAL HPP BAHAN" (guards against multi-section sheets like Nasi
+  // Bungkus whose per-row figures use different porsi bases). Otherwise fall
+  // back to a clean summary so HPP/porsi stays exactly right.
+  const itemizedSum = itemized.reduce((s, r) => s + Number(r.price), 0)
+  const reconciled = materialHpp > 0 && Math.abs(itemizedSum - materialHpp) <= materialHpp * 0.02 + 5
+  const recipe: IngredientDraft[] = []
+  let ingredientCount = 0
+  if (itemized.length > 0 && reconciled) {
+    recipe.push(...itemized)
+    ingredientCount = itemized.length
+  } else if (materialHpp > 0) {
+    recipe.push({ name: 'Bahan baku / porsi', qty: '1', unit: 'porsi', price: String(Math.round(materialHpp)) })
+  }
+
+  // Overhead = total HPP minus what the bahan lines already account for, so the
+  // menu's computed HPP lands on the sheet's Total HPP/porsi.
+  const bahanSum = recipe.reduce((s, r) => s + Number(r.price), 0)
+  const biayaTambahan = Math.round(totalHpp - bahanSum)
+  if (biayaTambahan > 0) {
     recipe.push({
       name: 'Biaya tambahan / porsi (tenaga kerja, sewa alat, listrik, gas, transportasi, dll.)',
       qty: '1',
       unit: 'porsi',
-      price: String(biayaR),
+      price: String(biayaTambahan),
     })
   }
 
@@ -108,6 +169,7 @@ export function parseHppSheet(sheet: XlsxSheet): HppMenu | null {
     computedPrice,
     sellPrice,
     recipe,
+    ingredientCount,
     valid: issues.length === 0,
     issues,
   }
