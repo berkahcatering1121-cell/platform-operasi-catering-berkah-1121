@@ -7,6 +7,32 @@
  * original, so partial coverage never breaks the UI.
  */
 export const EN: Record<string, string> = {
+  // ── HPP import + invoice (menu & sales) ───────────────────────────────
+  'Impor HPP (Excel)': 'Import HPP (Excel)',
+  'Invoice': 'Invoice',
+  'Unduh Invoice (PDF)': 'Download Invoice (PDF)',
+  'Perbarui': 'Update',
+  'Baru': 'New',
+  'Kategori tujuan': 'Target category',
+  'Pilih': 'Select',
+  'Status': 'Status',
+  'Margin': 'Margin',
+  'Harga Jual': 'Selling Price',
+  'HPP / Porsi': 'COGS / Portion',
+  'menu terbaca': 'menus read',
+  'Pilih file HPP (.xlsx)': 'Choose HPP file (.xlsx)',
+  'Tidak ada menu HPP yang terbaca di file ini.': 'No HPP menu could be read from this file.',
+  'menu berhasil diimpor ke kategori': 'menus imported into category',
+  'HPP, resep ringkas, dan harga jual sudah diperbarui sesuai dokumen Excel.':
+    'COGS, summary recipe, and selling price have been updated to match the Excel document.',
+  'Belum ada kategori menu. Tambahkan dulu di tab Kategori & Referensi.':
+    'No menu category yet. Add one first in the Categories & References tab.',
+  'Harga jual diambil dari kolom "Harga jual/porsi" di tiap sheet. Menu dengan nama sama di kategori ini akan diperbarui (bukan digandakan).':
+    'Selling price is taken from the "Harga jual/porsi" column on each sheet. A menu with the same name in this category is updated (not duplicated).',
+  'Nama menu tidak terbaca': 'Menu name not readable',
+  'HPP total tidak terbaca': 'Total COGS not readable',
+  'Harga jual tidak terbaca': 'Selling price not readable',
+
   // ── Modules / navigation ──────────────────────────────────────────────
   'Dashboard': 'Dashboard',
   'Master Data': 'Master Data',

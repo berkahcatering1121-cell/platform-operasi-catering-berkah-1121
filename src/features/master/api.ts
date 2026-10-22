@@ -225,38 +225,54 @@ export interface MenuItemSaveInput {
   ingredients: IngredientDraft[]
 }
 
+// Insert or update one menu item plus its recipe rows. Shared by the single
+// editor (useSaveMenuItem) and the bulk HPP importer (useImportMenuItems).
+async function persistMenuItem(input: MenuItemSaveInput): Promise<void> {
+  const itemPayload = {
+    category_id: input.category_id,
+    name: input.name.trim(),
+    description: input.description.trim() || null,
+    sell_price: input.sell_price,
+  }
+  let itemId = input.id
+  if (itemId) {
+    unwrap(await supabase.from('menu_items').update(itemPayload).eq('id', itemId).select('id'))
+    // Replace recipe rows wholesale - simplest correct sync for a small list.
+    unwrap(await supabase.from('menu_ingredients').delete().eq('menu_item_id', itemId).select('id'))
+  } else {
+    const rows = unwrap<{ id: string }[]>(
+      await supabase.from('menu_items').insert({ ...itemPayload, sort: 999 }).select('id'),
+    )
+    itemId = rows[0].id
+  }
+  const recipe = input.ingredients
+    .filter((r) => r.name.trim())
+    .map((r, i) => ({
+      menu_item_id: itemId,
+      name: r.name.trim(),
+      qty: Number(r.qty) || 0,
+      unit: r.unit,
+      price: Number(r.price) || 0,
+      sort: i,
+    }))
+  if (recipe.length) unwrap(await supabase.from('menu_ingredients').insert(recipe).select('id'))
+}
+
 export function useSaveMenuItem() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: MenuItemSaveInput) => {
-      const itemPayload = {
-        category_id: input.category_id,
-        name: input.name.trim(),
-        description: input.description.trim() || null,
-        sell_price: input.sell_price,
-      }
-      let itemId = input.id
-      if (itemId) {
-        unwrap(await supabase.from('menu_items').update(itemPayload).eq('id', itemId).select('id'))
-        // Replace recipe rows wholesale - simplest correct sync for a small list.
-        unwrap(await supabase.from('menu_ingredients').delete().eq('menu_item_id', itemId).select('id'))
-      } else {
-        const rows = unwrap<{ id: string }[]>(
-          await supabase.from('menu_items').insert({ ...itemPayload, sort: 999 }).select('id'),
-        )
-        itemId = rows[0].id
-      }
-      const recipe = input.ingredients
-        .filter((r) => r.name.trim())
-        .map((r, i) => ({
-          menu_item_id: itemId,
-          name: r.name.trim(),
-          qty: Number(r.qty) || 0,
-          unit: r.unit,
-          price: Number(r.price) || 0,
-          sort: i,
-        }))
-      if (recipe.length) unwrap(await supabase.from('menu_ingredients').insert(recipe).select('id'))
+    mutationFn: persistMenuItem,
+    onSuccess: () => qc.invalidateQueries(),
+  })
+}
+
+// Bulk upsert used by the HPP Excel importer (runs the rows sequentially so a
+// mid-batch failure surfaces cleanly and earlier rows stay saved).
+export function useImportMenuItems() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (inputs: MenuItemSaveInput[]) => {
+      for (const input of inputs) await persistMenuItem(input)
     },
     onSuccess: () => qc.invalidateQueries(),
   })

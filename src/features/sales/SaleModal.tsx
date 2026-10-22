@@ -6,6 +6,7 @@ import PhotoUploader from '@/components/ui/PhotoUploader'
 import { formatRupiah } from '@/lib/format'
 import { useEmployees, useMenuCategories, useMenuItems, usePaymentMethods } from '@/features/master/api'
 import { useSaveSale, type SaleInput } from './api'
+import { generateInvoicePdf, invoiceNumberFor, type InvoiceData } from './invoice'
 import type { SaleView } from '@/lib/db'
 
 const STATUS_OPTIONS = ['Lunas', 'DP', 'Belum Bayar'].map((s) => ({ value: s, label: s }))
@@ -55,9 +56,15 @@ export default function SaleModal({ open, onClose, editing }: Props) {
   const employees = useEmployees()
   const save = useSaveSale()
   const [form, setForm] = useState<FormState>(toForm())
+  // After a successful save we keep the modal open on a confirmation panel so
+  // the auto-generated invoice can be re-downloaded without re-entering data.
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    if (open) setForm(toForm(editing))
+    if (open) {
+      setForm(toForm(editing))
+      setSaved(false)
+    }
   }, [open, editing])
 
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }))
@@ -90,6 +97,28 @@ export default function SaleModal({ open, onClose, editing }: Props) {
     return m?.id ?? ''
   }, [menuItems.data, form.menu_name, form.menu_category])
 
+  // Build the invoice straight from the entered sale (total = portions x harga).
+  const buildInvoice = (): InvoiceData => {
+    const picName = (employees.data ?? []).find((e) => e.id === form.pic_employee_id)?.name ?? null
+    const paid = isLunas ? total : Number(form.paid_amount) || 0
+    return {
+      invoiceNo: invoiceNumberFor(form.sale_date, form.customer.trim(), editing?.id),
+      sale_date: form.sale_date,
+      customer: form.customer.trim(),
+      menu_name: form.menu_name.trim() || null,
+      menu_category: form.menu_category || null,
+      portions: Number(form.portions) || 0,
+      price_per_portion: Number(form.price_per_portion) || 0,
+      total,
+      paid_amount: paid,
+      sisa,
+      status: form.status,
+      method: form.method || null,
+      pic_name: picName,
+      notes: form.notes.trim() || null,
+    }
+  }
+
   const submit = () => {
     if (!form.customer.trim() || save.isPending) return
     const payload: SaleInput = {
@@ -107,7 +136,13 @@ export default function SaleModal({ open, onClose, editing }: Props) {
       notes: form.notes.trim() || null,
       photos: form.photos,
     }
-    save.mutate(payload, { onSuccess: onClose })
+    save.mutate(payload, {
+      onSuccess: () => {
+        // Auto-generate the invoice the moment the sale is saved.
+        void generateInvoicePdf(buildInvoice())
+        setSaved(true)
+      },
+    })
   }
 
   return (
@@ -118,16 +153,41 @@ export default function SaleModal({ open, onClose, editing }: Props) {
       title={editing ? 'Edit Penjualan' : 'Tambah Penjualan'}
       subtitle="Total & Sisa Pembayaran dihitung otomatis"
       footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={save.isPending}>
-            Batal
-          </Button>
-          <Button onClick={submit} disabled={save.isPending || !form.customer.trim()}>
-            {save.isPending ? 'Menyimpan…' : 'Simpan'}
-          </Button>
-        </>
+        saved ? (
+          <>
+            <Button variant="secondary" onClick={() => void generateInvoicePdf(buildInvoice())}>
+              Unduh ulang Invoice
+            </Button>
+            <Button onClick={onClose}>Selesai</Button>
+          </>
+        ) : (
+          <>
+            <Button variant="secondary" onClick={onClose} disabled={save.isPending}>
+              Batal
+            </Button>
+            <Button onClick={submit} disabled={save.isPending || !form.customer.trim()}>
+              {save.isPending ? 'Menyimpan…' : 'Simpan'}
+            </Button>
+          </>
+        )
       }
     >
+      {saved ? (
+        <div className="space-y-3 py-2 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ok/10 text-ok">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </div>
+          <div className="text-[15px] font-extrabold text-ink">Penjualan tersimpan</div>
+          <div className="mx-auto max-w-sm text-[12.5px] leading-relaxed text-ink-muted">
+            Invoice otomatis dibuat untuk <span className="font-bold text-ink">{form.customer.trim() || '-'}</span> dan
+            terunduh sebagai PDF. Totalnya{' '}
+            <span className="font-bold text-ink">{formatRupiah(total)}</span> ({form.portions || 0} porsi x{' '}
+            {formatRupiah(Number(form.price_per_portion) || 0)}).
+          </div>
+        </div>
+      ) : (
       <div className="space-y-3.5">
         <InputLegend />
 
@@ -237,6 +297,7 @@ export default function SaleModal({ open, onClose, editing }: Props) {
 
         {save.isError && <p className="text-[11.5px] text-danger">{(save.error as Error).message}</p>}
       </div>
+      )}
     </Modal>
   )
 }

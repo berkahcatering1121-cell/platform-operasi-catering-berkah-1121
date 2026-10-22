@@ -124,3 +124,51 @@ export async function readXlsxFirstSheet(buf: ArrayBuffer): Promise<string[][]> 
   const shared = files['xl/sharedStrings.xml'] ? parseSharedStrings(files['xl/sharedStrings.xml']) : []
   return parseSheet(sheetXml, shared)
 }
+
+// Read one attribute value out of an XML start-tag string.
+function tagAttr(tag: string, name: string): string | undefined {
+  return tag.match(new RegExp(`${name.replace(':', '\\:')}="([^"]*)"`))?.[1]
+}
+
+export interface XlsxSheet {
+  name: string
+  grid: string[][]
+}
+
+/**
+ * Read every worksheet of an .xlsx file, in workbook order, into named grids.
+ * Resolves sheet name -> worksheet part through workbook.xml + its rels, so it
+ * works regardless of the physical sheetN.xml numbering.
+ */
+export async function readXlsxAllSheets(buf: ArrayBuffer): Promise<XlsxSheet[]> {
+  const files = await unzip(
+    buf,
+    (n) =>
+      n === 'xl/sharedStrings.xml' ||
+      n === 'xl/workbook.xml' ||
+      n === 'xl/_rels/workbook.xml.rels' ||
+      /^xl\/worksheets\/sheet\d+\.xml$/.test(n),
+  )
+  const wb = files['xl/workbook.xml']
+  if (!wb) throw new Error('File .xlsx tidak memiliki workbook.xml.')
+  const shared = files['xl/sharedStrings.xml'] ? parseSharedStrings(files['xl/sharedStrings.xml']) : []
+
+  // Relationship id -> worksheet path (Target is relative to the xl/ folder).
+  const relMap = new Map<string, string>()
+  for (const rel of files['xl/_rels/workbook.xml.rels']?.match(/<Relationship\b[^>]*\/?>/g) ?? []) {
+    const id = tagAttr(rel, 'Id')
+    const target = tagAttr(rel, 'Target')
+    if (id && target) relMap.set(id, 'xl/' + target.replace(/^\/?xl\//, '').replace(/^\//, ''))
+  }
+
+  const out: XlsxSheet[] = []
+  for (const tag of wb.match(/<sheet\b[^>]*\/?>/g) ?? []) {
+    const rid = tagAttr(tag, 'r:id')
+    const path = rid ? relMap.get(rid) : undefined
+    const xml = path ? files[path] : undefined
+    if (!xml) continue
+    out.push({ name: decodeEntities(tagAttr(tag, 'name') ?? ''), grid: parseSheet(xml, shared) })
+  }
+  if (out.length === 0) throw new Error('Tidak ada lembar kerja yang terbaca di file .xlsx.')
+  return out
+}

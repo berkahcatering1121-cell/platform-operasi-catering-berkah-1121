@@ -12,6 +12,7 @@ import { groupByMonth } from '@/lib/grouping'
 import { useEmployees } from '@/features/master/api'
 import { useSales, useDeleteSale } from '@/features/sales/api'
 import SaleModal from '@/features/sales/SaleModal'
+import { generateInvoicePdf, invoiceNumberFor } from '@/features/sales/invoice'
 import type { SaleView } from '@/lib/db'
 import { useT } from '@/lib/i18n'
 
@@ -41,6 +42,25 @@ export default function Penjualan() {
     setEditing(s)
     setModalOpen(true)
   }
+
+  // Re-generate the invoice PDF for an existing sale (total = porsi x harga).
+  const printInvoice = (r: SaleView) =>
+    void generateInvoicePdf({
+      invoiceNo: invoiceNumberFor(r.sale_date, r.customer, r.id),
+      sale_date: r.sale_date,
+      customer: r.customer,
+      menu_name: r.menu_name,
+      menu_category: r.menu_category,
+      portions: r.portions,
+      price_per_portion: r.price_per_portion,
+      total: r.total,
+      paid_amount: r.paid_amount,
+      sisa: r.sisa,
+      status: r.status,
+      method: r.method,
+      pic_name: empName(r.pic_employee_id, r.pic_name) || null,
+      notes: r.notes,
+    })
 
   return (
     <>
@@ -109,7 +129,20 @@ export default function Penjualan() {
                             {empName(r.pic_employee_id, r.pic_name) || <span className="text-ink-faint">-</span>}
                           </td>
                           <td className={TD_R}>
-                            <RowActions onEdit={() => openEdit(r)} onDelete={() => setToDelete(r)} />
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => printInvoice(r)}
+                                aria-label={t('Invoice')}
+                                title={t('Unduh Invoice (PDF)')}
+                                className="rounded-md p-1.5 text-ink-secondary transition hover:bg-app-panel hover:text-brand"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                  <path d="M14 2v6h6M9 13h6M9 17h6" />
+                                </svg>
+                              </button>
+                              <RowActions onEdit={() => openEdit(r)} onDelete={() => setToDelete(r)} />
+                            </div>
                           </td>
                         </tr>
                       ))}

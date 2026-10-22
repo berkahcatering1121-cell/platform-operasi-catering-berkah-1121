@@ -9,6 +9,7 @@ import { formatRupiah, formatPercentInt } from '@/lib/format'
 import { titleCase } from '@/lib/text'
 import { useT } from '@/lib/i18n'
 import MenuEditorModal from './MenuEditorModal'
+import MenuImportModal from './MenuImportModal'
 import { useDeleteMenuItem, useMenuCategories, useMenuItems } from './api'
 import type { MenuItemView } from '@/lib/db'
 
@@ -20,6 +21,7 @@ export default function MenuTab() {
 
   const [editor, setEditor] = useState<{ item: MenuItemView | null; categoryId?: string } | null>(null)
   const [toDelete, setToDelete] = useState<MenuItemView | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
   const [q, setQ] = useState('')
 
   const byCategory = useMemo(() => {
@@ -67,6 +69,10 @@ export default function MenuTab() {
             Satu tabel per kategori menu. Tekan “+ Menu” pada kategori untuk menambah sub-menu di dalamnya.
           </p>
         </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+        <Button variant="secondary" onClick={() => setImportOpen(true)}>
+          {t('Impor HPP (Excel)')}
+        </Button>
         <div className="relative w-full sm:w-[320px]">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -91,6 +97,7 @@ export default function MenuTab() {
               </svg>
             </button>
           )}
+        </div>
         </div>
       </div>
 
@@ -191,6 +198,13 @@ export default function MenuTab() {
         categories={categories}
         item={editor?.item ?? null}
         defaultCategoryId={editor?.categoryId}
+      />
+
+      <MenuImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        categories={categories}
+        existingItems={items.data ?? []}
       />
 
       <ConfirmDialog
