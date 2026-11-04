@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Modal from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
-import { formatRupiah, formatPercentInt } from '@/lib/format'
+import { formatRupiah } from '@/lib/format'
 import { titleCase } from '@/lib/text'
 import { useT } from '@/lib/i18n'
 import { readXlsxAllSheets } from '@/lib/xlsxRead'
@@ -21,7 +21,9 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
   const { t } = useT()
   const importer = useImportMenuItems()
   const fileRef = useRef<HTMLInputElement>(null)
-  const [categoryId, setCategoryId] = useState('')
+  // Prasmanan packages and plain nasi-kotak/box go to separate categories.
+  const [catPrasmanan, setCatPrasmanan] = useState('')
+  const [catBox, setCatBox] = useState('')
   const [menus, setMenus] = useState<HppMenu[] | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [source, setSource] = useState('')
@@ -29,24 +31,25 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
   const [done, setDone] = useState(0)
 
   useEffect(() => {
-    if (open) {
-      setCategoryId((c) => c || categories[0]?.id || '')
-      setMenus(null)
-      setSelected(new Set())
-      setSource('')
-      setErr('')
-      setDone(0)
-      importer.reset()
-    }
+    if (!open) return
+    const first = categories[0]?.id ?? ''
+    setCatPrasmanan(categories.find((c) => /prasmanan/i.test(c.name))?.id ?? first)
+    setCatBox(categories.find((c) => /kotak|box|kardus|bungkus/i.test(c.name))?.id ?? first)
+    setMenus(null)
+    setSelected(new Set())
+    setSource('')
+    setErr('')
+    setDone(0)
+    importer.reset()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  // Existing menu names in the chosen category -> their id, for upsert matching.
-  const existingByName = useMemo(() => {
-    const m = new Map<string, string>()
-    for (const it of existingItems) if (it.category_id === categoryId) m.set(it.name.trim().toLowerCase(), it.id)
-    return m
-  }, [existingItems, categoryId])
+  const catName = (id: string) => categories.find((c) => c.id === id)?.name ?? ''
+  const targetCat = (m: HppMenu) => (m.isPrasmanan ? catPrasmanan : catBox)
+
+  // Existing menu id for upsert: same name within the menu's target category.
+  const existingId = (catId: string, name: string) =>
+    existingItems.find((it) => it.category_id === catId && it.name.trim().toLowerCase() === name.trim().toLowerCase())?.id
 
   const onFile = async (f: File | undefined) => {
     if (!f) return
@@ -77,22 +80,43 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
     })
 
   const chosen = (menus ?? []).filter((m) => m.valid && selected.has(m.sheet))
+  const hasPrasmanan = (menus ?? []).some((m) => m.valid && m.isPrasmanan)
+  const hasBox = (menus ?? []).some((m) => m.valid && !m.isPrasmanan)
+  const missingCat = chosen.some((m) => !targetCat(m))
 
-  const inputs: MenuItemSaveInput[] = chosen.map((m) => ({
-    id: existingByName.get(m.name.trim().toLowerCase()),
-    category_id: categoryId,
-    name: m.name,
-    description: hppDescription(m),
-    sell_price: m.sellPrice,
-    ingredients: m.recipe,
-  }))
+  const inputs: MenuItemSaveInput[] = chosen.map((m) => {
+    const catId = targetCat(m)
+    return {
+      id: existingId(catId, m.name),
+      category_id: catId,
+      name: m.name,
+      description: hppDescription(m),
+      sell_price: m.sellPrice,
+      ingredients: m.recipe,
+    }
+  })
 
   const doImport = () => {
-    if (inputs.length === 0 || !categoryId) return
+    if (inputs.length === 0 || missingCat) return
     importer.mutate(inputs, { onSuccess: () => setDone(inputs.length) })
   }
 
-  const catName = categories.find((c) => c.id === categoryId)?.name ?? ''
+  const CatSelect = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+    <div>
+      <div className="mb-1 text-[11.5px] font-semibold text-ink-muted">{label}</div>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="cb-select field-master h-11 w-full rounded-field pl-3 pr-8 text-[14px] font-semibold text-master outline-none"
+      >
+        {categories.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
 
   return (
     <Modal
@@ -100,7 +124,7 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
       onClose={onClose}
       wide
       title="Impor HPP Menu dari Excel"
-      subtitle="Unggah file HPP Catering (.xlsx). Tiap sheet menjadi satu menu dengan HPP & harga jual sesuai dokumen."
+      subtitle="Unggah file HPP Catering (.xlsx). Paket Prasmanan dan Nasi Kotak otomatis dipisah ke kategorinya."
       footer={
         <>
           <button
@@ -111,7 +135,7 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
           </button>
           <button
             onClick={doImport}
-            disabled={inputs.length === 0 || importer.isPending || done > 0 || !categoryId}
+            disabled={inputs.length === 0 || importer.isPending || done > 0 || missingCat}
             className="rounded-btn bg-brand px-4 py-2 text-[13px] font-bold text-white transition hover:bg-brand-dark disabled:opacity-60"
           >
             {importer.isPending ? t('Mengimpor…') : `${t('Impor')} ${inputs.length} ${t('menu')}`}
@@ -122,36 +146,28 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
       <div className="space-y-4">
         {done > 0 ? (
           <div className="rounded-field border p-4 text-center" style={{ background: '#E9F6EE', borderColor: '#BFE3CE' }}>
-            <div className="text-[14px] font-extrabold text-ok">
-              {done} {t('menu berhasil diimpor ke kategori')} “{catName}”.
-            </div>
+            <div className="text-[14px] font-extrabold text-ok">{done} {t('menu berhasil diimpor.')}</div>
             <div className="mt-0.5 text-[12px] text-ink-body">
               {t('HPP, resep ringkas, dan harga jual sudah diperbarui sesuai dokumen Excel.')}
             </div>
           </div>
         ) : (
           <>
-            {/* Target category */}
-            <div>
-              <div className="mb-1 text-[11.5px] font-semibold text-ink-muted">{t('Kategori tujuan')}</div>
-              {categories.length === 0 ? (
-                <p className="rounded-field bg-warn-bg px-3 py-2 text-[12px] font-semibold text-warn">
-                  {t('Belum ada kategori menu. Tambahkan dulu di tab Kategori & Referensi.')}
-                </p>
-              ) : (
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="cb-select field-master h-11 w-full rounded-field pl-3 pr-8 text-[14px] font-semibold text-master outline-none sm:w-[320px]"
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+            {/* Target categories */}
+            {categories.length === 0 ? (
+              <p className="rounded-field bg-warn-bg px-3 py-2 text-[12px] font-semibold text-warn">
+                {t('Belum ada kategori menu. Tambahkan dulu di tab Kategori & Referensi.')}
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {hasPrasmanan && (
+                  <CatSelect label={t('Kategori untuk Paket Prasmanan')} value={catPrasmanan} onChange={setCatPrasmanan} />
+                )}
+                {(hasBox || !menus) && (
+                  <CatSelect label={t('Kategori untuk Nasi Kotak / lainnya')} value={catBox} onChange={setCatBox} />
+                )}
+              </div>
+            )}
 
             {/* File picker */}
             <div className="flex flex-wrap items-center gap-2">
@@ -175,7 +191,7 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
             </div>
 
             <p className="text-[11px] leading-relaxed text-ink-faint">
-              {t('Harga jual diambil dari kolom "Harga jual/porsi" di tiap sheet. Menu dengan nama sama di kategori ini akan diperbarui (bukan digandakan).')}
+              {t('Harga jual diambil dari kolom "Harga jual/porsi" di tiap sheet. Menu dengan nama sama di kategori tujuan akan diperbarui (bukan digandakan).')}
             </p>
 
             {err && <p className="rounded-field bg-danger-bg px-3 py-2 text-[12px] font-semibold text-danger">{err}</p>}
@@ -196,16 +212,16 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
                       <tr>
                         <th className={TH + ' w-10 text-center'}>✓</th>
                         <th className={TH}>{t('Menu')}</th>
+                        <th className={TH}>{t('Kategori tujuan')}</th>
                         <th className={TH_R}>{t('HPP / Porsi')}</th>
                         <th className={TH_R}>{t('Harga Jual')}</th>
-                        <th className={TH_R}>{t('Margin')}</th>
                         <th className={TH}>{t('Status')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {menus.map((m) => {
-                        const isUpdate = m.valid && existingByName.has(m.name.trim().toLowerCase())
-                        const margin = m.sellPrice > 0 ? (m.sellPrice - m.totalHpp) / m.sellPrice : 0
+                        const catId = targetCat(m)
+                        const isUpdate = m.valid && !!existingId(catId, m.name)
                         return (
                           <tr key={m.sheet} className={!m.valid ? 'bg-danger-bg/40' : ''}>
                             <td className={TD + ' text-center'}>
@@ -225,9 +241,18 @@ export default function MenuImportModal({ open, onClose, categories, existingIte
                                 {m.valid && ` · ${m.ingredientCount > 0 ? `${m.ingredientCount} ${t('bahan')}` : t('resep ringkas')}`}
                               </div>
                             </td>
+                            <td className={TD}>
+                              {m.valid ? (
+                                <span className="inline-flex items-center gap-1">
+                                  {m.isPrasmanan && <Badge tone="amber">{t('Prasmanan')}</Badge>}
+                                  <span className="text-[12px] font-semibold text-master">{catName(catId) || '-'}</span>
+                                </span>
+                              ) : (
+                                '-'
+                              )}
+                            </td>
                             <td className={TD_R + ' tabular-nums'}>{m.valid ? formatRupiah(m.totalHpp) : '-'}</td>
                             <td className={TD_R + ' font-bold tabular-nums text-ink'}>{m.valid ? formatRupiah(m.sellPrice) : '-'}</td>
-                            <td className={TD_R + ' tabular-nums text-ink-muted'}>{m.valid ? formatPercentInt(margin) : '-'}</td>
                             <td className={TD}>
                               {!m.valid ? (
                                 <span className="text-[11.5px] font-semibold text-danger">{m.issues.map((e) => t(e)).join(', ')}</span>

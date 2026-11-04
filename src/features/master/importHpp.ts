@@ -25,6 +25,7 @@ export interface HppMenu {
   margin: number // fraction, e.g. 0.3
   computedPrice: number // harga jual dari formula
   sellPrice: number // harga jual dibulatkan (yang dipakai)
+  isPrasmanan: boolean // paket prasmanan (buffet) vs nasi kotak/box
   recipe: IngredientDraft[]
   ingredientCount: number // jumlah baris bahan (tanpa baris biaya tambahan)
   valid: boolean
@@ -74,7 +75,8 @@ export function parseHppSheet(sheet: XlsxSheet): HppMenu | null {
   let menuName = afterDash.replace(/\([^)]*\)/, '').trim()
   // A few "Prasmanan" sheets drop the word from the title; add it back so the
   // two "Nasi Rames" packages (prasmanan vs bulk) do not collide by name.
-  if (up(sheetName).includes('PRASMANAN') && !up(menuName).includes('PRASMANAN')) {
+  const isPrasmanan = up(sheetName).includes('PRASMANAN') || up(menuName).includes('PRASMANAN')
+  if (isPrasmanan && !up(menuName).includes('PRASMANAN')) {
     menuName = `Prasmanan ${menuName}`
   }
   menuName = titleCase(menuName.toLowerCase())
@@ -168,6 +170,7 @@ export function parseHppSheet(sheet: XlsxSheet): HppMenu | null {
     margin,
     computedPrice,
     sellPrice,
+    isPrasmanan,
     recipe,
     ingredientCount,
     valid: issues.length === 0,

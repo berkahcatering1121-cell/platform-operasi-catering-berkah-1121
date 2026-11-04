@@ -29,6 +29,12 @@ export const EN: Record<string, string> = {
   'Semua menu sudah ada HPP.': 'All menus already have HPP.',
   'Menu di bawah ini resepnya masih kosong, jadi HPP-nya belum dihitung. Unduh daftarnya untuk diserahkan ke vendor HPP.':
     'The menus below have an empty recipe, so their HPP is not computed yet. Download the list to hand to the HPP vendor.',
+  'Kategori untuk Paket Prasmanan': 'Category for Prasmanan packages',
+  'Kategori untuk Nasi Kotak / lainnya': 'Category for Nasi Kotak / others',
+  'Prasmanan': 'Prasmanan',
+  'menu berhasil diimpor.': 'menus imported successfully.',
+  'Harga jual diambil dari kolom "Harga jual/porsi" di tiap sheet. Menu dengan nama sama di kategori tujuan akan diperbarui (bukan digandakan).':
+    'Selling price is taken from the "Harga jual/porsi" column on each sheet. A menu with the same name in the target category is updated (not duplicated).',
   'Pilih file HPP (.xlsx)': 'Choose HPP file (.xlsx)',
   'Tidak ada menu HPP yang terbaca di file ini.': 'No HPP menu could be read from this file.',
   'menu berhasil diimpor ke kategori': 'menus imported into category',
