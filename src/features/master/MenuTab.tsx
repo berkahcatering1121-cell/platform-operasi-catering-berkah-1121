@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Card, EmptyState, ErrorState, LoadingRows } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import ExportMenu from '@/components/ExportMenu'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import RowActions from '@/components/ui/RowActions'
 import { MarginBadge, marginNote } from '@/components/ui/Badge'
@@ -22,6 +23,7 @@ export default function MenuTab() {
   const [editor, setEditor] = useState<{ item: MenuItemView | null; categoryId?: string } | null>(null)
   const [toDelete, setToDelete] = useState<MenuItemView | null>(null)
   const [importOpen, setImportOpen] = useState(false)
+  const [onlyNoHpp, setOnlyNoHpp] = useState(false)
   const [q, setQ] = useState('')
 
   const byCategory = useMemo(() => {
@@ -33,6 +35,14 @@ export default function MenuTab() {
     }
     return map
   }, [items.data])
+
+  // Menus without a recipe (ingredient_count === 0) have no computed HPP yet.
+  const noHpp = useMemo(() => {
+    const catName = new Map((cats.data ?? []).map((c) => [c.id, c.name]))
+    return (items.data ?? [])
+      .filter((m) => m.ingredient_count === 0)
+      .map((m) => ({ item: m, categoryName: catName.get(m.category_id) ?? '' }))
+  }, [items.data, cats.data])
 
   if (cats.isLoading || items.isLoading) return <LoadingRows />
   const err = cats.error || items.error
@@ -53,6 +63,21 @@ export default function MenuTab() {
     .filter((v) => v.show)
   const totalMatches = term ? visible.reduce((t, v) => t + v.list.length, 0) : 0
 
+  // No-HPP list, honoring the same search box (match by menu or category name).
+  const noHppVisible = term
+    ? noHpp.filter(({ item, categoryName }) => `${item.name} ${categoryName}`.toLowerCase().includes(term))
+    : noHpp
+
+  // Export the current no-HPP list so it can be handed to the HPP vendor.
+  const doExportNoHpp = async (fmt: 'xlsx' | 'csv') => {
+    const header = ['No', t('Kategori'), t('Menu'), t('Harga Jual / Porsi')]
+    const rows = noHppVisible.map(({ item, categoryName }, i) => [i + 1, categoryName, titleCase(item.name), item.sell_price])
+    const { downloadXlsx, downloadCsv } = await import('@/lib/export')
+    const base = 'Menu Belum Ada HPP - Catering Berkah'
+    if (fmt === 'xlsx') downloadXlsx([{ name: 'Belum Ada HPP', rows: [header, ...rows], cols: [6, 24, 44, 18] }], base + '.xlsx')
+    else downloadCsv([header, ...rows], base + '.csv')
+  }
+
   return (
     <>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -64,6 +89,19 @@ export default function MenuTab() {
             <span className="rounded-pill border border-app-border bg-app-panel px-3 py-1 text-[12px] font-extrabold text-ink-secondary">
               {items.data?.length ?? 0} {t('menu')}
             </span>
+            {noHpp.length > 0 && (
+              <button
+                onClick={() => setOnlyNoHpp((v) => !v)}
+                title={t('Tampilkan menu yang belum ada HPP')}
+                className={`rounded-pill border px-3 py-1 text-[12px] font-extrabold transition ${
+                  onlyNoHpp
+                    ? 'border-danger bg-danger-bg text-danger ring-1 ring-danger'
+                    : 'border-app-border bg-warn-bg text-warn hover:brightness-95'
+                }`}
+              >
+                {noHpp.length} {t('belum ada HPP')}
+              </button>
+            )}
           </div>
           <p className="mt-2 text-[12.5px] text-ink-muted">
             Satu tabel per kategori menu. Tekan “+ Menu” pada kategori untuk menambah sub-menu di dalamnya.
@@ -101,6 +139,71 @@ export default function MenuTab() {
         </div>
       </div>
 
+      {onlyNoHpp ? (
+        <Card
+          title={t('Menu Belum Ada HPP')}
+          subtitle={`${noHppVisible.length} ${t('menu')}`}
+          action={
+            <div className="flex items-center gap-2">
+              <ExportMenu
+                disabled={noHppVisible.length === 0}
+                items={[
+                  { label: t('Excel (.xlsx)'), sub: t('Buku kerja spreadsheet'), onSelect: () => doExportNoHpp('xlsx') },
+                  { label: t('CSV'), sub: t('Teks nilai dipisah koma'), onSelect: () => doExportNoHpp('csv') },
+                ]}
+              />
+              <Button variant="secondary" onClick={() => setOnlyNoHpp(false)}>
+                {t('Tampilkan semua')}
+              </Button>
+            </div>
+          }
+          bodyClassName=""
+        >
+          <p className="px-4 pt-3 text-[12px] text-ink-muted">
+            {t('Menu di bawah ini resepnya masih kosong, jadi HPP-nya belum dihitung. Unduh daftarnya untuk diserahkan ke vendor HPP.')}
+          </p>
+          <div className="cb-scroll overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className={TH + ' w-10 text-center'}>No</th>
+                  <th className={TH}>Menu</th>
+                  <th className={TH}>{t('Kategori')}</th>
+                  <th className={TH_R}>{t('Harga Jual / Porsi')}</th>
+                  <th className={TH_R}>{t('Aksi')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {noHppVisible.length > 0 ? (
+                  noHppVisible.map(({ item: m, categoryName }, mi) => (
+                    <tr key={m.id}>
+                      <td className={TD + ' text-center font-bold tabular-nums text-ink-faint'}>{mi + 1}</td>
+                      <td className={TD} style={{ whiteSpace: 'normal', maxWidth: 520 }}>
+                        <div className="font-bold text-ink">{titleCase(m.name)}</div>
+                        {m.description && (
+                          <div className="mt-0.5 text-[11px] leading-relaxed text-ink-faint">{titleCase(m.description)}</div>
+                        )}
+                      </td>
+                      <td className={TD}>{categoryName}</td>
+                      <td className={TD_R + ' font-bold text-ink'}>{formatRupiah(m.sell_price)}</td>
+                      <td className={TD_R}>
+                        <RowActions onEdit={() => setEditor({ item: m })} onDelete={() => setToDelete(m)} />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5}>
+                      <EmptyState message={t('Semua menu sudah ada HPP.')} />
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : (
+      <>
       {term && (
         <p className="mb-3 text-[12px] text-ink-muted">
           {totalMatches > 0 ? `${totalMatches} menu cocok dengan “${q.trim()}”` : `Tidak ada menu cocok dengan “${q.trim()}”`}
@@ -191,6 +294,8 @@ export default function MenuTab() {
           </Card>
         )}
       </div>
+      </>
+      )}
 
       <MenuEditorModal
         open={!!editor}

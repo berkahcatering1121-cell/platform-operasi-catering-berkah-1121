@@ -22,6 +22,13 @@ export const EN: Record<string, string> = {
   'menu terbaca': 'menus read',
   'bahan': 'ingredients',
   'resep ringkas': 'summary recipe',
+  'belum ada HPP': 'without HPP',
+  'Tampilkan menu yang belum ada HPP': 'Show menus without HPP',
+  'Menu Belum Ada HPP': 'Menus Without HPP',
+  'Tampilkan semua': 'Show all',
+  'Semua menu sudah ada HPP.': 'All menus already have HPP.',
+  'Menu di bawah ini resepnya masih kosong, jadi HPP-nya belum dihitung. Unduh daftarnya untuk diserahkan ke vendor HPP.':
+    'The menus below have an empty recipe, so their HPP is not computed yet. Download the list to hand to the HPP vendor.',
   'Pilih file HPP (.xlsx)': 'Choose HPP file (.xlsx)',
   'Tidak ada menu HPP yang terbaca di file ini.': 'No HPP menu could be read from this file.',
   'menu berhasil diimpor ke kategori': 'menus imported into category',
