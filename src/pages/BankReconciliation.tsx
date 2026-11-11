@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Card, EmptyState, ErrorState, LoadingRows } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { TD, TD_R, TH, TH_R } from '@/components/ui/table'
 import { formatRupiah, formatDate, months as monthNames } from '@/lib/format'
 import { titleCase } from '@/lib/text'
@@ -9,13 +10,22 @@ import { useT } from '@/lib/i18n'
 import { useCashFlow } from '@/features/cashflow/api'
 import { useSaveOpex } from '@/features/opex/api'
 import { OPEX_CATEGORIES } from '@/lib/db'
-import { parseBcaStatement, type BankTxn, type BcaParseResult } from '@/features/reconciliation/parseBca'
+import { parseBcaStatement, type BcaParseResult } from '@/features/reconciliation/parseBca'
 import { parseBcaPdf } from '@/features/reconciliation/parseBcaPdf'
 import {
   getBankSummary,
   saveBankSummary,
+  deleteBankSummary,
   type BankMonthSummary,
 } from '@/features/reconciliation/bankSummary'
+import {
+  useBankTxns,
+  useSaveBankTxns,
+  useMarkBankTxnRecorded,
+  useDeleteBankTxnsForMonth,
+  type BankTxnRow,
+  type BankTxnInsert,
+} from '@/features/reconciliation/api'
 import { extractPdfText } from '@/lib/pdfText'
 
 const TODAY = new Date()
@@ -41,9 +51,14 @@ function StatCard({
   )
 }
 
-// A bank transaction paired with its match state against the system ledger.
-interface Reconciled extends BankTxn {
+// A persisted bank transaction paired with its match state against the ledger.
+interface Reconciled extends BankTxnRow {
   matched: boolean
+}
+
+// Stable key so re-uploading the same statement never duplicates rows.
+function dedupKeyOf(tx: { date: string; direction: string; amount: number; balance: number | null; description: string }, acct: string) {
+  return `${acct}|${tx.date}|${tx.direction}|${tx.amount}|${tx.balance ?? ''}|${tx.description}`
 }
 
 export default function BankReconciliation() {
@@ -53,14 +68,14 @@ export default function BankReconciliation() {
 
   const [year, setYear] = useState(TODAY.getFullYear())
   const [month, setMonth] = useState(TODAY.getMonth() + 1) // 1-12
-  const [parsed, setParsed] = useState<BcaParseResult | null>(null)
   const [pasteText, setPasteText] = useState('')
   const [fileName, setFileName] = useState('')
   const [catFor, setCatFor] = useState<Record<string, string>>({}) // txn.id -> chosen category
-  const [recorded, setRecorded] = useState<Set<string>>(new Set())
   const [pdfBusy, setPdfBusy] = useState(false)
   const [pdfError, setPdfError] = useState('')
+  const [warnings, setWarnings] = useState<string[]>([])
   const [savedTick, setSavedTick] = useState(0)
+  const [confirmClear, setConfirmClear] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const mm = String(month).padStart(2, '0')
@@ -69,7 +84,14 @@ export default function BankReconciliation() {
   const monthEnd = `${year}-${mm}-31`
   const inMonth = (d: string) => d >= monthStart && d <= monthEnd
 
-  // Saved bank-statement summary for the selected month (from this browser).
+  // Persisted bank mutations for the selected month (stored in the system).
+  const bankTxnsQuery = useBankTxns(monthKey)
+  const storedTxns = useMemo(() => bankTxnsQuery.data ?? [], [bankTxnsQuery.data])
+  const saveBankTxns = useSaveBankTxns()
+  const markRecorded = useMarkBankTxnRecorded()
+  const clearMonth = useDeleteBankTxnsForMonth()
+
+  // Saved bank-statement summary for the selected month (opening/closing).
   const bankSummary = useMemo<BankMonthSummary | null>(
     () => getBankSummary(monthKey),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -94,48 +116,62 @@ export default function BankReconciliation() {
 
   const perubahan = sys.saldoAkhir - sys.saldoAwal
 
-  // ── Bank side (from the uploaded / pasted statement, scoped to the month) ──
-  const bankTxns = useMemo(() => (parsed?.txns ?? []).filter((t) => inMonth(t.date)), [parsed, year, month]) // eslint-disable-line react-hooks/exhaustive-deps
+  // ── Bank side (from the persisted statement rows) ──
   const bank = useMemo(() => {
-    const masuk = bankTxns.filter((t) => t.direction === 'in').reduce((s, t) => s + t.amount, 0)
-    const keluar = bankTxns.filter((t) => t.direction === 'out').reduce((s, t) => s + t.amount, 0)
-    return { masuk, keluar, saldoAwal: parsed?.openingBalance ?? null, saldoAkhir: parsed?.closingBalance ?? null }
-  }, [bankTxns, parsed])
+    const masuk = storedTxns.filter((t) => t.direction === 'in').reduce((s, t) => s + t.amount, 0)
+    const keluar = storedTxns.filter((t) => t.direction === 'out').reduce((s, t) => s + t.amount, 0)
+    return { masuk, keluar, saldoAwal: bankSummary?.opening ?? null, saldoAkhir: bankSummary?.closing ?? null }
+  }, [storedTxns, bankSummary])
 
   // ── Match each bank transaction against a system ledger row ──
   const monthRows = useMemo(() => rows.filter((r) => inMonth(r.date)), [rows, year, month]) // eslint-disable-line react-hooks/exhaustive-deps
   const reconciled = useMemo<Reconciled[]>(() => {
     const used = new Set<string>()
-    return bankTxns.map((tx) => {
+    return storedTxns.map((tx) => {
       const target = Math.round(tx.amount)
       const hit = monthRows.find((r) => {
         if (used.has(r.id)) return false
         const val = tx.direction === 'in' ? r.cashIn : r.cashOut
         if (Math.round(val) !== target) return false
-        const dd = Math.abs((Date.parse(r.date) - Date.parse(tx.date)) / 864e5)
+        const dd = Math.abs((Date.parse(r.date) - Date.parse(tx.txn_date)) / 864e5)
         return dd <= 4
       })
       if (hit) used.add(hit.id)
       return { ...tx, matched: !!hit }
     })
-  }, [bankTxns, monthRows])
+  }, [storedTxns, monthRows])
 
-  const unmatched = reconciled.filter((r) => !r.matched && !recorded.has(r.id))
+  const unmatched = reconciled.filter((r) => !r.matched && !r.recorded)
   const unmatchedOut = unmatched.filter((r) => r.direction === 'out')
   const matchedCount = reconciled.filter((r) => r.matched).length
+  const recordedCount = storedTxns.filter((t) => t.recorded).length
 
-  const hasBank = !!parsed && bankTxns.length > 0
+  const hasBank = storedTxns.length > 0
   const selisihAkhir = bank.saldoAkhir != null ? bank.saldoAkhir - sys.saldoAkhir : null
-
   const monthLabel = `${monthNames()[month - 1]} ${year}`
+
+  // Persist all parsed statement lines. month_key is derived in the DB from the
+  // row's own date, so rows land in their correct month regardless of the picker.
+  const persist = (res: BcaParseResult, name: string, acctLast4?: string) => {
+    setWarnings(res.warnings)
+    setFileName(name)
+    const acct = acctLast4 ?? bankSummary?.accountLast4 ?? ''
+    const inserts: BankTxnInsert[] = res.txns.map((tx) => ({
+      txn_date: tx.date,
+      description: tx.description,
+      direction: tx.direction,
+      amount: Math.round(tx.amount * 100) / 100,
+      balance: tx.balance,
+      month_key: tx.date.slice(0, 7),
+      source: name,
+      account_last4: acct || null,
+      dedup_key: dedupKeyOf(tx, acct),
+    }))
+    if (inserts.length) saveBankTxns.mutate(inserts)
+  }
 
   const doParse = (text: string, name: string) => {
     const res = parseBcaStatement(text, year)
-    setParsed(res)
-    setFileName(name)
-    setRecorded(new Set())
-    // If the pasted/CSV text carries opening & closing balances, remember them
-    // for this month so the Dashboard can show the bank balance growth too.
     if (res.openingBalance != null && res.closingBalance != null) {
       saveBankSummary({
         monthKey,
@@ -145,9 +181,11 @@ export default function BankReconciliation() {
         totalOut: res.totalOut,
         savedAt: new Date().toISOString(),
       })
-      setSavedTick((t) => t + 1)
+      setSavedTick((n) => n + 1)
     }
+    persist(res, name)
   }
+
   const onFile = async (f: File | undefined) => {
     if (!f) return
     setPdfError('')
@@ -169,10 +207,8 @@ export default function BankReconciliation() {
         } else if (summary) {
           saveBankSummary({ ...summary, monthKey })
         }
-        setSavedTick((t) => t + 1)
-        setFileName(f.name)
-        setParsed(result) // full transaction list -> the unmatched table works
-        setRecorded(new Set())
+        setSavedTick((n) => n + 1)
+        persist(result, f.name, summary?.accountLast4)
       } catch (e) {
         setPdfError((e as Error).message || 'Gagal membaca PDF.')
       } finally {
@@ -183,11 +219,13 @@ export default function BankReconciliation() {
     doParse(await f.text(), f.name)
   }
 
-  const record = (tx: BankTxn) => {
+  // Record an unmatched OUT transaction as an operating cost, then mark the bank
+  // row as recorded in the system so the state survives reloads.
+  const record = (tx: Reconciled) => {
     const category = catFor[tx.id] ?? OPEX_CATEGORIES[OPEX_CATEGORIES.length - 1]
     saveOpex.mutate(
       {
-        cost_date: tx.date,
+        cost_date: tx.txn_date,
         description: tx.description,
         category,
         amount: Math.round(tx.amount),
@@ -195,8 +233,20 @@ export default function BankReconciliation() {
         notes: 'Dicatat dari rekonsiliasi mutasi BCA',
         photos: [],
       },
-      { onSuccess: () => setRecorded((s) => new Set(s).add(tx.id)) },
+      { onSuccess: () => markRecorded.mutate({ id: tx.id, recorded_cost_id: null }) },
     )
+  }
+
+  const clearStatement = () => {
+    clearMonth.mutate(monthKey, {
+      onSuccess: () => {
+        deleteBankSummary(monthKey)
+        setSavedTick((n) => n + 1)
+        setFileName('')
+        setWarnings([])
+        setConfirmClear(false)
+      },
+    })
   }
 
   return (
@@ -291,7 +341,7 @@ export default function BankReconciliation() {
             </div>
           </div>
 
-          {/* Bank statement summary (from an uploaded PDF/CSV; kept in this browser) */}
+          {/* Bank statement summary (opening/closing saved per month) */}
           {bankSummary && (
             <Card
               title={`${t('Ringkasan Bank (dari statement)')} · ${monthLabel}`}
@@ -327,7 +377,7 @@ export default function BankReconciliation() {
           )}
 
           {/* Upload BCA statement */}
-          <Card title={t('Unggah Mutasi Bank BCA')} subtitle={t('Unggah PDF mutasi rekening BCA (otomatis terbaca), file CSV, atau tempel teks mutasi.')}>
+          <Card title={t('Unggah Mutasi Bank BCA')} subtitle={t('Unggah PDF mutasi rekening BCA (otomatis terbaca), file CSV, atau tempel teks mutasi. Semua baris tersimpan di sistem.')}>
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <input
@@ -339,13 +389,13 @@ export default function BankReconciliation() {
                 />
                 <button
                   onClick={() => fileRef.current?.click()}
-                  disabled={pdfBusy}
+                  disabled={pdfBusy || saveBankTxns.isPending}
                   className="inline-flex items-center gap-1.5 rounded-btn bg-brand px-3.5 py-2 text-[13px] font-bold text-white transition hover:bg-brand-dark disabled:opacity-60"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
                   </svg>
-                  {pdfBusy ? t('Membaca PDF…') : t('Pilih file PDF / CSV')}
+                  {pdfBusy ? t('Membaca PDF…') : saveBankTxns.isPending ? t('Menyimpan…') : t('Pilih file PDF / CSV')}
                 </button>
                 {fileName && <span className="text-[12px] font-semibold text-ink-body">{fileName}</span>}
               </div>
@@ -362,33 +412,36 @@ export default function BankReconciliation() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => doParse(pasteText, t('teks ditempel'))}
-                  disabled={!pasteText.trim()}
+                  disabled={!pasteText.trim() || saveBankTxns.isPending}
                   className="rounded-btn border border-app-border bg-app-card px-3 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel disabled:opacity-50"
                 >
-                  {t('Baca teks')}
+                  {t('Baca & simpan teks')}
                 </button>
-                {parsed && (
+                {hasBank && (
                   <button
-                    onClick={() => {
-                      setParsed(null)
-                      setPasteText('')
-                      setFileName('')
-                      setRecorded(new Set())
-                    }}
-                    className="rounded-btn px-3 py-2 text-[13px] font-bold text-ink-muted hover:bg-app-panel"
+                    onClick={() => setConfirmClear(true)}
+                    className="rounded-btn px-3 py-2 text-[13px] font-bold text-danger hover:bg-danger-bg"
                   >
-                    {t('Hapus')}
+                    {t('Hapus mutasi bulan ini')}
                   </button>
                 )}
               </div>
-              {parsed?.warnings.map((w, i) => (
+              {saveBankTxns.isError && (
+                <p className="text-[11.5px] text-danger">{(saveBankTxns.error as Error).message}</p>
+              )}
+              {warnings.map((w, i) => (
                 <p key={i} className="text-[11.5px] text-danger">{t(w)}</p>
               ))}
             </div>
           </Card>
 
-          {/* Bank vs system comparison */}
-          {hasBank && (
+          {bankTxnsQuery.isLoading ? (
+            <LoadingRows />
+          ) : !hasBank ? (
+            <Card>
+              <EmptyState message={t('Unggah atau tempel mutasi BCA untuk mulai mencocokkan dengan catatan sistem.')} />
+            </Card>
+          ) : (
             <>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard label={t('Saldo Awal Bank')} value={bank.saldoAwal != null ? formatRupiah(bank.saldoAwal) : '-'} />
@@ -401,8 +454,8 @@ export default function BankReconciliation() {
                 />
                 <StatCard
                   label={t('Transaksi cocok')}
-                  value={`${matchedCount} / ${bankTxns.length}`}
-                  tone={matchedCount === bankTxns.length ? 'green' : undefined}
+                  value={`${matchedCount} / ${storedTxns.length}`}
+                  tone={matchedCount === storedTxns.length ? 'green' : undefined}
                   hint={t('bank yang cocok dengan sistem')}
                 />
               </div>
@@ -440,7 +493,7 @@ export default function BankReconciliation() {
                       {unmatched.length > 0 ? (
                         unmatched.map((tx) => (
                           <tr key={tx.id}>
-                            <td className={TD + ' whitespace-nowrap'}>{formatDate(tx.date)}</td>
+                            <td className={TD + ' whitespace-nowrap'}>{formatDate(tx.txn_date)}</td>
                             <td className={TD + ' font-bold text-ink'} style={{ whiteSpace: 'normal', maxWidth: 320 }}>
                               {titleCase(tx.description)}
                             </td>
@@ -473,7 +526,7 @@ export default function BankReconciliation() {
                               {tx.direction === 'out' ? (
                                 <button
                                   onClick={() => record(tx)}
-                                  disabled={saveOpex.isPending}
+                                  disabled={saveOpex.isPending || markRecorded.isPending}
                                   className="rounded-btn bg-brand px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-brand-dark disabled:opacity-60"
                                 >
                                   {t('Catat')}
@@ -487,7 +540,7 @@ export default function BankReconciliation() {
                       ) : (
                         <tr>
                           <td colSpan={6}>
-                            <EmptyState message={t('Semua transaksi bank sudah cocok dengan sistem.')} />
+                            <EmptyState message={t('Semua transaksi bank sudah cocok atau sudah dicatat.')} />
                           </td>
                         </tr>
                       )}
@@ -500,16 +553,69 @@ export default function BankReconciliation() {
               {unmatchedOut.length === 0 && unmatched.length > 0 && (
                 <p className="text-[11.5px] text-ink-muted">{t('Sisa transaksi adalah pemasukan; catat lewat modul terkait bila perlu.')}</p>
               )}
-            </>
-          )}
 
-          {!hasBank && (
-            <Card>
-              <EmptyState message={t('Unggah atau tempel mutasi BCA untuk mulai mencocokkan dengan catatan sistem.')} />
-            </Card>
+              {/* All persisted bank mutations for the month (proof they are stored) */}
+              <Card
+                title={t('Semua Mutasi Bank Tersimpan')}
+                subtitle={t('Seluruh baris mutasi tersimpan permanen di sistem untuk bulan ini.')}
+                action={
+                  <span className="flex-none whitespace-nowrap rounded-pill border border-app-border bg-app-panel px-3 py-1 text-[12px] font-extrabold text-ink-secondary">
+                    {storedTxns.length} · {recordedCount} {t('tercatat')}
+                  </span>
+                }
+                bodyClassName=""
+              >
+                <div className="cb-scroll max-h-[380px] overflow-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="sticky top-0 bg-app-panel">
+                      <tr>
+                        <th className={TH}>{t('Tanggal')}</th>
+                        <th className={TH}>{t('Keterangan')}</th>
+                        <th className={TH}>{t('Arah')}</th>
+                        <th className={TH_R}>{t('Jumlah')}</th>
+                        <th className={TH}>{t('Status')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reconciled.map((tx) => (
+                        <tr key={tx.id}>
+                          <td className={TD + ' whitespace-nowrap'}>{formatDate(tx.txn_date)}</td>
+                          <td className={TD} style={{ whiteSpace: 'normal', maxWidth: 320 }}>{titleCase(tx.description)}</td>
+                          <td className={TD}>
+                            <Badge tone={tx.direction === 'in' ? 'green' : 'red'}>
+                              {tx.direction === 'in' ? t('Masuk') : t('Keluar')}
+                            </Badge>
+                          </td>
+                          <td className={TD_R + ' font-bold ' + (tx.direction === 'in' ? 'text-ok' : 'text-danger')}>
+                            {formatRupiah(tx.amount)}
+                          </td>
+                          <td className={TD}>
+                            {tx.recorded ? (
+                              <span className="text-[11.5px] font-semibold text-ok">{t('Tercatat')}</span>
+                            ) : tx.matched ? (
+                              <span className="text-[11.5px] font-semibold text-brand">{t('Cocok')}</span>
+                            ) : (
+                              <span className="text-[11.5px] font-semibold text-warn">{t('Belum')}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </>
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmClear}
+        message={`${t('Hapus semua mutasi bank tersimpan untuk')} ${monthLabel}?`}
+        busy={clearMonth.isPending}
+        onClose={() => setConfirmClear(false)}
+        onConfirm={clearStatement}
+      />
     </>
   )
 }

@@ -32,6 +32,18 @@ export const EN: Record<string, string> = {
   'Kategori untuk Paket Prasmanan': 'Category for Prasmanan packages',
   'Kategori untuk Nasi Kotak / lainnya': 'Category for Nasi Kotak / others',
   'Prasmanan': 'Prasmanan',
+  'Unggah PDF mutasi rekening BCA (otomatis terbaca), file CSV, atau tempel teks mutasi. Semua baris tersimpan di sistem.':
+    'Upload a BCA statement PDF (auto-read), a CSV file, or paste the statement text. Every row is stored in the system.',
+  'Baca & simpan teks': 'Read & save text',
+  'Hapus mutasi bulan ini': 'Delete this month’s mutations',
+  'Semua transaksi bank sudah cocok atau sudah dicatat.': 'All bank transactions are matched or already recorded.',
+  'Semua Mutasi Bank Tersimpan': 'All Saved Bank Mutations',
+  'Seluruh baris mutasi tersimpan permanen di sistem untuk bulan ini.':
+    'Every mutation row is stored permanently in the system for this month.',
+  'tercatat': 'recorded',
+  'Tercatat': 'Recorded',
+  'Cocok': 'Matched',
+  'Hapus semua mutasi bank tersimpan untuk': 'Delete all saved bank mutations for',
   'menu berhasil diimpor.': 'menus imported successfully.',
   'Harga jual diambil dari kolom "Harga jual/porsi" di tiap sheet. Menu dengan nama sama di kategori tujuan akan diperbarui (bukan digandakan).':
     'Selling price is taken from the "Harga jual/porsi" column on each sheet. A menu with the same name in the target category is updated (not duplicated).',
