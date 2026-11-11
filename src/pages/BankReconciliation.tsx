@@ -150,6 +150,21 @@ export default function BankReconciliation() {
   const selisihAkhir = bank.saldoAkhir != null ? bank.saldoAkhir - sys.saldoAkhir : null
   const monthLabel = `${monthNames()[month - 1]} ${year}`
 
+  // The file label follows the selected month: show the source of this month's
+  // stored rows, falling back to the just-uploaded file name.
+  const storedSource = useMemo(() => storedTxns.find((t) => t.source)?.source ?? '', [storedTxns])
+  const shownFile = fileName || storedSource
+
+  // Clear the transient upload UI when the user switches month/year manually, so
+  // a document from another month does not linger. (Programmatic month changes
+  // from an upload set their own file name and are unaffected.)
+  const resetUpload = () => {
+    setFileName('')
+    setPasteText('')
+    setWarnings([])
+    setPdfError('')
+  }
+
   // Persist all parsed statement lines. month_key is derived in the DB from the
   // row's own date, so rows land in their correct month regardless of the picker.
   const persist = (res: BcaParseResult, name: string, acctLast4?: string) => {
@@ -258,7 +273,10 @@ export default function BankReconciliation() {
           <div className="flex items-center gap-2">
             <select
               value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
+              onChange={(e) => {
+                setMonth(Number(e.target.value))
+                resetUpload()
+              }}
               className="cb-select h-[38px] rounded-btn border border-app-border bg-app-card pl-3 pr-8 text-[13px] font-bold text-ink-secondary outline-none hover:bg-app-panel"
               aria-label={t('Pilih bulan')}
             >
@@ -270,7 +288,10 @@ export default function BankReconciliation() {
             </select>
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setYear((y) => y - 1)}
+                onClick={() => {
+                  setYear((y) => y - 1)
+                  resetUpload()
+                }}
                 className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
                 aria-label={t('Tahun sebelumnya')}
               >
@@ -278,7 +299,10 @@ export default function BankReconciliation() {
               </button>
               <span className="min-w-[52px] text-center text-[14px] font-extrabold text-ink">{year}</span>
               <button
-                onClick={() => setYear((y) => y + 1)}
+                onClick={() => {
+                  setYear((y) => y + 1)
+                  resetUpload()
+                }}
                 className="rounded-btn border border-app-border bg-app-card px-2.5 py-2 text-[13px] font-bold text-ink-secondary hover:bg-app-panel"
                 aria-label={t('Tahun berikutnya')}
               >
@@ -397,7 +421,7 @@ export default function BankReconciliation() {
                   </svg>
                   {pdfBusy ? t('Membaca PDF…') : saveBankTxns.isPending ? t('Menyimpan…') : t('Pilih file PDF / CSV')}
                 </button>
-                {fileName && <span className="text-[12px] font-semibold text-ink-body">{fileName}</span>}
+                {shownFile && <span className="text-[12px] font-semibold text-ink-body">{shownFile}</span>}
               </div>
               {pdfError && <p className="text-[11.5px] font-semibold text-danger">{t(pdfError)}</p>}
 
