@@ -20,7 +20,8 @@ import LiveClock from '@/features/dashboard/LiveClock'
 import PeriodPicker from '@/features/dashboard/PeriodPicker'
 import SmartAlerts from '@/features/dashboard/SmartAlerts'
 import { computeAlerts, computeAnalytics } from '@/features/dashboard/insights'
-import { getBankSummary, getAllBankSummaries } from '@/features/reconciliation/bankSummary'
+import { getAllBankSummaries, type BankMonthSummary } from '@/features/reconciliation/bankSummary'
+import { useBankStatements, bankStatementToSummary } from '@/features/reconciliation/api'
 import { periodRange, formatRangeLabel, isoDate, type PeriodKey } from '@/features/dashboard/period'
 
 const TODAY_YEAR = new Date().getFullYear()
@@ -254,25 +255,33 @@ export default function Dashboard() {
   const menuTotalQty = useMemo(() => menuSales.reduce((s, m) => s + m.qty, 0), [menuSales])
   const menuMaxQty = menuSales.length ? menuSales[0].qty : 0
 
-  // Bank balance growth for the scope, from bank statements saved in this
-  // browser (via the Rekonsiliasi Bank module).
+  // Statement summaries: DB rows (shared across devices) merged over any local
+  // browser copies, so the Dashboard shows the real bank figures everywhere.
+  const bankStatements = useBankStatements()
+  const allSummaries = useMemo(() => {
+    const m = new Map<string, BankMonthSummary>()
+    for (const s of getAllBankSummaries()) m.set(s.monthKey, s)
+    for (const r of bankStatements.data ?? []) m.set(r.month_key, bankStatementToSummary(r))
+    return [...m.values()]
+  }, [bankStatements.data])
+
+  // Bank balance growth for the scope (from the merged statement summaries).
   const bankGrowth = useMemo(() => {
+    const forYear = allSummaries.filter((s) => s.monthKey.startsWith(String(year)))
     if (month) {
-      const s = getBankSummary(`${year}-${String(month).padStart(2, '0')}`)
+      const s = forYear.find((x) => x.monthKey === `${year}-${String(month).padStart(2, '0')}`)
       return s ? { value: s.closing - s.opening, has: true } : { value: 0, has: false }
     }
-    const all = getAllBankSummaries().filter((s) => s.monthKey.startsWith(String(year)))
-    if (all.length === 0) return { value: 0, has: false }
-    return { value: all.reduce((a, s) => a + (s.closing - s.opening), 0), has: true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year, month])
+    if (forYear.length === 0) return { value: 0, has: false }
+    return { value: forYear.reduce((a, s) => a + (s.closing - s.opening), 0), has: true }
+  }, [allSummaries, year, month])
 
   // Real bank figures (from uploaded statements) for the selected scope. For a
   // single month it is that month's summary; for a whole year the totals are
   // summed and the opening/closing span the earliest..latest month present.
   const bankScope = useMemo(() => {
     const pad = (n: number) => String(n).padStart(2, '0')
-    const all = getAllBankSummaries().filter((s) => s.monthKey.startsWith(String(year)))
+    const all = allSummaries.filter((s) => s.monthKey.startsWith(String(year)))
     const list = month ? all.filter((s) => s.monthKey === `${year}-${pad(month)}`) : all
     if (list.length === 0) return null
     const sorted = [...list].sort((a, b) => (a.monthKey < b.monthKey ? -1 : 1))
@@ -283,8 +292,7 @@ export default function Dashboard() {
       totalOut: list.reduce((s, x) => s + x.totalOut, 0),
       months: list.length,
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year, month])
+  }, [allSummaries, year, month])
 
   const kpis: { label: string; value: ReactNode; sub: string; accent?: 'green' | 'dark'; to?: string }[] = [
     { label: t('Total Pendapatan'), value: <CountUp to={totals.rev} format={formatRupiah} />, sub: `Total ${scopeLabel}`, to: salesTo },

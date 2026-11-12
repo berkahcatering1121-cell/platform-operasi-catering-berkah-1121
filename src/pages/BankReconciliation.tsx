@@ -23,6 +23,10 @@ import {
   useSaveBankTxns,
   useMarkBankTxnRecorded,
   useDeleteBankTxnsForMonth,
+  useBankStatements,
+  useSaveBankStatement,
+  useDeleteBankStatement,
+  bankStatementToSummary,
   type BankTxnRow,
   type BankTxnInsert,
 } from '@/features/reconciliation/api'
@@ -90,13 +94,25 @@ export default function BankReconciliation() {
   const saveBankTxns = useSaveBankTxns()
   const markRecorded = useMarkBankTxnRecorded()
   const clearMonth = useDeleteBankTxnsForMonth()
+  const bankStatements = useBankStatements()
+  const saveBankStatement = useSaveBankStatement()
+  const deleteBankStatement = useDeleteBankStatement()
 
-  // Saved bank-statement summary for the selected month (opening/closing).
-  const bankSummary = useMemo<BankMonthSummary | null>(
-    () => getBankSummary(monthKey),
+  // Statement summary for the month: prefer the one stored in the DB (shared
+  // across devices), fall back to this browser's localStorage copy.
+  const bankSummary = useMemo<BankMonthSummary | null>(() => {
+    const row = (bankStatements.data ?? []).find((r) => r.month_key === monthKey)
+    return row ? bankStatementToSummary(row) : getBankSummary(monthKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [monthKey, savedTick],
-  )
+  }, [bankStatements.data, monthKey, savedTick])
+
+  // Save a month summary to both the DB (authoritative, cross-device) and the
+  // local browser copy (instant, offline-safe).
+  const persistSummary = (s: BankMonthSummary) => {
+    saveBankSummary(s)
+    saveBankStatement.mutate(s)
+    setSavedTick((n) => n + 1)
+  }
 
   // ── System side (from the Cash Flow ledger) ──
   const sys = useMemo(() => {
@@ -188,7 +204,7 @@ export default function BankReconciliation() {
   const doParse = (text: string, name: string) => {
     const res = parseBcaStatement(text, year)
     if (res.openingBalance != null && res.closingBalance != null) {
-      saveBankSummary({
+      persistSummary({
         monthKey,
         opening: res.openingBalance,
         closing: res.closingBalance,
@@ -196,7 +212,6 @@ export default function BankReconciliation() {
         totalOut: res.totalOut,
         savedAt: new Date().toISOString(),
       })
-      setSavedTick((n) => n + 1)
     }
     persist(res, name)
   }
@@ -218,11 +233,10 @@ export default function BankReconciliation() {
           const [yy, mmn] = summary.monthKey.split('-')
           setYear(Number(yy))
           setMonth(Number(mmn))
-          saveBankSummary(summary)
+          persistSummary(summary)
         } else if (summary) {
-          saveBankSummary({ ...summary, monthKey })
+          persistSummary({ ...summary, monthKey })
         }
-        setSavedTick((n) => n + 1)
         persist(result, f.name, summary?.accountLast4)
       } catch (e) {
         setPdfError((e as Error).message || 'Gagal membaca PDF.')
@@ -256,6 +270,7 @@ export default function BankReconciliation() {
     clearMonth.mutate(monthKey, {
       onSuccess: () => {
         deleteBankSummary(monthKey)
+        deleteBankStatement.mutate(monthKey)
         setSavedTick((n) => n + 1)
         setFileName('')
         setWarnings([])
