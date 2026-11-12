@@ -44,6 +44,14 @@ export const EN: Record<string, string> = {
   'Tercatat': 'Recorded',
   'Cocok': 'Matched',
   'Hapus semua mutasi bank tersimpan untuk': 'Delete all saved bank mutations for',
+  'Menurut Bank (Rekening Koran)': 'Per Bank (Statement)',
+  'Angka asli dari mutasi rekening': 'Actual figures from the bank statement',
+  'Belum ada data bank untuk periode ini': 'No bank data for this period yet',
+  'menurut bank': 'per bank',
+  'Selisih Bank vs Sistem': 'Bank vs System Difference',
+  'saldo akhir bank − saldo kas sistem': 'bank closing balance − system cash balance',
+  'Unggah mutasi rekening di Rekonsiliasi Bank agar angka bank tampil di sini.':
+    'Upload a bank statement in Bank Reconciliation so the bank figures show here.',
   'menu berhasil diimpor.': 'menus imported successfully.',
   'Harga jual diambil dari kolom "Harga jual/porsi" di tiap sheet. Menu dengan nama sama di kategori tujuan akan diperbarui (bukan digandakan).':
     'Selling price is taken from the "Harga jual/porsi" column on each sheet. A menu with the same name in the target category is updated (not duplicated).',

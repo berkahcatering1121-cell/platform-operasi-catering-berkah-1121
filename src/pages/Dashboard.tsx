@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
-import { Card, ErrorState, LoadingRows } from '@/components/ui/Card'
+import { Card, EmptyState, ErrorState, LoadingRows } from '@/components/ui/Card'
 import CountUp from '@/components/ui/CountUp'
 import { formatPercent, formatRupiah, months as monthNames, monthsShort } from '@/lib/format'
 import { titleCase } from '@/lib/text'
@@ -267,6 +267,25 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, month])
 
+  // Real bank figures (from uploaded statements) for the selected scope. For a
+  // single month it is that month's summary; for a whole year the totals are
+  // summed and the opening/closing span the earliest..latest month present.
+  const bankScope = useMemo(() => {
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const all = getAllBankSummaries().filter((s) => s.monthKey.startsWith(String(year)))
+    const list = month ? all.filter((s) => s.monthKey === `${year}-${pad(month)}`) : all
+    if (list.length === 0) return null
+    const sorted = [...list].sort((a, b) => (a.monthKey < b.monthKey ? -1 : 1))
+    return {
+      opening: sorted[0].opening,
+      closing: sorted[sorted.length - 1].closing,
+      totalIn: list.reduce((s, x) => s + x.totalIn, 0),
+      totalOut: list.reduce((s, x) => s + x.totalOut, 0),
+      months: list.length,
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year, month])
+
   const kpis: { label: string; value: ReactNode; sub: string; accent?: 'green' | 'dark'; to?: string }[] = [
     { label: t('Total Pendapatan'), value: <CountUp to={totals.rev} format={formatRupiah} />, sub: `Total ${scopeLabel}`, to: salesTo },
     {
@@ -328,6 +347,34 @@ export default function Dashboard() {
               <Kpi key={k.label} label={k.label} value={k.value} sub={k.sub} accent={k.accent} to={k.to} />
             ))}
           </div>
+
+          {/* Real figures from the bank statement (Rekonsiliasi Bank) */}
+          <Card
+            title={t('Menurut Bank (Rekening Koran)')}
+            subtitle={
+              bankScope
+                ? month
+                  ? `${t('Angka asli dari mutasi rekening')} · ${scopeLabel}`
+                  : `${bankScope.months} ${t('bulan')} · ${scopeLabel}`
+                : t('Belum ada data bank untuk periode ini')
+            }
+          >
+            {bankScope ? (
+              <div className="cb-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <Kpi label={t('Saldo Awal Bank')} value={<CountUp to={bankScope.opening} format={formatRupiah} />} sub={scopeLabel} />
+                <Kpi label={t('Total Uang Masuk')} value={<CountUp to={bankScope.totalIn} format={formatRupiah} />} sub={t('menurut bank')} accent="green" />
+                <Kpi label={t('Total Uang Keluar')} value={<CountUp to={bankScope.totalOut} format={formatRupiah} />} sub={t('menurut bank')} />
+                <Kpi label={t('Saldo Akhir Bank')} value={<CountUp to={bankScope.closing} format={formatRupiah} />} sub={t('menurut bank')} accent="dark" />
+                <Kpi
+                  label={t('Selisih Bank vs Sistem')}
+                  value={<CountUp to={bankScope.closing - cashBalance} format={formatRupiah} />}
+                  sub={t('saldo akhir bank − saldo kas sistem')}
+                />
+              </div>
+            ) : (
+              <EmptyState message={t('Unggah mutasi rekening di Rekonsiliasi Bank agar angka bank tampil di sini.')} />
+            )}
+          </Card>
 
           {/* Financial analytics */}
           <Card title={t('Analitik Keuangan')} subtitle={scopeLabel}>
